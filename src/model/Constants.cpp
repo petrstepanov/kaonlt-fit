@@ -16,8 +16,12 @@
 
 #include "Constants.h"
 
-const char* Constants::APPLICATION_NAME = "TLIST Processor";
-const UInt_t Constants::WINDOW_WIDTH = 900;
-const UInt_t Constants::WINDOW_HEIGHT = 600;
+const char* Constants::APPLICATION_NAME = "KaonLT Fit";
+
+const char* Constants::TREE_NAME = "tree1;3";
+const UInt_t Constants::TILE_PROFILE = 60;
+
+const Bool_t Constants::DO_PLOT_TREE = kTRUE;
+const Bool_t Constants::DO_PLOT_PROFILES = kFALSE;
 
 const std::string Constants::drawOptions[] = { "SURF2", "LEGO2" };

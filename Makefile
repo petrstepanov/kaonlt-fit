@@ -62,15 +62,15 @@ all: production
 
 # Add -O3 optimization level for the production release
 production: CXXFLAGS+=-O3
-production: directories $(DICT_CXX_FILENAME) $(SHARED_LIBRARY) $(OBJECTS) $(EXECUTABLE) move_files
+production: directories clean-executable $(DICT_CXX_FILENAME) $(SHARED_LIBRARY) $(OBJECTS) $(EXECUTABLE) move_files
 
 # Add -O3 optimization level for the test release
 release: CXXFLAGS+=-O3
-release: directories $(DICT_CXX_FILENAME) $(SHARED_LIBRARY) $(OBJECTS) $(EXECUTABLE_LOCAL) move_files
+release: directories clean-executable-local $(DICT_CXX_FILENAME) $(SHARED_LIBRARY) $(OBJECTS) $(EXECUTABLE_LOCAL) move_files
 
 # Also might add flags for debug optimizations: -Og -ggdb -DDEBUG
 debug: CXXFLAGS+=-g
-debug: directories $(DICT_CXX_FILENAME) $(SHARED_LIBRARY) $(OBJECTS) $(EXECUTABLE_LOCAL) move_files move_debug_symbols
+debug: directories clean-executable-local $(DICT_CXX_FILENAME) $(SHARED_LIBRARY) $(OBJECTS) $(EXECUTABLE_LOCAL) move_files move_debug_symbols
 
 # Target for dictionary generation (creates .cxx and .pcm)
 $(DICT_CXX_FILENAME): $(HEADERS) $(SRC_DIR)/LinkDef.h
@@ -147,6 +147,12 @@ clean:
 	rm -f $(DICT_PCM_FILENAME)
 	rm -f $(SHARED_LIBRARY)
 	rm -f -r $(SHARED_LIBRARY_DS)
+
+clean-executable:
+	rm -f -r $(EXECUTABLE)
+
+clean-executable-local:
+	rm -f -r $(EXECUTABLE_LOCAL)
 
 # Target for creating the ./build and ./dist directories 
 directories:

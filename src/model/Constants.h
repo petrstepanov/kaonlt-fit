@@ -21,8 +21,14 @@
 class Constants {
   public:
     static const char* APPLICATION_NAME;
-    static const UInt_t WINDOW_WIDTH;
-    static const UInt_t WINDOW_HEIGHT;
+
+    static const char* TREE_NAME;
+    static const UInt_t TILE_PROFILE;
+
+    static const Bool_t DO_PLOT_TREE;
+    static const Bool_t DO_PLOT_PROFILES;
+//    static const UInt_t CANVAS_WIDTH;
+//    static const UInt_t CANVAS_HEIGHT;
 
     static const std::string drawOptions[2];
 };
