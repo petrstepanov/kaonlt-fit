@@ -47,3 +47,11 @@ void HistUtils::resetHistogram(TH1* hist){
 		hist->SetBinError(i, 0);
 	}
 }
+
+void HistUtils::increaseBinContent(TH1* hist, Float_t val){
+	Int_t bin = hist->GetXaxis()->FindBin(val);
+	if (bin >= 1 && bin <= hist->GetNbinsX()){
+		Float_t content = hist->GetBinContent(bin);
+		hist->SetBinContent(bin, ++content);
+	}
+}

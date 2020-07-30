@@ -18,6 +18,7 @@ public:
 
 	static TH1* trimHistogram(TH1*);
 	static void resetHistogram(TH1*);
+	static void increaseBinContent(TH1*, Float_t);
 };
 
 #endif /* SRC_UTIL_HISTUTILS_H_ */

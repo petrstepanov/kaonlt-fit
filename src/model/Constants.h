@@ -16,21 +16,32 @@
 
 #include <TROOT.h>
 #include <TColor.h>
-#include <string>
+#include <TString.h>
+#include <TList.h>
+
+// Command-line parameters
+struct Parameters {
+	TString treeName = "tree1;3";
+	Float_t plotTree = kTRUE;
+	Int_t tileProfile = 55;
+	TList* inputFiles = new TList();
+};
 
 class Constants {
   public:
-    static const char* APPLICATION_NAME;
+	static Constants* getInstance();
 
-    static const char* TREE_NAME;
-    static const UInt_t TILE_PROFILE;
+	static const char* APPLICATION_NAME;
 
-    static const Bool_t DO_PLOT_TREE;
-    static const Bool_t DO_PLOT_PROFILES;
-//    static const UInt_t CANVAS_WIDTH;
-//    static const UInt_t CANVAS_HEIGHT;
+    void parseParameters(int argc, char* argv[]);
 
-    static const std::string drawOptions[2];
+	Parameters parameters;
+
+	private:
+		Constants();
+		static Constants* instance;
+
+    // static const std::string drawOptions[2];
 };
 
 #endif /* CONSTANTS_H */
