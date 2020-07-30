@@ -17,7 +17,7 @@ public:
 	TreeUtils();
 	virtual ~TreeUtils();
 
-	static TH1* GetBranchHistogram(TTree*, const char*, const char*);
+	static void fillBranchToHistogram(TTree*, const char*, const char*);
 };
 
 #endif /* SRC_UTIL_TREEUTILS_H_ */
