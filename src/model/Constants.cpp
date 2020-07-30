@@ -18,7 +18,7 @@
 
 const char* Constants::APPLICATION_NAME = "KaonLT Fit";
 
-const char* Constants::TREE_NAME = "tree1;2";
+const char* Constants::TREE_NAME = "tree1;3";
 const UInt_t Constants::TILE_PROFILE = 60;
 
 const Bool_t Constants::DO_PLOT_TREE = kTRUE;
