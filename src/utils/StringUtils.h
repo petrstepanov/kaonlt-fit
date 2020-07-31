@@ -5,8 +5,8 @@
  *      Author: petrstepanov
  */
 
-#ifndef SRC_UTIL_STRINGUTILS_H_
-#define SRC_UTIL_STRINGUTILS_H_
+#ifndef SRC_UTILS_STRINGUTILS_H_
+#define SRC_UTILS_STRINGUTILS_H_
 
 #include <iostream>
 #include <utility>
@@ -20,4 +20,4 @@ public:
 	static std::pair<TString, TString> parseParameter(const char*);
 };
 
-#endif /* SRC_UTIL_STRINGUTILS_H_ */
+#endif /* SRC_UTILS_STRINGUTILS_H_ */

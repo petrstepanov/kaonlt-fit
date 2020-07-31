@@ -5,8 +5,8 @@
  *      Author: petrstepanov
  */
 
-#ifndef SRC_UTIL_HISTUTILS_H_
-#define SRC_UTIL_HISTUTILS_H_
+#ifndef SRC_UTILS_HISTUTILS_H_
+#define SRC_UTILS_HISTUTILS_H_
 
 #include <iostream>
 #include <TH1F.h>
@@ -21,4 +21,4 @@ public:
 	static void increaseBinContent(TH1*, Float_t);
 };
 
-#endif /* SRC_UTIL_HISTUTILS_H_ */
+#endif /* SRC_UTILS_HISTUTILS_H_ */

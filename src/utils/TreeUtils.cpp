@@ -5,7 +5,8 @@
  *      Author: petrstepanov
  */
 
-#include "TreeUtils.h"
+#include "../utils/TreeUtils.h"
+
 #include "TVirtualTreePlayer.h"
 #include "TCanvas.h"
 #include "TSystem.h"

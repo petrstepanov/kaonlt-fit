@@ -19,7 +19,8 @@
 #include <utility>
 #include "Constants.h"
 #include <TObjString.h>
-#include "../util/StringUtils.h"
+
+#include "../utils/StringUtils.h"
 
 Constants::Constants(){};
 
@@ -32,6 +33,28 @@ Constants* Constants::getInstance(){
     return instance;
 }
 const char* Constants::APPLICATION_NAME = "KaonLT Fit";
+
+// Variable limits set experimentally by zooming into axis
+// ----------+-------+------------------+----------------+
+// Variable  | bins  | lo_bin_left_edge | hi_bin_up_edge |
+// ----------+-------+------------------+----------------+
+// Channels  | 21000 |            -1000 |          20000 |
+// Tile      |   145 |                1 |            146 |
+// Amplitude |  4096 |                0 |           4096 |
+// ----------+-------+------------------+----------------+
+
+const Int_t Constants::TILE_BINS = 145;
+const Int_t Constants::TILE_MIN = 1;
+const Int_t Constants::TILE_MAX = 146;
+
+const Int_t Constants::CH_BINS = 21000;
+const Int_t Constants::CH_MIN = -1000;
+const Int_t Constants::CH_MAX = 20000;
+
+const Int_t Constants::AMP_BINS = 4096;
+const Int_t Constants::AMP_MIN = 0;
+const Int_t Constants::AMP_MAX = 4096;
+
 
 void Constants::parseParameters(int argc, char* argv[]){
 	// Print command line argumants

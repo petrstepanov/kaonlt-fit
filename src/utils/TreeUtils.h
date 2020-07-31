@@ -5,8 +5,8 @@
  *      Author: petrstepanov
  */
 
-#ifndef SRC_UTIL_TREEUTILS_H_
-#define SRC_UTIL_TREEUTILS_H_
+#ifndef SRC_UTILS_TREEUTILS_H_
+#define SRC_UTILS_TREEUTILS_H_
 
 #include <iostream>
 #include <TH1.h>
@@ -20,4 +20,4 @@ public:
 	static void fillBranchToHistogram(TTree*, const char*, const char*);
 };
 
-#endif /* SRC_UTIL_TREEUTILS_H_ */
+#endif /* SRC_UTILS_TREEUTILS_H_ */
