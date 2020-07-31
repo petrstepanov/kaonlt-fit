@@ -5,7 +5,7 @@
  *      Author: petrstepanov
  */
 
-#include "HistUtils.h"
+#include "../utils/HistUtils.h"
 
 HistUtils::HistUtils() {
 	// TODO Auto-generated constructor stub

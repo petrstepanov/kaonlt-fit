@@ -5,7 +5,8 @@
  *      Author: petrstepanov
  */
 
-#include "StringUtils.h"
+#include "../utils/StringUtils.h"
+
 #include "TPRegexp.h"
 #include "TObjString.h"
 #include "TObjArray.h"

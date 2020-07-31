@@ -33,6 +33,18 @@ class Constants {
 
 	static const char* APPLICATION_NAME;
 
+	static const Int_t TILE_BINS;
+	static const Int_t TILE_MIN;
+	static const Int_t TILE_MAX;
+
+	static const Int_t CH_BINS;
+	static const Int_t CH_MIN;
+	static const Int_t CH_MAX;
+
+	static const Int_t AMP_BINS;
+	static const Int_t AMP_MIN;
+	static const Int_t AMP_MAX;
+
     void parseParameters(int argc, char* argv[]);
 
 	Parameters parameters;
