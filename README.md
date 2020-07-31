@@ -23,7 +23,7 @@ Optional parameter `--plot-tree=kFALSE` controls whether the original Tree data 
 
 <img src="https://raw.githubusercontent.com/petrstepanov/kaonlt-fit/master/resources/tree1;3-ch:tile-amp:tile.png" style="width: 100%">
 
-Program constructs one-dimensional projections for each PMT histogram at the value of Tile (`tilel` for PMT1 and `tiler` for PMT2) equal to a certain value. This threshold value is spacified in the `--tile-profile=55` command line argument. An extra condition is added for selection of the data for the projections. Only events with non-zero Tile pairs are considered (`tilel!=0 && tiler!=0`). This provies more clean experimental data. We make sure that there is a hit in each PMT.
+Program constructs one-dimensional projections for each PMT histogram at the value of Tile (`tilel` for PMT1 and `tiler` for PMT2) equal to a certain value. This threshold value is specified in the `--tile-profile=55` command line argument. An extra condition is added for selection of the data for the projections. Only events with non-zero Tile pairs are considered (`tilel!=0 && tiler!=0`). This provies more clean experimental data. We make sure that there is a hit in each PMT.
 
 Following projections for PMT histograms are obtained:
 
