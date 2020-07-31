@@ -11,13 +11,13 @@ Program opens a set of files specified as command line arguments. Class `Constan
 
 Class `TreeHelper` opens each ROOT file and imports the ROOT Tree. Tree name is provided in in `--tree-name=tree1;3 ` command line parameter. The tree contains data from two PMTs. Namely, `tile`, `channel` and `amplitude` and has following structure:
 
-  ************************************************************************************
-  *    Row   *     tilel *     tiler *     amp_1 *     amp_2 *      ch_1 *      ch_2 *
-  ************************************************************************************
-  *        0 *        77 *        93 *         0 *         0 *         0 *         0 *
-  *        1 *        75 *        29 *         0 *         0 *         0 *         0 *
-  *        2 *       126 *        87 *         0 *         0 *         0 *         0 *
-  *      ... *       ... *       ... *       ... *       ... *       ... *       ... *
+        ************************************************************************************
+        *    Row   *     tilel *     tiler *     amp_1 *     amp_2 *      ch_1 *      ch_2 *
+        ************************************************************************************
+        *        0 *        77 *        93 *         0 *         0 *         0 *         0 *
+        *        1 *        75 *        29 *         0 *         0 *         0 *         0 *
+        *        2 *       126 *        87 *         0 *         0 *         0 *         0 *
+        *      ... *       ... *       ... *       ... *       ... *       ... *       ... *
 
 Optional parameter `--plot-tree=kFALSE` controls whether the original Tree data is plotted. When set to `kTRUE`, program generates 2D histograms with the original Tree data and saves them to the hard drive. These plots look as follows:
 
