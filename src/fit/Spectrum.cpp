@@ -13,13 +13,13 @@ Spectrum::Spectrum(Int_t nMaxVal=100) : nMax(nMaxVal), pi(TMath::Pi()), e(TMath:
 	// Initialize parameters as RooRealVars even though we're not using RooFit
 	// Convenient because RooRealVar has name, value and limits
 	// Parameter values taken from Fig.2, https://doi.org/10.1016/0168-9002(94)90183-X
-	RooRealVar* Q0 = new RooRealVar("Q0", "pedestal", 23.26, 0, Constants::CH_MAX, "e");
-	RooRealVar* s0 = new RooRealVar("s0", "standard deviation of the type I background process", 0.192, 0, 1, "");
-	RooRealVar* Q1 = new RooRealVar("Q1", "average charge at the PM output", 35.04, 0, 500, "e");
-	RooRealVar* s1 = new RooRealVar("s1", "corresponding standard deviation of the charge distribution", 11.73, 0, 100, "");
-	RooRealVar* w  = new RooRealVar("w",  "probability that signal is accompanied by type II background process", 0.383, 0, 1, "");
-	RooRealVar* a  = new RooRealVar("a",  "coefficient of the exponential decrease of the type II background", 0.034, 0, 0.1, "");
-	RooRealVar* mu = new RooRealVar("mu", "number of photo-electrons", 1.68, 0, 50, "");
+	RooRealVar* Q0 = new RooRealVar("Q_{0}", "pedestal", 23.26, 0, Constants::CH_MAX, "e");
+	RooRealVar* s0 = new RooRealVar("#sigma_{0}", "standard deviation of the type I background process", 0.192, 0, 1, "");
+	RooRealVar* Q1 = new RooRealVar("Q_{1}", "average charge at the PM output", 35.04, 0, 500, "e");
+	RooRealVar* s1 = new RooRealVar("#sigma_{1}", "corresponding standard deviation of the charge distribution", 11.73, 0, 100, "");
+	RooRealVar* w  = new RooRealVar("w", "probability that signal is accompanied by type II background process", 0.383, 0, 1, "");
+	RooRealVar* a  = new RooRealVar("#alpha", "coefficient of the exponential decrease of the type II background", 0.034, 0, 0.1, "");
+	RooRealVar* mu = new RooRealVar("#mu", "number of photo-electrons", 1.68, 0, 50, "");
 	parameters->add(*Q0);
 	parameters->add(*s0);
 	parameters->add(*Q1);

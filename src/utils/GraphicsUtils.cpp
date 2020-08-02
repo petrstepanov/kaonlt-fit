@@ -28,16 +28,16 @@ void GraphicsUtils::setMyStatsDisplay(TH1* hist, TVirtualPad* pad){
 }
 
 void GraphicsUtils::alignStats(TH1* hist, TVirtualPad* pad){
-	pad->Modified();
+	// pad->Modified();
 	pad->Update();
 	TPaveStats *stats = (TPaveStats*) hist->FindObject("stats");
 	Double_t statsWidth = stats->GetX2NDC() - stats->GetX1NDC();
-	Double_t statsHeight = stats->GetY2NDC() - stats->GetY1NDC();
+	Double_t statsHeight = 0.04*stats->GetListOfLines()->GetSize(); // stats->GetY2NDC() - stats->GetY1NDC();
 	// Move stats horizontally
-	stats->SetX2NDC(0.9);
+	stats->SetX2NDC(1 - pad->GetRightMargin());
 	stats->SetX1NDC(stats->GetX2NDC() - statsWidth);
 	// Move stats vertically
-	stats->SetY2NDC(0.9);
+	stats->SetY2NDC(1 - pad->GetTopMargin());
 	stats->SetY1NDC(stats->GetY2NDC() - statsHeight);
 	// Display only histogram entries
 	pad->Modified();

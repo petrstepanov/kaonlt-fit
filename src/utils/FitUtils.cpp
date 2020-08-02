@@ -75,6 +75,11 @@ TF1* FitUtils::getRealFitFunction(TH1* hist){
 			// 	realFunc->FixParameter(i, pedestal);
 			// }
 
+			// Fix w = 0
+			// if (strcmp(parameter->GetName(),"w")==0){
+			// realFunc->FixParameter(i, 0);
+			// }
+
 			i++;
 		}
 	}

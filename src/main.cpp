@@ -25,7 +25,7 @@ int run(const char* fileName) {
 		TreeHelper::getInstance()->plotTree();
 	}
 
-	// Temporary plor tree profiles for ch_! and ch_2
+	// Temporary plot tree profiles for ch_! and ch_2
 	// Need to study the region between the pedestal and first peak
 	TreeHelper::getInstance()->plotTreeProfiles();
 
@@ -46,15 +46,16 @@ int run(const char* fileName) {
 	TString pmtsCanvasTitle = TString::Format("Profile of the PMT spectra (tile = %d)", Constants::getInstance()->parameters.tileProfile);
 	TCanvas* pmtsCanvas = new TCanvas("pmtsCanvas", pmtsCanvasTitle, 1024, 512);
 	pmtsCanvas->Divide(2,1);
+
 	TVirtualPad* pmtsCanvasPad1 = pmtsCanvas->cd(1);
 	pmtsCanvasPad1->SetLogy();
-	pmt1Hist->Draw();
-	GraphicsUtils::alignStats(pmt1Hist, pmtsCanvasPad1);
+	TH1* pmt1HistClone = dynamic_cast<TH1F*>(pmt1Hist->DrawClone());
+	// GraphicsUtils::alignStats(pmt1HistClone, pmtsCanvasPad1);
+
 	TVirtualPad* pmtsCanvasPad2 = pmtsCanvas->cd(2);
 	pmtsCanvasPad2->SetLogy();
-	pmt2Hist->Draw();
-//	GraphicsUtils::setMyStatsDisplay(pmt2Hist, pmtsCanvasPad2);
-	GraphicsUtils::alignStats(pmt2Hist, pmtsCanvasPad2);
+	TH1* pmt2HistClone = dynamic_cast<TH1F*>(pmt2Hist->DrawClone());
+	// GraphicsUtils::alignStats(pmt2HistClone, pmtsCanvasPad2);
 
 	// Save canvas with PMT profiles to file
 	TString pngFilePath = TString(pmtsCanvas->GetName()) + ".png";
@@ -67,6 +68,7 @@ int run(const char* fileName) {
 	pmt1Hist->Fit(fitFunction->GetName());
 	GraphicsUtils::showFitParametersInStats(pmt1Hist, fitCanvas);
 	pmt1Hist->Draw();
+	GraphicsUtils::alignStats(pmt1Hist, fitCanvas);
 
 	return 0;
 }

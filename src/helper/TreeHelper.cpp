@@ -15,6 +15,7 @@
 #include "TreeHelper.h"
 #include "../model/Constants.h"
 #include "../utils/HistUtils.h"
+#include "../utils/GraphicsUtils.h"
 
 TreeHelper::TreeHelper() {
 	fileName = new TString();
@@ -63,15 +64,15 @@ void TreeHelper::plotTreeProfiles(){
 	ch1Hist->SetStats(0);
 	ch1Hist->GetYaxis()->SetTitle("Channel (ch_1)");
 	TH1F* ch2Hist = new TH1F("ch2Hist", "Channel profile for PMT2", Constants::CH_BINS, Constants::CH_MIN, Constants::CH_MAX);
-	ch1Hist->GetXaxis()->SetTitle("Events");
-	ch1Hist->SetStats(0);
-	ch1Hist->GetYaxis()->SetTitle("Channel (ch_2)");
+	ch2Hist->GetXaxis()->SetTitle("Events");
+	ch2Hist->SetStats(0);
+	ch2Hist->GetYaxis()->SetTitle("Channel (ch_2)");
 
 	const char* treeName = myTree->GetName(); //Constants::getInstance()->parameters.treeName.Data();
 	TString myCanvasName = TString::Format("%s-ch_1-ch_2", treeName);
 	TString myCanvasTitle = TString::Format("TTree \"%s\" channel profiles. File \"%s\"", treeName, fileName->Data());
-	TCanvas* myCanvas = new TCanvas(myCanvasName, myCanvasTitle, 1024, 1024);
-	myCanvas->Divide(1,2);
+	TCanvas* myCanvas = new TCanvas(myCanvasName, myCanvasTitle, 1024, 512);
+	myCanvas->Divide(2,1);
 
 	TVirtualPad* pad1 = myCanvas->cd(1);
 	pad1->SetLogz();
@@ -80,6 +81,7 @@ void TreeHelper::plotTreeProfiles(){
 	myTree->Draw("ch_1>>ch1Hist","",""); // no canvas, draw directly to histogram
 	pad1->SetLogy();
 	ch1Hist->Draw();
+	// GraphicsUtils::alignStats(ch1Hist, pad1);
 
 	TVirtualPad* pad2 = myCanvas->cd(2);
 	pad2->SetLogz();
@@ -88,6 +90,7 @@ void TreeHelper::plotTreeProfiles(){
 	myTree->Draw("ch_2>>ch2Hist","",""); // no canvas, draw directly to histogram
 	pad2->SetLogy();
 	ch2Hist->Draw();
+	// GraphicsUtils::alignStats(ch2Hist, pad2);
 
 	// Save canvas to file
 	// TString pngFilePath = TString(myCanvas->GetName()) + ".png";
@@ -146,8 +149,8 @@ void TreeHelper::plotTree(){
 
 	TVirtualPad* pad3 = myCanvas->cd(3);
 	pad3->SetLogz();
-	pad3->SetLeftMargin(0.15);
 	pad3->SetRightMargin(0.15);
+	pad3->SetLeftMargin(0.15);
 	// myTree->Draw("amp_1:tilel", "", "COLZ0");
 	myTree->Draw("amp_1:tilel>>amp1TilelHist","","COLZ0"); // no canvas, draw directly to histogram
 	amp1TilelHist->Draw("COLZ0");
