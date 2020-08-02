@@ -55,6 +55,8 @@ const Int_t Constants::AMP_BINS = 4096;
 const Int_t Constants::AMP_MIN = 0;
 const Int_t Constants::AMP_MAX = 4096;
 
+// const Double_t Constants::e = 1.6e−19;
+
 
 void Constants::parseParameters(int argc, char* argv[]){
 	// Print command line argumants

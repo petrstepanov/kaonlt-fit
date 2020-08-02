@@ -7,5 +7,6 @@
 // For signals and slots
 #pragma link C++ class Model;
 #pragma link C++ class Database;
+#pragma link C++ class Spectrum;
 
 #endif

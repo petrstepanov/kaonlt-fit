@@ -9,8 +9,9 @@
 #include <TObjString.h>
 
 #include "model/Constants.h"
-#include "utils/TreeUtils.h"
+#include "utils/FitUtils.h"
 #include "utils/GraphicsUtils.h"
+#include "utils/TreeUtils.h"
 #include "helper/TreeHelper.h"
 
 int run(const char* fileName) {
@@ -53,6 +54,13 @@ int run(const char* fileName) {
 	// Save canvas with PMT profiles to file
 	TString pngFilePath = TString(pmtsCanvas->GetName()) + ".png";
 	pmtsCanvas->SaveAs(pngFilePath);
+
+	// Perform fitting (just one hist for now)
+	TF1* fitFunction = FitUtils::getRealFitFunction(pmt1Hist);
+	TCanvas* fitCanvas = new TCanvas("fitCanvas", "fitCanvas", 1024, 512);
+	fitCanvas->SetLogy();
+	pmt1Hist->Fit(fitFunction->GetName());
+	pmt1Hist->Draw();
 
 	return 0;
 }
