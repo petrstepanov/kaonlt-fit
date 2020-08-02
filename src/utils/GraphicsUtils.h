@@ -16,7 +16,9 @@ public:
 	GraphicsUtils();
 	virtual ~GraphicsUtils();
 
-	static void styleLegend(TH1*, TVirtualPad*);
+	static void setMyStatsDisplay(TH1*, TVirtualPad*);
+	static void alignStats(TH1*, TVirtualPad*);
+	static void showFitParametersInStats(TH1*, TVirtualPad*);
 };
 
 #endif /* SRC_HELPER_GRAPHICSUTILS_H_ */

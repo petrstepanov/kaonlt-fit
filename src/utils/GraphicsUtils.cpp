@@ -17,14 +17,38 @@ GraphicsUtils::~GraphicsUtils() {
 	// TODO Auto-generated destructor stub
 }
 
-void GraphicsUtils::styleLegend(TH1* hist, TVirtualPad* pad){
+void GraphicsUtils::setMyStatsDisplay(TH1* hist, TVirtualPad* pad){
+	pad->Modified();
 	pad->Update();
 	TPaveStats *stats = (TPaveStats*) hist->FindObject("stats");
-	stats->SetX1NDC(0.680);
-	stats->SetY1NDC(0.742);
+	// Modify statistics display https://root.cern.ch/doc/master/classTPaveStats.html
+	stats->SetOptStat(10);
+	pad->Modified();
+	pad->Update();
+}
+
+void GraphicsUtils::alignStats(TH1* hist, TVirtualPad* pad){
+	pad->Modified();
+	pad->Update();
+	TPaveStats *stats = (TPaveStats*) hist->FindObject("stats");
+	Double_t statsWidth = stats->GetX2NDC() - stats->GetX1NDC();
+	Double_t statsHeight = stats->GetY2NDC() - stats->GetY1NDC();
+	// Move stats horizontally
 	stats->SetX2NDC(0.9);
+	stats->SetX1NDC(stats->GetX2NDC() - statsWidth);
+	// Move stats vertically
 	stats->SetY2NDC(0.9);
-//	stats->SetOptStat(11);
+	stats->SetY1NDC(stats->GetY2NDC() - statsHeight);
+	// Display only histogram entries
+	pad->Modified();
+	pad->Update();
+}
+
+void GraphicsUtils::showFitParametersInStats(TH1* hist, TVirtualPad* pad){
+	pad->Modified();
+	pad->Update();
+	TPaveStats *stats = (TPaveStats*) hist->FindObject("stats");
+	stats->SetOptFit(1011);
 	pad->Modified();
 	pad->Update();
 }

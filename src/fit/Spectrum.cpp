@@ -6,14 +6,14 @@
  */
 
 #include "Spectrum.h"
-
+#include "../model/Constants.h"
 #include <TMath.h>
 
 Spectrum::Spectrum(Int_t nMaxVal=100) : nMax(nMaxVal), pi(TMath::Pi()), e(TMath::E()) {
 	// Initialize parameters as RooRealVars even though we're not using RooFit
 	// Convenient because RooRealVar has name, value and limits
 	// Parameter values taken from Fig.2, https://doi.org/10.1016/0168-9002(94)90183-X
-	RooRealVar* Q0 = new RooRealVar("Q0", "pedestal", 23.26, 0, 2000, "e");
+	RooRealVar* Q0 = new RooRealVar("Q0", "pedestal", 23.26, 0, Constants::CH_MAX, "e");
 	RooRealVar* s0 = new RooRealVar("s0", "standard deviation of the type I background process", 0.192, 0, 1, "");
 	RooRealVar* Q1 = new RooRealVar("Q1", "average charge at the PM output", 35.04, 0, 500, "e");
 	RooRealVar* s1 = new RooRealVar("s1", "corresponding standard deviation of the charge distribution", 11.73, 0, 100, "");

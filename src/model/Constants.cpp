@@ -49,7 +49,7 @@ const Int_t Constants::TILE_MAX = 146;
 
 const Int_t Constants::CH_BINS = 21000;
 const Int_t Constants::CH_MIN = -1000;
-const Int_t Constants::CH_MAX = 20000;
+const Int_t Constants::CH_MAX = 5000;
 
 const Int_t Constants::AMP_BINS = 4096;
 const Int_t Constants::AMP_MIN = 0;

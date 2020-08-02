@@ -25,6 +25,10 @@ int run(const char* fileName) {
 		TreeHelper::getInstance()->plotTree();
 	}
 
+	// Temporary plor tree profiles for ch_! and ch_2
+	// Need to study the region between the pedestal and first peak
+	TreeHelper::getInstance()->plotTreeProfiles();
+
 	// Prepare histograms for the PMT projection spectra
 	TString pmt1HistTitle = TString::Format("PMT1 profile at tilel=%d", Constants::getInstance()->parameters.tileProfile);
 	TH1* pmt1Hist = new TH1F("pmt1Hist", pmt1HistTitle, 2100, -1000, 20000);
@@ -45,11 +49,12 @@ int run(const char* fileName) {
 	TVirtualPad* pmtsCanvasPad1 = pmtsCanvas->cd(1);
 	pmtsCanvasPad1->SetLogy();
 	pmt1Hist->Draw();
-	GraphicsUtils::styleLegend(pmt1Hist, pmtsCanvasPad1);
+	GraphicsUtils::alignStats(pmt1Hist, pmtsCanvasPad1);
 	TVirtualPad* pmtsCanvasPad2 = pmtsCanvas->cd(2);
 	pmtsCanvasPad2->SetLogy();
 	pmt2Hist->Draw();
-	GraphicsUtils::styleLegend(pmt2Hist, pmtsCanvasPad2);
+//	GraphicsUtils::setMyStatsDisplay(pmt2Hist, pmtsCanvasPad2);
+	GraphicsUtils::alignStats(pmt2Hist, pmtsCanvasPad2);
 
 	// Save canvas with PMT profiles to file
 	TString pngFilePath = TString(pmtsCanvas->GetName()) + ".png";
@@ -60,6 +65,7 @@ int run(const char* fileName) {
 	TCanvas* fitCanvas = new TCanvas("fitCanvas", "fitCanvas", 1024, 512);
 	fitCanvas->SetLogy();
 	pmt1Hist->Fit(fitFunction->GetName());
+	GraphicsUtils::showFitParametersInStats(pmt1Hist, fitCanvas);
 	pmt1Hist->Draw();
 
 	return 0;

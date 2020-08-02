@@ -56,7 +56,7 @@ TF1* FitUtils::getRealFitFunction(TH1* hist){
 	// Instantiate TF1 from a member function of a general C++ class
 	// https://root.cern.ch/doc/master/classTF1.html#F6
 	Spectrum* spectrum = new Spectrum(20);
-	TF1* realFunc = new TF1("realFunc", spectrum, &Spectrum::real, xMin, xMax, Spectrum::parameters->getSize(), "Spectrum", "ideal");
+	TF1* realFunc = new TF1("realFunc", spectrum, &Spectrum::real, xMin, 2000, Spectrum::parameters->getSize(), "Spectrum", "ideal");
 
 	// Iterate parameters, set their names, starting values and limits
 	TIterator* it = Spectrum::parameters->createIterator();

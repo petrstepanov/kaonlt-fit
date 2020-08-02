@@ -18,6 +18,7 @@ public:
 	virtual ~TreeHelper();
 
 	int init(const char*);
+	void plotTreeProfiles();
 	void plotTree();
 	void fillPmtHists(TH1*, TH1*);
 
