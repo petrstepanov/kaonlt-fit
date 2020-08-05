@@ -8,6 +8,10 @@
 #include <TH1.h>
 #include <TObjString.h>
 
+#include <Math/Factory.h>
+#include <Math/Minimizer.h>
+#include <Math/MinimizerOptions.h>
+
 #include "model/Constants.h"
 #include "utils/FitUtils.h"
 #include "utils/GraphicsUtils.h"
@@ -78,10 +82,23 @@ int test(){
 	TH1* testHist = TestSpectrum::getHistogram();
 	TCanvas* testCanvas = new TCanvas("testCanvas", "testCanvas", 640, 512);
 	TF1* fitFunction = FitUtils::getRealFitFunction(testHist);
-//	testHist->Fit(fitFunction->GetName());
-//	GraphicsUtils::showFitParametersInStats(testHist, testCanvas);
-	testHist->Draw();
-	fitFunction->Draw("SAME");
+
+	// Tutorial: /fit/NumericalMinimization.C
+//	const char* minName = "Minuit2";
+//	const char* algoName = "";
+//	ROOT::Math::Minimizer* minimizer = ROOT::Math::Factory::CreateMinimizer(minName, algoName);
+//
+//	minimizer->SetMaxFunctionCalls(1000000); // for Minuit/Minuit2
+//	minimizer->SetMaxIterations(10000);  // for GSL
+//	minimizer->SetTolerance(0.001);
+//	minimizer->SetPrintLevel(1);
+
+//	ROOT::Math::MinimizerOptions::SetDefaultStrategy(0);
+
+	testHist->Fit(fitFunction->GetName(), "VM");
+	GraphicsUtils::showFitParametersInStats(testHist, testCanvas);
+//	testHist->Draw();
+//	fitFunction->Draw("SAME");
 	GraphicsUtils::alignStats(testHist, testCanvas);
 	return 0;
 }

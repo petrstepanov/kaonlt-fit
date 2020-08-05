@@ -10,6 +10,7 @@
 #include <RooRealVar.h>
 #include "FitUtils.h"
 #include "../fit/Spectrum.h"
+#include "../model/Constants.h"
 
 FitUtils::FitUtils() {
 	// TODO Auto-generated constructor stub
@@ -23,9 +24,9 @@ FitUtils::~FitUtils() {
 TF1* FitUtils::getConvFitFunction(Double_t xMin, Double_t xMax){
 	// Instantiate TF1 from a member function of a general C++ class
 	// https://root.cern.ch/doc/master/classTF1.html#F6
-	Spectrum* spectrum = new Spectrum(10);
-	TF1* idealFunc = new TF1("idealFunc", spectrum, &Spectrum::ideal, xMin, xMax, 3, "Spectrum", "ideal");
-	TF1* bgFunc = new TF1("bgFunc", spectrum, &Spectrum::background, xMin, xMax, 3, "Spectrum", "background");
+	Spectrum* spectrum = new Spectrum(10, 10, 10);
+	TF1* idealFunc; // new TF1("idealFunc", spectrum, &Spectrum::ideal, xMin, xMax, 3, "Spectrum", "ideal");
+	TF1* bgFunc; // = new TF1("bgFunc", spectrum, &Spectrum::background, xMin, xMax, 3, "Spectrum", "background");
 
 	TF1Convolution* conv = new TF1Convolution("idealFunc", "bgFunc", xMin, xMax);
 	conv->SetNofPointsFFT(1024);
@@ -55,7 +56,8 @@ TF1* FitUtils::getRealFitFunction(TH1* hist){
 
 	// Instantiate TF1 from a member function of a general C++ class
 	// https://root.cern.ch/doc/master/classTF1.html#F6
-	Spectrum* spectrum = new Spectrum(hist->Integral(), 100); // 100 sum terms
+	Int_t termsNumber = 20; //Constants::getInstance()->parameters.termsNumber;
+	Spectrum* spectrum = new Spectrum(hist->Integral(), xMin, xMax, termsNumber);
 	TF1* realFunc = new TF1("realFunc", spectrum, &Spectrum::real, xMin, xMax, Spectrum::parameters->getSize(), "Spectrum", "real");
 
 	// Iterate parameters, set their names, starting values and limits
@@ -76,9 +78,9 @@ TF1* FitUtils::getRealFitFunction(TH1* hist){
 			// }
 
 			// Fix w = 0
-			// if (strcmp(parameter->GetName(),"w")==0){
-			// realFunc->FixParameter(i, 0);
-			// }
+//			 if (strcmp(parameter->GetName(),"w")==0){
+//				 realFunc->FixParameter(i, 0.383);
+//			 }
 
 			i++;
 		}

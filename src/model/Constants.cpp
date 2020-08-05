@@ -84,6 +84,10 @@ void Constants::parseParameters(int argc, char* argv[]){
 			// Tile value for the histogram projection
 			parameters.tileProfile = atoi(pair.second);
 		}
+//		else if (pair.first ==  "terms-number"){
+//			// Number of terms in the fitting function
+//			parameters.termsNumber = atoi(pair.second);
+//		}
 		else if (pair.first ==  "file-name"){
 			// Add filename to the list of files
 			TObjString* fileName = new TObjString(pair.second);
