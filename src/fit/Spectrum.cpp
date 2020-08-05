@@ -9,7 +9,8 @@
 #include "../model/Constants.h"
 #include <TMath.h>
 
-Spectrum::Spectrum(Int_t nMaxVal=100) : nMax(nMaxVal), pi(TMath::Pi()), e(TMath::E()) {
+Spectrum::Spectrum(Double_t histIntegralVal, Int_t nMaxVal) :
+	nMax(nMaxVal), histIntegral(histIntegralVal), pi(TMath::Pi()), e(TMath::E()) {
 	// Initialize parameters as RooRealVars even though we're not using RooFit
 	// Convenient because RooRealVar has name, value and limits
 	// Parameter values taken from Fig.2, https://doi.org/10.1016/0168-9002(94)90183-X
@@ -69,6 +70,32 @@ Double_t Spectrum::background(Double_t* _x, Double_t* par) {
 	return bg;
 }
 
+// Alias functions for the Mathematica cform[%] command
+Double_t Sqrt(Double_t x){
+	return sqrt(x);
+}
+
+Double_t Power(Double_t x, Double_t y){
+	return pow(x,y);
+}
+
+Double_t Factorial(Int_t n){
+	return TMath::Factorial(n);
+}
+
+Int_t UnitStep(Double_t x){
+	return (x<0)?0:1;
+}
+
+Double_t Erf(Double_t x){
+	return TMath::Erf(x);
+}
+
+Double_t E = TMath::E();
+
+// TH1::Fit - fitting function should be normalized
+// https://root-forum.cern.ch/t/root-fit-unbindata-example-is-not-working/28462
+
 Double_t Spectrum::real(Double_t* _x, Double_t* par) {
 	Double_t x = _x[0];
 
@@ -87,6 +114,7 @@ Double_t Spectrum::real(Double_t* _x, Double_t* par) {
 	// Constants
 	Double_t e = TMath::E();
 	Double_t pi = TMath::Pi();
+	Double_t Pi = TMath::Pi();
 
 	// Helper variables
 	Double_t theta = (x < 0)? 0 : 1;
@@ -101,13 +129,35 @@ Double_t Spectrum::real(Double_t* _x, Double_t* par) {
 
 	// Other terms
 	for (Int_t n = 1; n <= nMax; n++){
-		Double_t frac1 = pow(mu, n)*exp(-mu)/TMath::Factorial(n);
-		Double_t frac2 = 1/s1/sqrt(2*pi*n);
-		Double_t frac3 = exp(-pow(x-Q0-Qsh-n*Q1,2)/(2*n*s1*s1));
-		sum += frac1*frac2*frac3;
+		// Double_t frac1 = pow(mu, n)*exp(-mu)/TMath::Factorial(n);
+		// Double_t frac2 = 1/s1/sqrt(2*pi*n);
+		// Double_t frac3 = exp(-pow(x-Q0-Qsh-n*Q1,2)/(2*n*s1*s1));
+		// sum += frac1*frac2*frac3;
+		sum += // begin mathematica code from "/mathematica/term2.nb"
+				Power(mu,n)/(Power(e,mu)*Power(E,
+				      Power(-Q0 - n*Q1 - w/a + x,2)/(2.*n*Power(s1,2)))*Sqrt(n)*
+				     Sqrt(2*Pi)*s1*Factorial(n))
+		; // end mathematica code
 	}
 
-	// std::cout << x << "\t" << sum << std::endl;
-	return sum;
+	// Calculate integral
+	Double_t integral = 0;
+
+	// First term
+	integral += // begin mathematica code from "/mathematica/term1.nb"
+			(((-1 + w)*Erf((Q0 - x)/(Sqrt(2)*s0)))/2. -
+			     (Power(E,a*(Q0 - x))*w*(1 + Power(E,a*x)*(-1 + a*Q0) +
+			          a*(-Q0 + x))*UnitStep(x))/a)/Power(E,mu)
+	; // end mathematica code
+
+	// Other terms
+	for (Int_t n = 1; n <= nMax; n++){
+		integral += // begin mathematica code from "/mathematica/term2.nb"
+			-(Power(mu,n)*Erf((w + a*(Q0 + n*Q1 - x))/(Sqrt(2)*a*Sqrt(n)*s1)))/
+				   (2.*Power(e,mu)*Factorial(n))
+		; // end mathematica code
+	}
+
+	return sum*histIntegral;
 }
 

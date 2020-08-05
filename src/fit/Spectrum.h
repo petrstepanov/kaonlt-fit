@@ -13,17 +13,19 @@
 
 class Spectrum {
 public:
-	Spectrum(Int_t);
+	Spectrum(Double_t histIntegralVal, Int_t nMaxVal=100);
 	virtual ~Spectrum();
 
 	Double_t ideal(Double_t*, Double_t*);
 	Double_t background(Double_t*, Double_t*);
+
 	Double_t real(Double_t*, Double_t*);
 
 	static RooArgList* parameters;
 
 private:
 	Int_t nMax;
+	Double_t histIntegral;
 	Double_t pi;
 	Double_t e;
 };

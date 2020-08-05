@@ -55,8 +55,8 @@ TF1* FitUtils::getRealFitFunction(TH1* hist){
 
 	// Instantiate TF1 from a member function of a general C++ class
 	// https://root.cern.ch/doc/master/classTF1.html#F6
-	Spectrum* spectrum = new Spectrum(20);
-	TF1* realFunc = new TF1("realFunc", spectrum, &Spectrum::real, xMin, 2000, Spectrum::parameters->getSize(), "Spectrum", "ideal");
+	Spectrum* spectrum = new Spectrum(hist->Integral(), 100); // 100 sum terms
+	TF1* realFunc = new TF1("realFunc", spectrum, &Spectrum::real, xMin, xMax, Spectrum::parameters->getSize(), "Spectrum", "real");
 
 	// Iterate parameters, set their names, starting values and limits
 	TIterator* it = Spectrum::parameters->createIterator();
@@ -67,7 +67,7 @@ TF1* FitUtils::getRealFitFunction(TH1* hist){
 		if(parameter){
 			realFunc->SetParName(i, parameter->GetName());
 			realFunc->SetParameter(i, parameter->getVal());
-			// realFunc->SetParLimits(i, parameter->getMin(), parameter->getMax());
+			realFunc->SetParLimits(i, parameter->getMin(), parameter->getMax());
 
 			// Fix Pedestal
 			// if (strcmp(parameter->GetName(),"Q0")==0){

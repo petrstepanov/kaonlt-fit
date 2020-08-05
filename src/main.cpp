@@ -12,6 +12,7 @@
 #include "utils/FitUtils.h"
 #include "utils/GraphicsUtils.h"
 #include "utils/TreeUtils.h"
+#include "utils/TestSpectrum.h"
 #include "helper/TreeHelper.h"
 
 int run(const char* fileName) {
@@ -27,7 +28,7 @@ int run(const char* fileName) {
 
 	// Temporary plot tree profiles for ch_! and ch_2
 	// Need to study the region between the pedestal and first peak
-	TreeHelper::getInstance()->plotTreeProfiles();
+	// TreeHelper::getInstance()->plotTreeProfiles();
 
 	// Prepare histograms for the PMT projection spectra
 	TString pmt1HistTitle = TString::Format("PMT1 profile at tilel=%d", Constants::getInstance()->parameters.tileProfile);
@@ -73,6 +74,18 @@ int run(const char* fileName) {
 	return 0;
 }
 
+int test(){
+	TH1* testHist = TestSpectrum::getHistogram();
+	TCanvas* testCanvas = new TCanvas("testCanvas", "testCanvas", 640, 512);
+	TF1* fitFunction = FitUtils::getRealFitFunction(testHist);
+//	testHist->Fit(fitFunction->GetName());
+//	GraphicsUtils::showFitParametersInStats(testHist, testCanvas);
+	testHist->Draw();
+	fitFunction->Draw("SAME");
+	GraphicsUtils::alignStats(testHist, testCanvas);
+	return 0;
+}
+
 int main(int argc, char* argv[]) {
 	// Create ROOT application
 	// https://github.com/root-project/root/blob/master/tutorials/gui/mditest.C#L409
@@ -90,12 +103,15 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
+	// Test fitting function on the test histigram
+	test();
+
 	// Iterate through input files and run analysis
-	for (TObject* object : *(constants->parameters.inputFiles)) {
-		if (TObjString* objString = dynamic_cast<TObjString*>(object)){
-			run(objString->GetString());
-		}
-	}
+//	for (TObject* object : *(constants->parameters.inputFiles)) {
+//		if (TObjString* objString = dynamic_cast<TObjString*>(object)){
+//			run(objString->GetString());
+//		}
+//	}
 
 	app->Run();
 	return 0;
