@@ -20,6 +20,7 @@ public:
 	FuncSReal(TH1* hist, Int_t nMaxVal=100);
 	virtual ~FuncSReal();
 
+	Double_t func(Double_t*, Double_t*);
 	TF1* getFitFunction();
 
 private:
@@ -27,10 +28,8 @@ private:
 	Int_t nMax;
 	std::vector<TF1*> functionTerms;    // Terms of the Ideal FuncSReal function (n=1..nMax)
 
-	static RooArgList* parameters;
+	RooArgList* parameters;
 	TF1* fitFunction;
-
-	Double_t func(Double_t*, Double_t*);
 };
 
 #endif /* SRC_FIT_FUNCSREAL_H_ */

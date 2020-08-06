@@ -10,8 +10,6 @@
 #include <TF1Convolution.h>
 #include <TMath.h>
 #include "FuncB.h"
-#include "FuncB.h"
-#include "FuncB.h"
 #include "FuncSIdealN.h"
 #include "FuncSReal.h"
 #include "FuncTerm0.h"
@@ -49,7 +47,7 @@ FuncSReal::FuncSReal(TH1* h, Int_t nMaxVal) : hist(h), nMax(nMaxVal) {
 	// Instantiate terms of the real FuncSReal
 	// Zero term has an uncertainty. Its approximate value is taken from (10)
 	FuncTerm0* funcTerm0 = new FuncTerm0();
-	TF1* term0 = new TF1("term0", this, &FuncTerm0::func, xMin, xMax, nPar, "FuncTerm0", "func");
+	TF1* term0 = new TF1("term0", funcTerm0, &FuncTerm0::func, xMin, xMax, nPar, "FuncTerm0", "func");
 	functionTerms.push_back(term0);
 
 	// Terms 1..N are background function covoluted wit the Ideal FuncSReal function
@@ -98,7 +96,10 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 	Double_t integral = 0;
 	Int_t xMin = hist->GetXaxis()->GetXmin();
 	Int_t xMax = hist->GetXaxis()->GetXmax();
-	for (TF1* func : functionTerms) integral += func->Integral(xMin, xMax, 1);
+	for (TF1* func : functionTerms){
+		func->SetParameters(par);
+		integral += func->Integral(xMin, xMax, 1);
+	}
 
 	// Return normalized function value
 	return sum/integral*(hist->Integral());
