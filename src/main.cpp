@@ -13,11 +13,11 @@
 #include <Math/MinimizerOptions.h>
 
 #include "model/Constants.h"
-#include "utils/FitUtils.h"
 #include "utils/GraphicsUtils.h"
 #include "utils/TreeUtils.h"
 #include "utils/TestSpectrum.h"
 #include "helper/TreeHelper.h"
+#include "fit/FuncSReal.h"
 
 int run(const char* fileName) {
 	// Instantiate the Tree and read it from the input file
@@ -67,10 +67,11 @@ int run(const char* fileName) {
 	pmtsCanvas->SaveAs(pngFilePath);
 
 	// Perform fitting (just one hist for now)
-	TF1* fitFunction = FitUtils::getRealFitFunction(pmt1Hist);
+	FuncSReal* funcSReal = new FuncSReal(pmt1Hist);
+	TF1* func = funcSReal->getFitFunction();
 	TCanvas* fitCanvas = new TCanvas("fitCanvas", "fitCanvas", 1024, 512);
 	fitCanvas->SetLogy();
-	pmt1Hist->Fit(fitFunction->GetName());
+	pmt1Hist->Fit(func);
 	GraphicsUtils::showFitParametersInStats(pmt1Hist, fitCanvas);
 	pmt1Hist->Draw();
 	GraphicsUtils::alignStats(pmt1Hist, fitCanvas);
@@ -81,7 +82,8 @@ int run(const char* fileName) {
 int test(){
 	TH1* testHist = TestSpectrum::getHistogram();
 	TCanvas* testCanvas = new TCanvas("testCanvas", "testCanvas", 640, 512);
-	TF1* fitFunction = FitUtils::getRealFitFunction(testHist);
+	FuncSReal* funcSReal = new FuncSReal(testHist, 20);
+	TF1* func = funcSReal->getFitFunction();
 
 	// Tutorial: /fit/NumericalMinimization.C
 //	const char* minName = "Minuit2";
@@ -95,7 +97,7 @@ int test(){
 
 //	ROOT::Math::MinimizerOptions::SetDefaultStrategy(0);
 
-	testHist->Fit(fitFunction->GetName(), "VM");
+	testHist->Fit(func, "VM");
 	GraphicsUtils::showFitParametersInStats(testHist, testCanvas);
 //	testHist->Draw();
 //	fitFunction->Draw("SAME");

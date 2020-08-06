@@ -5,8 +5,10 @@
 #pragma link C++ nestedclasses;
 
 // For signals and slots
-#pragma link C++ class Model;
-#pragma link C++ class Database;
-#pragma link C++ class Spectrum;
+#pragma link C++ class AbsFunc;
+#pragma link C++ class FuncB;
+#pragma link C++ class FuncSIdealN;
+#pragma link C++ class FuncSReal;
+#pragma link C++ class FuncTerm0;
 
 #endif
