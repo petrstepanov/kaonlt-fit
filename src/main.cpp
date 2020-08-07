@@ -16,6 +16,7 @@
 #include "utils/GraphicsUtils.h"
 #include "utils/TreeUtils.h"
 #include "utils/TestSpectrum.h"
+#include "utils/FitUtils.h"
 #include "helper/TreeHelper.h"
 #include "fit/FuncSReal.h"
 #include "fit/FuncSRealFFT.h"
@@ -68,14 +69,14 @@ int run(const char* fileName) {
 	pmtsCanvas->SaveAs(pngFilePath);
 
 	// Perform fitting (just one hist for now)
-	FuncSReal* funcSReal = new FuncSReal(pmt1Hist);
-	TF1* func = funcSReal->getFitFunction();
-	TCanvas* fitCanvas = new TCanvas("fitCanvas", "fitCanvas", 1024, 512);
-	fitCanvas->SetLogy();
-	pmt1Hist->Fit(func);
-	GraphicsUtils::showFitParametersInStats(pmt1Hist, fitCanvas);
-	pmt1Hist->Draw();
-	GraphicsUtils::alignStats(pmt1Hist, fitCanvas);
+	// FuncSReal* funcSReal = new FuncSReal(pmt1Hist);
+	// TF1* func = funcSReal->getFitFunction();
+	// TCanvas* fitCanvas = new TCanvas("fitCanvas", "fitCanvas", 1024, 512);
+	// fitCanvas->SetLogy();
+	// pmt1Hist->Fit(func);
+	// GraphicsUtils::showFitParametersInStats(pmt1Hist, fitCanvas);
+	// pmt1Hist->Draw();
+	// GraphicsUtils::alignStats(pmt1Hist, fitCanvas);
 
 	return 0;
 }
@@ -85,8 +86,7 @@ int test(){
 	TCanvas* testCanvas = new TCanvas("testCanvas", "testCanvas", 640, 512);
 //	FuncSReal* funcSReal = new FuncSReal(testHist, 20);
 //	TF1* func = funcSReal->getFitFunction();
-	FuncSRealFFT* funcSReal = new FuncSRealFFT(testHist, 20);
-	TF1* func = funcSReal->getFitFunction();
+	TF1* func = FitUtils::getFuncSReal(testHist, 20);
 
 	// Tutorial: /fit/NumericalMinimization.C
 //	const char* minName = "Minuit2";
@@ -104,7 +104,7 @@ int test(){
 //	GraphicsUtils::showFitParametersInStats(testHist, testCanvas);
 	testHist->Draw();
 	func->Draw("SAME");
-	GraphicsUtils::alignStats(testHist, testCanvas);
+	// GraphicsUtils::alignStats(testHist, testCanvas);
 	return 0;
 }
 

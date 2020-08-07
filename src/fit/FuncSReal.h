@@ -18,20 +18,16 @@
 
 class FuncSReal {
 public:
-	FuncSReal(TH1* hist, Int_t nMaxVal=100);
+	FuncSReal(TH1* hist, Int_t nMaxVal=10);
 	virtual ~FuncSReal();
 
 	Double_t func(Double_t*, Double_t*);
-	TF1* getFitFunction();
 
 private:
 	TH1* hist;
 	Int_t nMax;
 
 	std::vector<TF1*> terms;    // Terms of the Ideal FuncSReal function (n=1..nMax)
-
-	TF1* fitFunction;
-	RooArgList* parameters;
 };
 
 #endif /* SRC_FIT_FUNCSREAL_H_ */
