@@ -9,45 +9,15 @@
 #include <TF1Convolution.h>
 #include <RooRealVar.h>
 #include "FitUtils.h"
-#include "../fit/Spectrum.h"
+
+#include "../fit/SpectrumSimplified.h"
+#include "../fit/SpectrumReal.h"
 #include "../model/Constants.h"
 
 FitUtils::FitUtils() {
-	// TODO Auto-generated constructor stub
-
 }
 
 FitUtils::~FitUtils() {
-	// TODO Auto-generated destructor stub
-}
-
-TF1* FitUtils::getConvFitFunction(Double_t xMin, Double_t xMax){
-	// Instantiate TF1 from a member function of a general C++ class
-	// https://root.cern.ch/doc/master/classTF1.html#F6
-	Spectrum* spectrum = new Spectrum(10, 10, 10);
-	TF1* idealFunc; // new TF1("idealFunc", spectrum, &Spectrum::ideal, xMin, xMax, 3, "Spectrum", "ideal");
-	TF1* bgFunc; // = new TF1("bgFunc", spectrum, &Spectrum::background, xMin, xMax, 3, "Spectrum", "background");
-
-	TF1Convolution* conv = new TF1Convolution("idealFunc", "bgFunc", xMin, xMax);
-	conv->SetNofPointsFFT(1024);
-
-	TF1 *convFunc = new TF1("convFunc",*conv, xMin, xMax, conv->GetNpar());
-	{
-		// Iterate parameters, set their names, starting values and limits
-		TIterator* it = Spectrum::parameters->createIterator();
-		TObject* tempObj = 0;
-		Int_t i = 0;
-		while((tempObj=it->Next())){
-			RooRealVar* parameter = dynamic_cast<RooRealVar*>(tempObj);
-			if(parameter){
-				convFunc->SetParName(i, parameter->GetName());
-				convFunc->SetParameter(i, parameter->getVal());
-				convFunc->SetParLimits(i, parameter->getMin(), parameter->getMax());
-				i++;
-			}
-		}
-	}
-	return convFunc;
 }
 
 TF1* FitUtils::getRealFitFunction(TH1* hist){
@@ -57,11 +27,11 @@ TF1* FitUtils::getRealFitFunction(TH1* hist){
 	// Instantiate TF1 from a member function of a general C++ class
 	// https://root.cern.ch/doc/master/classTF1.html#F6
 	Int_t termsNumber = 20; //Constants::getInstance()->parameters.termsNumber;
-	Spectrum* spectrum = new Spectrum(hist->Integral(), xMin, xMax, termsNumber);
-	TF1* realFunc = new TF1("realFunc", spectrum, &Spectrum::real, xMin, xMax, Spectrum::parameters->getSize(), "Spectrum", "real");
+	SpectrumSimplified* spectrum = new SpectrumSimplified(hist->Integral(), xMin, xMax, termsNumber);
+	TF1* realFunc = new TF1("realFunc", spectrum, &SpectrumSimplified::func, xMin, xMax, SpectrumSimplified::parameters->getSize(), "Spectrum", "func");
 
 	// Iterate parameters, set their names, starting values and limits
-	TIterator* it = Spectrum::parameters->createIterator();
+	TIterator* it = SpectrumSimplified::parameters->createIterator();
 	TObject* tempObj = 0;
 	Int_t i = 0;
 	while((tempObj=it->Next())){
@@ -78,9 +48,9 @@ TF1* FitUtils::getRealFitFunction(TH1* hist){
 			// }
 
 			// Fix w = 0
-//			 if (strcmp(parameter->GetName(),"w")==0){
-//				 realFunc->FixParameter(i, 0.383);
-//			 }
+			// if (strcmp(parameter->GetName(),"w")==0){
+			//  realFunc->FixParameter(i, 0.383);
+			// }
 
 			i++;
 		}
@@ -88,7 +58,7 @@ TF1* FitUtils::getRealFitFunction(TH1* hist){
 
 
 	// Set the number of points used to draw the fit function
-	realFunc->SetNpx(10000);
+	realFunc->SetNpx(1000);
 
 	return realFunc;
 }

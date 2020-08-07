@@ -1,15 +1,17 @@
 /*
- * Spectrum.cpp
+ * SpectrumSimplified.cpp
  *
  *  Created on: Aug 2, 2020
  *      Author: petrstepanov
  */
 
-#include "Spectrum.h"
+#include "SpectrumSimplified.h"
+
 #include "../model/Constants.h"
+#include "../utils/MathematicaAliases.h"
 #include <TMath.h>
 
-Spectrum::Spectrum(Double_t histIntegralVal, Int_t xMinVal, Int_t xMaxVal, Int_t nMaxVal) :
+SpectrumSimplified::SpectrumSimplified(Double_t histIntegralVal, Int_t xMinVal, Int_t xMaxVal, Int_t nMaxVal) :
 	nMax(nMaxVal), xMin(xMinVal), xMax(xMaxVal), histIntegral(histIntegralVal), pi(TMath::Pi()), e(TMath::E()) {
 	// Initialize parameters as RooRealVars even though we're not using RooFit
 	// Convenient because RooRealVar has name, value and limits
@@ -30,75 +32,15 @@ Spectrum::Spectrum(Double_t histIntegralVal, Int_t xMinVal, Int_t xMaxVal, Int_t
 	parameters->add(*mu);
 }
 
-Spectrum::~Spectrum() {
+SpectrumSimplified::~SpectrumSimplified() {
 }
 
-RooArgList* Spectrum::parameters = new RooArgList();
-
-//Double_t Spectrum::ideal(Double_t* _x, Double_t* par) {
-//	Double_t x = _x[0];
-//
-//	// Parameters:
-//	Double_t mu = par[0]; // number of photo-electrons
-//	Double_t Q1 = par[1]; // average charge at the PM output
-//	Double_t s1 = par[2]; // corresponding standard deviation of the charge distribution
-//
-//	Double_t sum = 0;
-//
-//	for (Int_t n = 0; n <= nMax; n++){
-//		Double_t frac1 = pow(mu, 0.)*pow(e,-mu)/TMath::Factorial(n);
-//		Double_t frac2 = 1/s1/sqrt(2*pi*n);
-//		Double_t frac3 = exp(-pow(x-n*Q1,2)/(2*n*s1*s1));
-//		sum += frac1*frac2*frac3;
-//	}
-//	return sum;
-//}
-//
-//Double_t Spectrum::background(Double_t* _x, Double_t* par) {
-//	Double_t x = _x[0];
-//
-//	// Parameters:
-//	Double_t w = par[0];  // probability that signal is accompanied by type II background process
-//	Double_t s0 = par[1]; // standard deviation of the type I background process
-//	Double_t a = par[2];  // coefficient of the exponential decrease of the type II background
-//
-//
-//	Double_t bg = (1-w)/s0/sqrt(2*pi)*exp(-x*x/(2*s0*s0));
-//	if (x >= 0){
-//		bg += w*a*exp(-a*x);
-//	}
-//	return bg;
-//}
-
-// Alias functions for the Mathematica cform[%] command
-Double_t Sqrt(Double_t x){
-	return sqrt(x);
-}
-
-Double_t Power(Double_t x, Double_t y){
-	return pow(x,y);
-}
-
-Double_t Factorial(Int_t n){
-	return TMath::Factorial(n);
-}
-
-Int_t UnitStep(Double_t x){
-	return (x<0)?0:1;
-}
-
-Double_t Erf(Double_t x){
-	return TMath::Erf(x);
-}
-
-// Constants
-Double_t E = TMath::E();
-Double_t Pi = TMath::Pi();
+RooArgList* SpectrumSimplified::parameters = new RooArgList();
 
 // TH1::Fit - fitting function should be normalized
 // https://root-forum.cern.ch/t/root-fit-unbindata-example-is-not-working/28462
 
-Double_t Spectrum::realIndefInt(Double_t x, Double_t* par) {
+Double_t SpectrumSimplified::realIndefInt(Double_t x, Double_t* par) {
 
 	// Parameters:
 	Double_t Q0 = par[0];		// average charge at the PM output
@@ -129,11 +71,11 @@ Double_t Spectrum::realIndefInt(Double_t x, Double_t* par) {
 	return integral;
 }
 
-Double_t Spectrum::realDefInt(Double_t* par){
+Double_t SpectrumSimplified::realDefIntNewton(Double_t* par){
 	return realIndefInt(xMax, par) - realIndefInt(xMin, par);
 }
 
-Double_t Spectrum::realDefIntSimple(Double_t* par){
+Double_t SpectrumSimplified::realDefIntSimpson(Double_t* par){
 	// Parameters:
 	Double_t Q0 = par[0];		// average charge at the PM output
 	Double_t s0 = par[1];		// standard deviation of the type I background process
@@ -164,7 +106,7 @@ Double_t Spectrum::realDefIntSimple(Double_t* par){
 	return integral;
 }
 
-Double_t Spectrum::real(Double_t* _x, Double_t* par) {
+Double_t SpectrumSimplified::func(Double_t* _x, Double_t* par) {
 	Double_t x = _x[0];
 
 	// Parameters:
@@ -199,7 +141,7 @@ Double_t Spectrum::real(Double_t* _x, Double_t* par) {
 		; // end mathematica code
 	}
 
-	Double_t defIntegral = realDefIntSimple(par); //realDefInt(par);
+	Double_t defIntegral = realDefIntSimpson(par); //realDefInt(par);
 	return sum/defIntegral*histIntegral;
 }
 
