@@ -15,7 +15,7 @@ public:
 	FitUtils();
 	virtual ~FitUtils();
 
-	static TF1* getFuncSReal(TH1*, Int_t);
+	static TF1* getFuncSReal(TH1*, Int_t, Bool_t isFFT = kFALSE);
 
 private:
 

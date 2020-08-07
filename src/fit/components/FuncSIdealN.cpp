@@ -6,7 +6,7 @@
  */
 
 #include "FuncSIdealN.h"
-#include "../utils/MathematicaAliases.h"
+#include "../../utils/MathematicaAliases.h"
 
 FuncSIdealN::FuncSIdealN(Int_t nVal) : n(nVal) {
 }

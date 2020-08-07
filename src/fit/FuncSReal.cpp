@@ -5,15 +5,14 @@
  *      Author: petrstepanov
  */
 
+#include "FuncSReal.h"
 #include "../model/Constants.h"
 #include "../utils/MathematicaAliases.h"
 #include <TF1Convolution.h>
 #include <TMath.h>
-#include "FuncB.h"
-#include "FuncSIdealN.h"
-#include "FuncSReal.h"
-#include "FuncTerm0.h"
-#include "FuncTermN.h"
+#include "./components/FuncB.h"
+#include "./components/FuncTerm0.h"
+#include "./components/FuncTermN.h"
 
 FuncSReal::FuncSReal(TH1* h, Int_t nMaxVal) : hist(h), nMax(nMaxVal) {
 	// Init TF1 finctions used to cunstruct the final fitting function
@@ -45,6 +44,8 @@ FuncSReal::FuncSReal(TH1* h, Int_t nMaxVal) : hist(h), nMax(nMaxVal) {
 FuncSReal::~FuncSReal() {
 }
 
+// Final fitting function - needs to be normalized
+// Components from ./components do not need to be normalized
 Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 	// Parameters
 	Double_t Q0 = par[0];		// average charge at the PM output

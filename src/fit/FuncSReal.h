@@ -14,7 +14,6 @@
 #include <RooRealVar.h>
 #include <iostream>
 #include <vector>
-#include "FuncTerm0.h"
 
 class FuncSReal {
 public:

@@ -11,7 +11,7 @@
 #include <RtypesCore.h>
 #include "AbsFunc.h"
 
-class FuncSIdealN /*: public AbsFunc*/ {
+class FuncSIdealN : public AbsFunc {
 public:
 	FuncSIdealN(Int_t);
 	virtual ~FuncSIdealN();

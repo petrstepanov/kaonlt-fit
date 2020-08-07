@@ -7,6 +7,7 @@
 
 #include "FitUtils.h"
 #include "../fit/FuncSReal.h"
+#include "../fit/FuncSRealFFT.h"
 #include <RooRealVar.h>
 #include <TF1.h>
 
@@ -16,7 +17,7 @@ FitUtils::FitUtils() {
 FitUtils::~FitUtils() {
 }
 
-TF1* FitUtils::getFuncSReal(TH1* hist, Int_t nMax){
+TF1* FitUtils::getFuncSReal(TH1* hist, Int_t nMax, Bool_t isFFT){
 	// Initialize parameters as RooRealVars even though we're not using RooFit
 	// Convenient because RooRealVar has name, value and limits
 	// Parameter values taken from Fig.2, https://doi.org/10.1016/0168-9002(94)90183-X
@@ -42,13 +43,21 @@ TF1* FitUtils::getFuncSReal(TH1* hist, Int_t nMax){
 	// Instantiate fitting function
 	Double_t xMin = hist->GetXaxis()->GetXmin();
 	Double_t xMax = hist->GetXaxis()->GetXmax();
-	FuncSReal* funcSReal = new FuncSReal(hist, 20);
 
 	// Experiencing memory leaks if define fitFunction inside FuncSReal like:
 	// fitFunction = new TF1("fitFunction", this, &FuncSRealOld::func, xMin, xMax, nPar, "FuncSRealOld", "func");
 
 	// Therefore we instantiate it in the FitUtils
-	TF1* fitFunction = new TF1("fitFunction", funcSReal, &FuncSReal::func, xMin, xMax, parameters->size());
+	TF1* fitFunction;
+
+	if(isFFT){
+		FuncSRealFFT* funcSReal = new FuncSRealFFT(hist, 20);
+		fitFunction = new TF1("fitFunction", funcSReal, &FuncSRealFFT::func, xMin, xMax, parameters->size());
+
+	} else {
+		FuncSReal* funcSReal = new FuncSReal(hist, 20);
+		fitFunction = new TF1("fitFunction", funcSReal, &FuncSReal::func, xMin, xMax, parameters->size());
+	}
 
 	// Set function starting parameter values, names and limits
 	TIterator* it = parameters->createIterator();
@@ -64,6 +73,6 @@ TF1* FitUtils::getFuncSReal(TH1* hist, Int_t nMax){
 		}
 	}
 
-	fitFunction->SetNpx(10000);
+	fitFunction->SetNpx(1000);
 	return fitFunction;
 }

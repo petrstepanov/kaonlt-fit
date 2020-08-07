@@ -6,7 +6,7 @@
  */
 
 #include "FuncTermN.h"
-#include "../utils/MathematicaAliases.h"
+#include "../../utils/MathematicaAliases.h"
 
 FuncTermN::FuncTermN(Int_t nVal) : n(nVal) {
 	// TODO Auto-generated constructor stub

@@ -14,7 +14,6 @@
 #include <RooRealVar.h>
 #include <iostream>
 #include <vector>
-#include "FuncTerm0.h"
 
 class FuncSRealFFT {
 public:
@@ -22,7 +21,6 @@ public:
 	virtual ~FuncSRealFFT();
 
 	Double_t func(Double_t*, Double_t*);
-	TF1* getFitFunction();
 
 private:
 	TH1* hist;
@@ -30,9 +28,6 @@ private:
 
 	TF1* term0;
 	std::vector<TF1*> terms;    // Terms of the Ideal FuncSRealFFT function (n=1..nMax)
-
-	RooArgList* parameters;
-	TF1* fitFunction;
 };
 
 #endif /* SRC_FIT_FuncSRealFFT_H_ */
