@@ -100,11 +100,11 @@ int test(){
 
 //	ROOT::Math::MinimizerOptions::SetDefaultStrategy(0);
 
-//	testHist->Fit(func, "VM");
-//	GraphicsUtils::showFitParametersInStats(testHist, testCanvas);
+	testHist->Fit(func, "V");
+	GraphicsUtils::showFitParametersInStats(testHist, testCanvas);
 	testHist->Draw();
-	func->Draw("SAME");
-	// GraphicsUtils::alignStats(testHist, testCanvas);
+//	func->Draw("SAME");
+	GraphicsUtils::alignStats(testHist, testCanvas);
 	return 0;
 }
 
