@@ -10,7 +10,7 @@
 
 #include "AbsFunc.h"
 
-class FuncB: public AbsFunc {
+class FuncB /*: public AbsFunc*/ {
 public:
 	FuncB();
 	virtual ~FuncB();

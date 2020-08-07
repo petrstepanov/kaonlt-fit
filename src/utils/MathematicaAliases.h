@@ -15,6 +15,10 @@ Int_t UnitStep(Double_t x);
 
 Double_t Erf(Double_t x);
 
+Double_t Abs(Double_t x);
+
+Double_t Sign(Double_t x);
+
 // Constants
 extern Double_t E;
 extern Double_t Pi;

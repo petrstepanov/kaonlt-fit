@@ -18,6 +18,7 @@
 #include "utils/TestSpectrum.h"
 #include "helper/TreeHelper.h"
 #include "fit/FuncSReal.h"
+#include "fit/FuncSRealFFT.h"
 
 int run(const char* fileName) {
 	// Instantiate the Tree and read it from the input file
@@ -82,7 +83,9 @@ int run(const char* fileName) {
 int test(){
 	TH1* testHist = TestSpectrum::getHistogram();
 	TCanvas* testCanvas = new TCanvas("testCanvas", "testCanvas", 640, 512);
-	FuncSReal* funcSReal = new FuncSReal(testHist, 20);
+//	FuncSReal* funcSReal = new FuncSReal(testHist, 20);
+//	TF1* func = funcSReal->getFitFunction();
+	FuncSRealFFT* funcSReal = new FuncSRealFFT(testHist, 20);
 	TF1* func = funcSReal->getFitFunction();
 
 	// Tutorial: /fit/NumericalMinimization.C

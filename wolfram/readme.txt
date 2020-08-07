@@ -10,4 +10,4 @@ Attempted to calculate the
 Why use roofit?
 Easier to deal with components
 Automatically calculates integrals for components
-Easier manipulation
+Easier manipulation 

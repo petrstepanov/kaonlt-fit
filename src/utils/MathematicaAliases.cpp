@@ -21,6 +21,14 @@ Double_t Erf(Double_t x){
 	return TMath::Erf(x);
 }
 
+Double_t Abs(Double_t x){
+	return TMath::Abs(x);
+}
+
+Double_t Sign(Double_t x){
+	return x/TMath::Abs(x);
+}
+
 // Constants
 Double_t E = TMath::E();
 Double_t Pi = TMath::Pi();
