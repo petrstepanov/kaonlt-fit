@@ -14,6 +14,7 @@
 #include "./components/FuncTerm0.h"
 #include "./components/FuncTermN.h"
 
+
 FuncSReal::FuncSReal(TH1* h, Int_t nMaxVal) : hist(h), nMax(nMaxVal) {
 	// Init TF1 finctions used to cunstruct the final fitting function
 	Double_t xMin = hist->GetXaxis()->GetXmin();
@@ -33,7 +34,7 @@ FuncSReal::FuncSReal(TH1* h, Int_t nMaxVal) : hist(h), nMax(nMaxVal) {
 	// Terms 1..N are background function covoluted wit the Ideal FuncSReal function
 	FuncB* funcB = new FuncB();
 	TF1* b = new TF1("b", funcB, &FuncB::func, xMin, xMax, nPar, "FuncB", "func");
-	for (UInt_t n=1; n <= nMax; n++){
+	for (UInt_t n=1; n < nMax; n++){
 		FuncTermN* funcTermN = new FuncTermN(n);
 		TString name = TString::Format("term%d", n);
 		TF1* term = new TF1(name.Data(), funcTermN, &FuncTermN::func, xMin, xMax, nPar, "FuncTermN", "func");
@@ -68,7 +69,8 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 	// Create doubled parameters array for convoluted function
 	for (TF1* func : terms){
 		func->SetParameters(par);
-		integral += func->Integral(xMin, xMax, 1);
+		integral += func->Integral(xMin, xMax);
+		// integral += FuncUtils::integralFast(func, par);
 	}
 
 	// Return normalized function value

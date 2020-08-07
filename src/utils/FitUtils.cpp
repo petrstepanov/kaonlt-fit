@@ -11,6 +11,7 @@
 #include <RooRealVar.h>
 #include <TF1.h>
 
+
 FitUtils::FitUtils() {
 }
 
@@ -49,13 +50,12 @@ TF1* FitUtils::getFuncSReal(TH1* hist, Int_t nMax, Bool_t isFFT){
 
 	// Therefore we instantiate it in the FitUtils
 	TF1* fitFunction;
-
 	if(isFFT){
-		FuncSRealFFT* funcSReal = new FuncSRealFFT(hist, 20);
-		fitFunction = new TF1("fitFunction", funcSReal, &FuncSRealFFT::func, xMin, xMax, parameters->size());
+		FuncSRealFFT* funcSRealFFT = new FuncSRealFFT(hist, nMax);
+		fitFunction = new TF1("fitFunction", funcSRealFFT, &FuncSRealFFT::func, xMin, xMax, parameters->size());
 
 	} else {
-		FuncSReal* funcSReal = new FuncSReal(hist, 20);
+		FuncSReal* funcSReal = new FuncSReal(hist, nMax);
 		fitFunction = new TF1("fitFunction", funcSReal, &FuncSReal::func, xMin, xMax, parameters->size());
 	}
 

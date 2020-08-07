@@ -24,7 +24,7 @@ struct Parameters {
 	TString treeName = "tree1;3";
 	Float_t plotTree = kTRUE;
 	Int_t tileProfile = 55;
-//	Int_t termsNumber = 100;
+	Int_t termsNumber = 50;
 	TList* inputFiles = new TList();
 };
 

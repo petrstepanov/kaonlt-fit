@@ -27,12 +27,13 @@ FuncSRealFFT::FuncSRealFFT(TH1* h, Int_t nMaxVal) : hist(h), nMax(nMaxVal) {
 	// Instantiate terms of the real FuncSRealFFT
 	// Zero term has an uncertainty. Its approximate value is taken from (10)
 	FuncTerm0* funcTerm0 = new FuncTerm0();
-	term0 = new TF1("term0", funcTerm0, &FuncTerm0::func, xMin, xMax, nPar, "FuncTerm0", "func");
+	TF1* term0 = new TF1("term0", funcTerm0, &FuncTerm0::func, xMin, xMax, nPar, "FuncTerm0", "func");
+	terms.push_back(term0);
 
 	// Terms 1..N are background function covoluted wit the Ideal FuncSRealFFT function
 	FuncB* funcB = new FuncB();
 	TF1* b = new TF1("b", funcB, &FuncB::func, xMin, xMax, nPar, "FuncB", "func");
-	for (UInt_t n=1; n <= nMaxVal; n++){
+	for (UInt_t n=1; n < nMax; n++){
 		FuncSIdealN* funcSIdealN = new FuncSIdealN(n);
 		TString name = TString::Format("SIdeal%d", n);
 		TF1* SIdealN = new TF1(name.Data(), funcSIdealN, &FuncSIdealN::func, xMin, xMax, nPar, "FuncSIdealN", "func");
@@ -62,20 +63,20 @@ Double_t FuncSRealFFT::func(Double_t* _x, Double_t* par) {
 
 	// Sum terms
 	Double_t sum = 0;
-	sum += term0->EvalPar(_x,par);
-	for (TF1* func : terms) sum += func->EvalPar(_x,parForConvolution);
+	for (int n = 0; n < terms.size(); ++n){
+	    if (n==0) sum += terms[n]->EvalPar(_x, par);
+	    else sum += terms[n]->EvalPar(_x, parForConvolution);
+	}
 
 	// Calculate integral
 	Double_t integral = 0;
 	Int_t xMin = hist->GetXaxis()->GetXmin();
 	Int_t xMax = hist->GetXaxis()->GetXmax();
-
-	term0->SetParameters(par);
-	integral += term0->Integral(xMin, xMax, 1);
-	// Create doubled parameters array for convoluted function
-	for (TF1* func : terms){
-		func->SetParameters(parForConvolution);
-		integral += func->Integral(xMin, xMax, 1);
+	for (int n = 0; n < terms.size(); ++n){
+	    if (n==0) terms[n]->SetParameters(par);
+	    else terms[n]->SetParameters(parForConvolution);
+	     integral += terms[n]->Integral(xMin, xMax);
+	    // integral += FuncUtils::integralFast(terms[n], par);
 	}
 
 	// Return normalized function value

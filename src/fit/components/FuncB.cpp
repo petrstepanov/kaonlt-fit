@@ -28,8 +28,10 @@ Double_t FuncB::func(Double_t* _x, Double_t* par) {
 
 	// Calculate function value
 	Double_t value = // begin mathematica code from "/mathematica/B.nb"
-			(1 - w)/(Power(E,Power(x,2)/(2.*Power(s0,2)))*Sqrt(2*Pi)*s0) +
-			   (a*w*UnitStep(x))/Power(E,a*x)
+//			(1 - w)/(Power(E,Power(x,2)/(2.*Power(s0,2)))*Sqrt(2*Pi)*s0) +
+//			   (a*w*UnitStep(x))/Power(E,a*x)
+			(1 - w)/(Power(E,Power(x-Q0,2)/(2.*Power(s0,2)))*Sqrt(2*Pi)*s0) +
+			   (a*w*UnitStep(x-Q0))/Power(E,a*(x-Q0))
 	; // end mathematica code
 
 	return value;

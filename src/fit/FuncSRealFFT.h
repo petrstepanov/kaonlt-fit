@@ -26,7 +26,6 @@ private:
 	TH1* hist;
 	Int_t nMax;
 
-	TF1* term0;
 	std::vector<TF1*> terms;    // Terms of the Ideal FuncSRealFFT function (n=1..nMax)
 };
 

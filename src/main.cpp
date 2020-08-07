@@ -7,10 +7,12 @@
 #include <TCanvas.h>
 #include <TH1.h>
 #include <TObjString.h>
+#include <TStopwatch.h>
 
 #include <Math/Factory.h>
 #include <Math/Minimizer.h>
 #include <Math/MinimizerOptions.h>
+#include <Math/IntegratorOptions.h>
 
 #include "model/Constants.h"
 #include "utils/GraphicsUtils.h"
@@ -84,9 +86,11 @@ int run(const char* fileName) {
 int test(){
 	TH1* testHist = TestSpectrum::getHistogram();
 	TCanvas* testCanvas = new TCanvas("testCanvas", "testCanvas", 640, 512);
-//	FuncSReal* funcSReal = new FuncSReal(testHist, 20);
-//	TF1* func = funcSReal->getFitFunction();
-	TF1* func = FitUtils::getFuncSReal(testHist, 20);
+	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
+	TF1* func = FitUtils::getFuncSReal(testHist, nTerms, kFALSE);
+
+	// Set default integrator
+	// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("");
 
 	// Tutorial: /fit/NumericalMinimization.C
 //	const char* minName = "Minuit2";
@@ -100,7 +104,11 @@ int test(){
 
 //	ROOT::Math::MinimizerOptions::SetDefaultStrategy(0);
 
+	TStopwatch* timer = new TStopwatch();
+	timer->Start();
 	testHist->Fit(func, "V");
+	printf("Real time = %7.3f s, Cpu Time = %7.3f s\n",timer->RealTime(),timer->CpuTime());
+
 	GraphicsUtils::showFitParametersInStats(testHist, testCanvas);
 	testHist->Draw();
 //	func->Draw("SAME");
