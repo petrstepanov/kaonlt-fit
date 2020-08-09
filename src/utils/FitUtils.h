@@ -18,8 +18,8 @@ public:
 
 	static TF1* getFuncSReal(TH1*, Int_t, Bool_t isFFT = kFALSE);
 	static void doFit(TH1* hist);
+	static void doRooFitConvolution(TH1* hist);
 	static void doRooFit(TH1* hist);
-	static void doRooFit2(TH1* hist);
 
 private:
 	static RooRealVar* Q0;

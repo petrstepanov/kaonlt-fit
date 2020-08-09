@@ -72,7 +72,7 @@ void FitUtils::doFit(TH1* hist){
 }
 
 // Fit not goes, weird function raise to the right
-void FitUtils::doRooFit(TH1* hist){
+void FitUtils::doRooFitConvolution(TH1* hist){
 	// Define channels axis (observable)
 	Double_t xMin = hist->GetXaxis()->GetXmin();
 	Double_t xMax = hist->GetXaxis()->GetXmax();
@@ -206,7 +206,7 @@ void FitUtils::doRooFit(TH1* hist){
 }
 
 // Fit without convolution, with SRealNPdf
-void FitUtils::doRooFit2(TH1* hist){
+void FitUtils::doRooFit(TH1* hist){
 	// Define channels axis (observable)
 	RooRealVar* observable = new RooRealVar("observable", "Channels axis", hist->GetXaxis()->GetXmin(), hist->GetXaxis()->GetXmax(), "ch");
 
@@ -269,7 +269,7 @@ void FitUtils::doRooFit2(TH1* hist){
 
 	// Unbinned likelihood fit
 	RooAbsReal::defaultIntegratorConfig()->getConfigSection("RooIntegrator1D").setRealValue("maxSteps", 30);
-	sRealPdf->fitTo(*data);
+	// sRealPdf->fitTo(*data);
 
 	// Construct and mimimize unbinned likelihood
 	// RooAbsReal *nll = model.createNLL(*data, NumCPU(2));
@@ -303,12 +303,8 @@ void FitUtils::doRooFit2(TH1* hist){
 		// Here we have to normalize non-convoluted material components with respect to the source contribution!
 		while (TObject* tempObject = it->Next()) {
 			RooAbsPdf* component = dynamic_cast<RooAbsPdf*>(tempObject);
-			if (component && (strcmp(component->ClassName(),"Term0Pdf")==0 || strcmp(component->ClassName(),"RooFFTConvPdf")==0)) {
+			if (component && (strcmp(component->ClassName(),"Term0Pdf")==0 || strcmp(component->ClassName(),"SRealNPdf")==0)) {
 				sRealPdf->plotOn(spectrumPlot, RooFit::Components(*component), RooFit::LineStyle(kDashed), RooFit::LineColor(GraphicsUtils::colorSet[i++%GraphicsUtils::colorSet.size()]));
-				// legend->AddEntry(spectrumPlot->findObject(component->GetName()), component->GetTitle(), "l");
-			}
-			if (component && strcmp(component->ClassName(),"BPdf")==0) {
-				sRealPdf->plotOn(spectrumPlot, RooFit::Components(*component), RooFit::LineStyle(kDashed), RooFit::LineColor(kBlack));
 				// legend->AddEntry(spectrumPlot->findObject(component->GetName()), component->GetTitle(), "l");
 			}
 		}
