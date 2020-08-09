@@ -27,7 +27,7 @@ Double_t FuncB::func(Double_t* _x, Double_t* par) {
 	Double_t mu = par[6];		// number of photo-electrons
 
 	// Calculate function value
-	Double_t value = // begin mathematica code from "/mathematica/B.nb"
+	Double_t value = // begin mathematica code from "/mathematica/B-shifted.nb"
 //			(1 - w)/(Power(E,Power(x,2)/(2.*Power(s0,2)))*Sqrt(2*Pi)*s0) +
 //			   (a*w*UnitStep(x))/Power(E,a*x)
 			(1 - w)/(Power(E,Power(x-Q0,2)/(2.*Power(s0,2)))*Sqrt(2*Pi)*s0) +
@@ -52,8 +52,9 @@ Double_t FuncB::indefiniteIntegral(Double_t x, Double_t* par) {
 	Double_t a  = par[5];		// coefficient of the exponential decrease of the type II background
 	Double_t mu = par[6];		// number of photo-electrons
 
-	Double_t value =  // begin mathematica code from "/mathematica/B.nb"
-			-((-1 + w)*Erf(x/(Sqrt(2)*s0)))/2. + (w - w/Power(E,a*x))*UnitStep(x)
+	Double_t value =  // begin mathematica code from "/mathematica/B-shifted.nb"
+			((-1 + w)*Erf((Q0 - x)/(Sqrt(2)*s0)))/2. +
+			   (w - Power(E,a*Q0 - a*x)*w)*UnitStep(-Q0 + x)
 	; // end mathematica code
 
 	return value;

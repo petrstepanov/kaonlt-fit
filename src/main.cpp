@@ -84,35 +84,8 @@ int run(const char* fileName) {
 }
 
 int test(){
-	TH1* testHist = TestSpectrum::getHistogram();
-	TCanvas* testCanvas = new TCanvas("testCanvas", "testCanvas", 640, 512);
-	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
-	TF1* func = FitUtils::getFuncSReal(testHist, nTerms, kFALSE);
-
-	// Set default integrator
-	// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("");
-
-	// Tutorial: /fit/NumericalMinimization.C
-//	const char* minName = "Minuit2";
-//	const char* algoName = "";
-//	ROOT::Math::Minimizer* minimizer = ROOT::Math::Factory::CreateMinimizer(minName, algoName);
-//
-//	minimizer->SetMaxFunctionCalls(1000000); // for Minuit/Minuit2
-//	minimizer->SetMaxIterations(10000);  // for GSL
-//	minimizer->SetTolerance(0.001);
-//	minimizer->SetPrintLevel(1);
-
-//	ROOT::Math::MinimizerOptions::SetDefaultStrategy(0);
-
-	TStopwatch* timer = new TStopwatch();
-	timer->Start();
-	testHist->Fit(func, "V");
-	printf("Real time = %7.3f s, Cpu Time = %7.3f s\n",timer->RealTime(),timer->CpuTime());
-
-	GraphicsUtils::showFitParametersInStats(testHist, testCanvas);
-	testHist->Draw();
-//	func->Draw("SAME");
-	GraphicsUtils::alignStats(testHist, testCanvas);
+	TH1* hist = TestSpectrum::getHistogram();
+	FitUtils::doRooFit(hist);
 	return 0;
 }
 

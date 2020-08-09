@@ -4,5 +4,9 @@
 #pragma link off all functions;
 #pragma link C++ nestedclasses;
 
+#pragma link C++ class Term0Pdf;
+#pragma link C++ class SIdealNPdf;
+#pragma link C++ class SRealNPdf;
+#pragma link C++ class BPdf;
 
 #endif
