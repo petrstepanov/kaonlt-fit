@@ -17,6 +17,7 @@ public:
 	virtual ~FitUtils();
 
 	static void doFit(TH1* hist, Bool_t isConvolution);
+	static void doFitTest(TH1* hist, Bool_t isConvolution);
 	static void doRooFit(TH1* hist, Bool_t isConvolution);
 
 private:

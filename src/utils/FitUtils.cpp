@@ -374,10 +374,9 @@ void FitUtils::doFit(TH1* hist, Bool_t isConvolution){
 
 	//	ROOT::Math::MinimizerOptions::SetDefaultStrategy(0);
 
-	// hist->Fit(func, "V");
-
 	TCanvas* canvas = new TCanvas("canvas", "testCanvas", 640, 512);
-	// GraphicsUtils::showFitParametersInStats(hist, canvas);
+	hist->Fit(func, "V");
+	GraphicsUtils::showFitParametersInStats(hist, canvas);
 
 	hist->Draw();
 	func->SetLineStyle(ELineStyle::kSolid);
@@ -429,14 +428,27 @@ void FitUtils::doFit(TH1* hist, Bool_t isConvolution){
 			TF1* f = new TF1(name.Data(), normFunc, &TF1Normalize::func, xMin, xMax, nFitPar, "TF1Normalize", "func");
 			f->SetParameters(fitParameters);
 			f->SetLineStyle(ELineStyle::kDashed);
-			f->SetNpx(1000);
+//			f->SetNpx(1000);
+			std::cout << "Drawing component " << n << std::endl;
 			f->Draw("SAME");
 			controlIntegral += f->Integral(xMin, xMax);
 		} else {
-			std::cout << "Error getting the component" << std::endl;
+			std::cout << "Error getting the component " << n << std::endl;
 		}
 	}
 
+	// Create combined TF1
+	TString s = "term0_norm";
+	for (UInt_t n=0; n<=components->LastIndex(); n++){
+		TF1* component = (TF1*)(components->At(n));
+		if (component){
+			s += "+";
+			s += component->GetName();
+		}
+	}
+	std::cout << s.Data() << std::endl;
+
+	//
 	std::cout << "control integral: " << controlIntegral << std::endl;
 	// GraphicsUtils::alignStats(hist, canvas);
 }
