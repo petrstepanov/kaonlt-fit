@@ -19,14 +19,15 @@
 
 class FuncSReal : public AbsComponentFunc {
 public:
-	FuncSReal(TH1* hist, Int_t nMaxVal=10);
+	FuncSReal(TH1* h, Int_t nMaxVal, Int_t nParVal);
 	virtual ~FuncSReal();
 
 	Double_t func(Double_t*, Double_t*);
 
 private:
-	TH1* hist;
-	Int_t nMax;
+	TH1* hist;		// access histogrm for integral and limits
+	Int_t nMax;		// number of terms
+	Int_t nPar;		// number of parameters
 };
 
 #endif /* SRC_FIT_FUNCSREAL_H_ */

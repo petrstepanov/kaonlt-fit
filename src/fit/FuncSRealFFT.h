@@ -19,7 +19,7 @@
 
 class FuncSRealFFT : public AbsComponentFunc {
 public:
-	FuncSRealFFT(TH1* hist, Int_t nMaxVal=100);
+	FuncSRealFFT(TH1* hist, Int_t nMaxVal, Int_t nParVal);
 	virtual ~FuncSRealFFT();
 
 	Double_t func(Double_t*, Double_t*);
@@ -27,6 +27,7 @@ public:
 private:
 	TH1* hist;
 	Int_t nMax;
+	Int_t nPar;
 };
 
 #endif /* SRC_FIT_FuncSRealFFT_H_ */

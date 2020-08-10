@@ -9,6 +9,8 @@
 #include "../fit/AbsComponentFunc.h"
 #include "../fit/FuncSReal.h"
 #include "../fit/FuncSRealFFT.h"
+#include "../fit/components/FuncTerm0.h"
+#include "../fit/components/FuncTermN.h"
 #include "../roofit/Term0Pdf.h"
 #include "../roofit/SIdealNPdf.h"
 #include "../roofit/SRealNPdf.h"
@@ -35,8 +37,6 @@
 #include <TCanvas.h>
 #include <TVectorD.h>
 #include <TCollection.h>
-#include "../fit/components/FuncTerm0.h"
-#include "../fit/components/FuncTermN.h"
 
 FitUtils::FitUtils() {
 }
@@ -306,7 +306,7 @@ void FitUtils::doRooFit(TH1* hist){
 	spectrumPlot->Draw();
 }
 
-void FitUtils::doFit(TH1* hist, Bool_t isConvolution){
+void FitUtils::doFit(TH1* hist){
 	// Number of terms in the fit function
 	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
 
@@ -328,16 +328,20 @@ void FitUtils::doFit(TH1* hist, Bool_t isConvolution){
 	// fitFunction = new TF1("fitFunction", this, &FuncSRealOld::func, xMin, xMax, nPar, "FuncSRealOld", "func");
 	// Therefore we instantiate it in the FitUtils
 	// Update: to save memory and easier access the fit components we introduce AbsComponentFunction
-	AbsComponentFunc* funcObject;
-	TF1* func;
-	if(isConvolution){
-		funcObject = new FuncSRealFFT(hist, nTerms);
-		func = new TF1("func", funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->size());
 
-	} else {
-		funcObject = new FuncSReal(hist, nTerms);
-		func = new TF1("func", funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->size());
-	}
+//	AbsComponentFunc* funcObject;
+//	TF1* func;
+//	if(isConvolution){
+//		funcObject = new FuncSRealFFT(hist, nTerms, parameters->size());
+//		func = new TF1("func", funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->size());
+//
+//	} else {
+//		funcObject = new FuncSReal(hist, nTerms, parameters->size());
+//		func = new TF1("func", funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->size());
+//	}
+
+	FuncSReal* funcObject = new FuncSReal(hist, nTerms, parameters->size());
+	TF1* func = new TF1("func", funcObject, &FuncSReal::func, xMin, xMax, parameters->size());
 
 	// Set function starting parameter values, names and limits
 	TIterator* it = parameters->createIterator();
@@ -379,8 +383,8 @@ void FitUtils::doFit(TH1* hist, Bool_t isConvolution){
 	GraphicsUtils::showFitParametersInStats(hist, canvas);
 
 	hist->Draw();
-	func->SetLineStyle(ELineStyle::kSolid);
-	func->Draw("SAME");
+//	func->SetLineStyle(ELineStyle::kSolid);
+//	func->Draw("SAME");
 
 	// Obtain function fit parameters
 	Int_t nFitPar = func->GetNpar();
@@ -438,17 +442,97 @@ void FitUtils::doFit(TH1* hist, Bool_t isConvolution){
 	}
 
 	// Create combined TF1
-	TString s = "term0_norm";
-	for (UInt_t n=0; n<=components->LastIndex(); n++){
+	TString addName = "term0_norm";
+	for (UInt_t n=1; n<=components->LastIndex(); n++){
 		TF1* component = (TF1*)(components->At(n));
 		if (component){
-			s += "+";
-			s += component->GetName();
+			addName += "+";
+			addName += component->GetName();
+			addName += "_norm";
 		}
 	}
-	std::cout << s.Data() << std::endl;
+	TF1 *addComponents = new TF1(addName.Data(), xMin, xMax, nFitPar);
+	std::cout << addName.Data() << std::endl;
+	addComponents->Draw("SAME");
 
 	//
 	std::cout << "control integral: " << controlIntegral << std::endl;
-	// GraphicsUtils::alignStats(hist, canvas);
+	GraphicsUtils::alignStats(hist, canvas);
 }
+
+// Sun terms like in ROOT documentation "term0+term1+...." - DOES NOT WORK
+void FitUtils::doFitTest(TH1* hist){
+	// Number of terms in the fit function
+	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
+
+	// Init array of ROOT parameters for single function
+	RooArgList* parameters = new RooArgList();
+	parameters->add(*Q0);
+	parameters->add(*s0);
+	parameters->add(*Q1);
+	parameters->add(*s1);
+	parameters->add(*w);
+	parameters->add(*a);
+	parameters->add(*mu);
+
+	// Instantiate fitting function
+	Double_t xMin = hist->GetXaxis()->GetXmin();
+	Double_t xMax = hist->GetXaxis()->GetXmax();
+
+	// Components will contain individual fit function terms
+	TList* components = new TList();
+
+	// Term 0 is Pedestal and eponential background
+	FuncTerm0* funcTerm0 = new FuncTerm0();
+	TF1* term0 = new TF1("term0", funcTerm0, &FuncTerm0::func, xMin, xMax, parameters->size(), 1, TF1::EAddToList::kAdd);
+	components->Add(term0);
+
+	// Terms 1..N are gaussians convoluted with the background function
+	for (UInt_t n=1; n < nTerms; n++){
+		FuncTermN* funcTermN = new FuncTermN(n);
+		TString name = TString::Format("term%d", n);
+		TF1* termN = new TF1(name.Data(), funcTermN, &FuncTermN::func, xMin, xMax, parameters->size());
+		components->Add(termN);
+	}
+
+	// Generate composite fit function name "term0+term1+term..."
+	// https://root.cern.ch/doc/master/classTF1.html#F4
+	TString addName = term0->GetName();
+	for (UInt_t n=1; n<=components->LastIndex(); n++){
+		TF1* component = (TF1*)(components->At(n));
+		if (component){
+			addName += "+";
+			addName += component->GetName();
+		}
+	}
+	std::cout << addName.Data() << std::endl;
+	TF1 *fitFunction = new TF1("fitFunction", addName.Data());
+
+	TF1Normalize* normFitObject = new TF1Normalize(fitFunction, hist->Integral());
+	TF1 *normFitFunction = new TF1("normFitFuntion", normFitObject, &TF1Normalize::func, xMin, xMax, parameters->size(), 1, TF1::EAddToList::kAdd);
+
+	// For each component set parameter names, values and limits
+	TIterator* it = parameters->createIterator();
+	TObject* tempObj = 0;
+	Int_t i = 0;
+	while((tempObj=it->Next())){
+		RooRealVar* parameter = dynamic_cast<RooRealVar*>(tempObj);
+		if(parameter){
+			normFitFunction->SetParName(i, parameter->GetName());
+			normFitFunction->SetParameter(i, parameter->getVal());
+			normFitFunction->SetParLimits(i, parameter->getMin(), parameter->getMax());
+			i++;
+		}
+	}
+
+	// Draw histogram
+	TCanvas* canvas = new TCanvas("canvas", "testCanvas", 640, 512);
+	hist->Draw();
+
+	// Fit histogram
+	// hist->Fit(func, "V");
+	// GraphicsUtils::showFitParametersInStats(hist, canvas);
+
+	fitFunction->Draw("SAME");
+}
+

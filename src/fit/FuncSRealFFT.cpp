@@ -14,7 +14,7 @@
 #include "./components/FuncSIdealN.h"
 #include "./components/FuncTerm0.h"
 
-FuncSRealFFT::FuncSRealFFT(TH1* h, Int_t nMaxVal) : AbsComponentFunc(), hist(h), nMax(nMaxVal) {
+FuncSRealFFT::FuncSRealFFT(TH1* h, Int_t nMaxVal, Int_t nParVal) : AbsComponentFunc(), hist(h), nMax(nMaxVal), nPar(nParVal) {
 	// Init TF1 finctions used to cunstruct the final fitting function
 	Double_t xMin = hist->GetXaxis()->GetXmin();
 	Double_t xMax = hist->GetXaxis()->GetXmax();
@@ -26,16 +26,16 @@ FuncSRealFFT::FuncSRealFFT(TH1* h, Int_t nMaxVal) : AbsComponentFunc(), hist(h),
 	// Instantiate terms of the real FuncSRealFFT
 	// Zero term has an uncertainty. Its approximate value is taken from (10)
 	FuncTerm0* funcTerm0 = new FuncTerm0();
-	TF1* term0 = new TF1("term0", funcTerm0, &FuncTerm0::func, xMin, xMax, nMax, "FuncTerm0", "func");
+	TF1* term0 = new TF1("term0", funcTerm0, &FuncTerm0::func, xMin, xMax, nPar, "FuncTerm0", "func");
 	components->Add(term0);
 
 	// Terms 1..N are background function covoluted wit the Ideal FuncSRealFFT function
 	FuncB* funcB = new FuncB();
-	TF1* b = new TF1("b", funcB, &FuncB::func, xMin, xMax, nMax, "FuncB", "func");
+	TF1* b = new TF1("b", funcB, &FuncB::func, xMin, xMax, nPar, "FuncB", "func");
 	for (UInt_t n=1; n < nMax; n++){
 		FuncSIdealN* funcSIdealN = new FuncSIdealN(n);
 		TString name = TString::Format("SIdeal%d", n);
-		TF1* SIdealN = new TF1(name.Data(), funcSIdealN, &FuncSIdealN::func, xMin, xMax, nMax, "FuncSIdealN", "func");
+		TF1* SIdealN = new TF1(name.Data(), funcSIdealN, &FuncSIdealN::func, xMin, xMax, nPar, "FuncSIdealN", "func");
 
 		TF1Convolution* conv = new TF1Convolution(SIdealN, b, xMin, xMax);
 		conv->SetNofPointsFFT(1024);

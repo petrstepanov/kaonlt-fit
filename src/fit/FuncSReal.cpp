@@ -15,7 +15,7 @@
 #include "./components/FuncTermN.h"
 
 
-FuncSReal::FuncSReal(TH1* h, Int_t nMaxVal) : AbsComponentFunc(), hist(h), nMax(nMaxVal) {
+FuncSReal::FuncSReal(TH1* h, Int_t nMaxVal, Int_t nParVal) : AbsComponentFunc(), hist(h), nMax(nMaxVal), nPar(nParVal) {
 	// Init TF1 finctions used to cunstruct the final fitting function
 	Double_t xMin = hist->GetXaxis()->GetXmin();
 	Double_t xMax = hist->GetXaxis()->GetXmax();
@@ -27,16 +27,14 @@ FuncSReal::FuncSReal(TH1* h, Int_t nMaxVal) : AbsComponentFunc(), hist(h), nMax(
 	// Instantiate terms of the real FuncSReal
 	// Zero term has an uncertainty. Its approximate value is taken from (10)
 	FuncTerm0* funcTerm0 = new FuncTerm0();
-	TF1* term0 = new TF1("term0", funcTerm0, &FuncTerm0::func, xMin, xMax, nMax, "FuncTerm0", "func");
+	TF1* term0 = new TF1("term0", funcTerm0, &FuncTerm0::func, xMin, xMax, 7, "FuncTerm0", "func");
 	components->Add(term0);
 
 	// Terms 1..N are background function covoluted wit the Ideal FuncSReal function
-	FuncB* funcB = new FuncB();
-	TF1* b = new TF1("b", funcB, &FuncB::func, xMin, xMax, nMax, "FuncB", "func");
 	for (UInt_t n=1; n < nMax; n++){
 		FuncTermN* funcTermN = new FuncTermN(n);
 		TString name = TString::Format("term%d", n);
-		TF1* termN = new TF1(name.Data(), funcTermN, &FuncTermN::func, xMin, xMax, nMax, "FuncTermN", "func");
+		TF1* termN = new TF1(name.Data(), funcTermN, &FuncTermN::func, xMin, xMax, 7, "FuncTermN", "func");
 		components->Add(termN);
 	}
 }
@@ -65,9 +63,9 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 	for (Int_t n = 0; n <= components->LastIndex(); n++){
 		TF1* component = (TF1*)(components->At(n));
 		if (component){
-		    component->SetParameters(par);					// Set parameters
 			value += component->EvalPar(_x, par);			// Sum the cumulated value
-			integral += component->Integral(xMin, xMax);	// Sum the total integral
+		    component->SetParameters(par);					// Set parameters
+			integral += component->Integral(xMin, xMax, 1);	// Sum the total integral
 		} else {
 			std::cout << "Error getting the component" << std::endl;
 		}
