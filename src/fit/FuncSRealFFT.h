@@ -15,7 +15,9 @@
 #include <iostream>
 #include <vector>
 
-class FuncSRealFFT {
+#include "AbsComponentFunc.h"
+
+class FuncSRealFFT : public AbsComponentFunc {
 public:
 	FuncSRealFFT(TH1* hist, Int_t nMaxVal=100);
 	virtual ~FuncSRealFFT();
@@ -25,8 +27,6 @@ public:
 private:
 	TH1* hist;
 	Int_t nMax;
-
-	std::vector<TF1*> terms;    // Terms of the Ideal FuncSRealFFT function (n=1..nMax)
 };
 
 #endif /* SRC_FIT_FuncSRealFFT_H_ */

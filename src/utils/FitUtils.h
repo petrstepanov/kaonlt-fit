@@ -16,12 +16,14 @@ public:
 	FitUtils();
 	virtual ~FitUtils();
 
-	static TF1* getFuncSReal(TH1*, Int_t, Bool_t isFFT = kFALSE);
-	static void doFit(TH1* hist);
-	static void doRooFitConvolution(TH1* hist);
-	static void doRooFit(TH1* hist);
+	static void doFit(TH1* hist, Bool_t isConvolution);
+	static void doRooFit(TH1* hist, Bool_t isConvolution);
 
 private:
+	static void doRooFitConvolution(TH1* hist);
+	static void doRooFit(TH1* hist);
+	static TF1* getFuncSReal(TH1*, Int_t, Bool_t isConvolution = kFALSE);
+
 	static RooRealVar* Q0;
 	static RooRealVar* s0;
 	static RooRealVar* Q1;

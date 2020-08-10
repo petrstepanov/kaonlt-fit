@@ -15,7 +15,7 @@
 #include "./components/FuncTermN.h"
 
 
-FuncSReal::FuncSReal(TH1* h, Int_t nMaxVal) : hist(h), nMax(nMaxVal) {
+FuncSReal::FuncSReal(TH1* h, Int_t nMaxVal) : AbsComponentFunc(), hist(h), nMax(nMaxVal) {
 	// Init TF1 finctions used to cunstruct the final fitting function
 	Double_t xMin = hist->GetXaxis()->GetXmin();
 	Double_t xMax = hist->GetXaxis()->GetXmax();
@@ -28,7 +28,7 @@ FuncSReal::FuncSReal(TH1* h, Int_t nMaxVal) : hist(h), nMax(nMaxVal) {
 	// Zero term has an uncertainty. Its approximate value is taken from (10)
 	FuncTerm0* funcTerm0 = new FuncTerm0();
 	TF1* term0 = new TF1("term0", funcTerm0, &FuncTerm0::func, xMin, xMax, nMax, "FuncTerm0", "func");
-	terms.push_back(term0);
+	components->Add(term0);
 
 	// Terms 1..N are background function covoluted wit the Ideal FuncSReal function
 	FuncB* funcB = new FuncB();
@@ -36,8 +36,8 @@ FuncSReal::FuncSReal(TH1* h, Int_t nMaxVal) : hist(h), nMax(nMaxVal) {
 	for (UInt_t n=1; n < nMax; n++){
 		FuncTermN* funcTermN = new FuncTermN(n);
 		TString name = TString::Format("term%d", n);
-		TF1* term = new TF1(name.Data(), funcTermN, &FuncTermN::func, xMin, xMax, nMax, "FuncTermN", "func");
-		terms.push_back(term);
+		TF1* termN = new TF1(name.Data(), funcTermN, &FuncTermN::func, xMin, xMax, nMax, "FuncTermN", "func");
+		components->Add(termN);
 	}
 }
 
@@ -56,22 +56,23 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 	Double_t a  = par[5];		// coefficient of the exponential decrease of the type II background
 	Double_t mu = par[6];		// number of photo-electrons
 
-	// Sum terms
-	Double_t sum = 0;
-	for (TF1* func : terms) sum += func->EvalPar(_x,par);
-
-	// Calculate integral
+	// Loop over components
+	Double_t value = 0;
 	Double_t integral = 0;
 	Int_t xMin = hist->GetXaxis()->GetXmin();
 	Int_t xMax = hist->GetXaxis()->GetXmax();
 
-	// Create doubled parameters array for convoluted function
-	for (TF1* func : terms){
-		func->SetParameters(par);
-		integral += func->Integral(xMin, xMax);
-		// integral += FuncUtils::integralFast(func, par);
+	for (Int_t n = 0; n <= components->LastIndex(); n++){
+		TF1* component = (TF1*)(components->At(n));
+		if (component){
+		    component->SetParameters(par);					// Set parameters
+			value += component->EvalPar(_x, par);			// Sum the cumulated value
+			integral += component->Integral(xMin, xMax);	// Sum the total integral
+		} else {
+			std::cout << "Error getting the component" << std::endl;
+		}
 	}
 
 	// Return normalized function value
-	return sum/integral*(hist->Integral());
+	return value/integral*(hist->Integral());
 }

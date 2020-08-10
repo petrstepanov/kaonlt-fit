@@ -14,7 +14,7 @@
 #include "./components/FuncSIdealN.h"
 #include "./components/FuncTerm0.h"
 
-FuncSRealFFT::FuncSRealFFT(TH1* h, Int_t nMaxVal) : hist(h), nMax(nMaxVal) {
+FuncSRealFFT::FuncSRealFFT(TH1* h, Int_t nMaxVal) : AbsComponentFunc(), hist(h), nMax(nMaxVal) {
 	// Init TF1 finctions used to cunstruct the final fitting function
 	Double_t xMin = hist->GetXaxis()->GetXmin();
 	Double_t xMax = hist->GetXaxis()->GetXmax();
@@ -27,7 +27,7 @@ FuncSRealFFT::FuncSRealFFT(TH1* h, Int_t nMaxVal) : hist(h), nMax(nMaxVal) {
 	// Zero term has an uncertainty. Its approximate value is taken from (10)
 	FuncTerm0* funcTerm0 = new FuncTerm0();
 	TF1* term0 = new TF1("term0", funcTerm0, &FuncTerm0::func, xMin, xMax, nMax, "FuncTerm0", "func");
-	terms.push_back(term0);
+	components->Add(term0);
 
 	// Terms 1..N are background function covoluted wit the Ideal FuncSRealFFT function
 	FuncB* funcB = new FuncB();
@@ -39,9 +39,10 @@ FuncSRealFFT::FuncSRealFFT(TH1* h, Int_t nMaxVal) : hist(h), nMax(nMaxVal) {
 
 		TF1Convolution* conv = new TF1Convolution(SIdealN, b, xMin, xMax);
 		conv->SetNofPointsFFT(1024);
-		TF1 *convFunc = new TF1("convFunc",*conv, xMin, xMax, conv->GetNpar());
+		TString termName = TString::Format("term%d", n);
+		TF1 *termN = new TF1(termName.Data(),*conv, xMin, xMax, conv->GetNpar());
 
-		terms.push_back(convFunc);
+		components->Add(termN);
 	}
 }
 
@@ -60,24 +61,32 @@ Double_t FuncSRealFFT::func(Double_t* _x, Double_t* par) {
 
 	Double_t parForConvolution[] = {Q0, s0, Q1, s1, w, a, mu, Q0, s0, Q1, s1, w, a, mu};
 
-	// Sum terms
-	Double_t sum = 0;
-	for (int n = 0; n < terms.size(); ++n){
-	    if (n==0) sum += terms[n]->EvalPar(_x, par);
-	    else sum += terms[n]->EvalPar(_x, parForConvolution);
-	}
+	// Set component parameters
 
-	// Calculate integral
+	// Loop over components
+	Double_t value = 0;
 	Double_t integral = 0;
 	Int_t xMin = hist->GetXaxis()->GetXmin();
 	Int_t xMax = hist->GetXaxis()->GetXmax();
-	for (int n = 0; n < terms.size(); ++n){
-	    if (n==0) terms[n]->SetParameters(par);
-	    else terms[n]->SetParameters(parForConvolution);
-	     integral += terms[n]->Integral(xMin, xMax);
-	    // integral += FuncUtils::integralFast(terms[n], par);
+
+	for (UInt_t n = 0; n <= components->LastIndex(); n++){
+		TF1* component = (TF1*)(components->At(n));
+		if (component){
+			// Set parameters
+		    if (n==0) component->SetParameters(par);
+		    else component->SetParameters(parForConvolution);
+
+		    // Sum the cumulated value
+			if (n==0) value += component->EvalPar(_x, par);
+			else value += component->EvalPar(_x, parForConvolution);
+
+			// Sum the total integral
+			integral += component->Integral(xMin, xMax);
+		} else {
+			std::cout << "Error getting the component" << std::endl;
+		}
 	}
 
 	// Return normalized function value
-	return sum/integral*(hist->Integral());
+	return value/integral*(hist->Integral());
 }

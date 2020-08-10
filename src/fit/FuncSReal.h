@@ -15,7 +15,9 @@
 #include <iostream>
 #include <vector>
 
-class FuncSReal {
+#include "AbsComponentFunc.h"
+
+class FuncSReal : public AbsComponentFunc {
 public:
 	FuncSReal(TH1* hist, Int_t nMaxVal=10);
 	virtual ~FuncSReal();
@@ -25,8 +27,6 @@ public:
 private:
 	TH1* hist;
 	Int_t nMax;
-
-	std::vector<TF1*> terms;    // Terms of the Ideal FuncSReal function (n=1..nMax)
 };
 
 #endif /* SRC_FIT_FUNCSREAL_H_ */
