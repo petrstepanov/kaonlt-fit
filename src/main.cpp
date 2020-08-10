@@ -85,7 +85,7 @@ int run(const char* fileName) {
 
 int test(){
 	TH1* hist = TestSpectrum::getHistogram();
-	FitUtils::doRooFit(hist);
+	FitUtils::doFit(hist);
 	return 0;
 }
 

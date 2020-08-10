@@ -15,18 +15,27 @@
 #include "../model/Constants.h"
 #include "../utils/RootUtils.h"
 #include "../utils/GraphicsUtils.h"
+#include "../helper/TF1Normalize.h"
 #include <RooRealVar.h>
 #include <RooConstVar.h>
 #include <RooDataHist.h>
 #include <RooFFTConvPdf.h>
 #include <RooNumConvPdf.h>
 #include <RooAddPdf.h>
+#include <RooArgList.h>
 #include <RooChi2Var.h>
+#include <RooFormulaVar.h>
 #include <RooMinimizer.h>
 #include <RooPlot.h>
+#include <RooRealSumPdf.h>
 #include <TF1.h>
+#include <TAttLine.h>
 #include <TLegend.h>
 #include <TCanvas.h>
+#include <TVectorD.h>
+#include <TCollection.h>
+#include "../fit/components/FuncTerm0.h"
+#include "../fit/components/FuncTermN.h"
 
 FitUtils::FitUtils() {
 }
@@ -43,34 +52,6 @@ RooRealVar* FitUtils::w  = new RooRealVar("w", "probability that signal is accom
 RooRealVar* FitUtils::a  = new RooRealVar("#alpha", "coefficient of the exponential decrease of the type II background", 0.034, 0, 0.1, "");
 RooRealVar* FitUtils::mu = new RooRealVar("#mu", "number of photo-electrons", 1.68, 0, 20, "");
 
-void FitUtils::doFit(TH1* hist){
-	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
-	TF1* func = getFuncSReal(hist, nTerms, kFALSE);
-
-	// Set default integrator
-	// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("");
-
-	// Tutorial: /fit/NumericalMinimization.C
-	//	const char* minName = "Minuit2";
-	//	const char* algoName = "";
-	//	ROOT::Math::Minimizer* minimizer = ROOT::Math::Factory::CreateMinimizer(minName, algoName);
-	//
-	//	minimizer->SetMaxFunctionCalls(1000000); // for Minuit/Minuit2
-	//	minimizer->SetMaxIterations(10000);  // for GSL
-	//	minimizer->SetTolerance(0.001);
-	//	minimizer->SetPrintLevel(1);
-
-	//	ROOT::Math::MinimizerOptions::SetDefaultStrategy(0);
-
-	hist->Fit(func, "V");
-
-	TCanvas* canvas = new TCanvas("canvas", "testCanvas", 640, 512);
-	GraphicsUtils::showFitParametersInStats(hist, canvas);
-	hist->Draw();
-	//	func->Draw("SAME");
-	GraphicsUtils::alignStats(hist, canvas);
-}
-
 // Fit not goes, weird function raise to the right
 void FitUtils::doRooFitConvolution(TH1* hist){
 	// Define channels axis (observable)
@@ -86,8 +67,14 @@ void FitUtils::doRooFitConvolution(TH1* hist){
 	RooArgList* terms = new RooArgList();
 	RooArgList* coefficients = new RooArgList();
 
+	// Init zero term PDF:
+	Term0Pdf* term0Pdf = new Term0Pdf("term0Pdf", "Term 0 of the real PM function", *observable, *Q0, *s0, *w, *a, *mu);
+	RooRealVar* coeff0 = new RooRealVar("coeff0", "coeff0", 1E-3, 1E-5, 1E3);
+	terms->add(*term0Pdf);
+	coefficients->add(*coeff0);
+
 	// Init terms 1..N as convolution of the background and ideal PM response function
-//	BPdf* bPdf = new BPdf("bPdf", "Background", *observable, *Q0, *s0, *w, *a);
+	BPdf* bPdf = new BPdf("bPdf", "Background", *observable, *Q0, *s0, *w, *a);
 	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
 	for (UInt_t n = 1; n < nTerms; n++){
 		// Instantiate N-th component PDF
@@ -100,16 +87,15 @@ void FitUtils::doRooFitConvolution(TH1* hist){
 		SIdealNPdf* sIdealNPdf = new SIdealNPdf(name.Data(), title.Data(), *observable, *Q1, *s1, *mu, *nVar);
 
 		// Instantiate background PDF
-		 TString nameB = TString::Format("B%dPdf", n);
-		 TString titleB = TString::Format("Background PDF %d", n);
-		 BPdf* bPdf = new BPdf(nameB.Data(), titleB.Data(), *observable, *Q0, *s0, *w, *a);
+		// TString nameB = TString::Format("B%dPdf", n);
+		// TString titleB = TString::Format("Background PDF %d", n);
+		// BPdf* bPdf = new BPdf(nameB.Data(), titleB.Data(), *observable, *Q0, *s0, *w, *a);
 
 		// Convolute ideal function with the background
 		TString nameConv = TString::Format("term%dPdf", n);
 		TString titleConv = TString::Format("Term %d or the real PM function", n);
 		RooFFTConvPdf* termNPdf = new RooFFTConvPdf(nameConv.Data(), titleConv.Data(), *observable, *sIdealNPdf, *bPdf);
-		termNPdf->setBufferFraction(10);
-		termNPdf->setBufferStrategy(RooFFTConvPdf::Flat);
+		termNPdf->setBufferFraction(3);
 
 //		RooNumConvPdf* termNPdf = new RooNumConvPdf(nameConv.Data(), titleConv.Data(), *observable, *sIdealNPdf, *bPdf);
 //		RooConstVar* convCenter = new RooConstVar("convCenter", "Convolution window center", (xMin+xMax)/2);
@@ -120,24 +106,28 @@ void FitUtils::doRooFitConvolution(TH1* hist){
 		terms->add(*termNPdf);
 	}
 
-	// Init zero term PDF:
-	Term0Pdf* term0Pdf = new Term0Pdf("term0Pdf", "Term 0 of the real PM function", *observable, *Q0, *s0, *w, *a, *mu);
-	terms->add(*term0Pdf);
+	// Define the N coefficients for the terms (each is 1/nTerms)
+//	for (UInt_t n = 0; n < nTerms; n++){
+//		// Instantiate N-th component PDF
+//		TString nameC = TString::Format("n%d", n);
+//		TString titleC = TString::Format("Term coefficient %d", n);
+//		RooConstVar* coeff = new RooConstVar(nameC.Data(), titleC.Data(), (Double_t)1.0);
+//		coefficients->add(*coeff);
+//	}
 
 	// Define the N coefficients for the terms (each is 1/nTerms)
-	for (UInt_t n = 0; n < nTerms; n++){
-		TString name = TString::Format("term%dCoeff", n);
-		TString title = TString::Format("Term %d coefficient", n);
-		// RooConstVar* termNCoeff = new RooConstVar(name.Data(), title.Data(), (Double_t)1.);
-		RooRealVar* termNCoeff = new RooRealVar(name.Data(), title.Data(), 1.0, 1.0, 1.0, "");
-		termNCoeff->setConstant();
-		coefficients->add(*termNCoeff);
+	for (UInt_t n = 1; n < nTerms; n++){
+		TString nameC = TString::Format("n%d", n);
+		RooConstVar* nVar = new RooConstVar(nameC.Data(), nameC.Data(), 1.0);
+		TString name = TString::Format("coeff%d", n);
+		RooFormulaVar* coeffN = new RooFormulaVar(name.Data(), name.Data(), "exp(-@0)*@0^@1/sqrt(@1)/sqrt(2*3.1416)/TMath::Factorial(@1)/@2", RooArgList(*mu,*nVar,*s1));
+		coefficients->add(*coeffN);
 	}
 
 	// Sum terms of the real PM responce function
-	// RooAddPdf* sRealPdf = new RooAddPdf("sRealPdf", "Real PM responce function", *terms, *coefficients);
+	// RooRealSumPdf* sRealPdf = new RooRealSumPdf("sRealPdf", "sRealPdf", *terms, *coefficients);
 	RooAddPdf* sRealPdf = new RooAddPdf("sRealPdf", "Real PM responce function", *terms, *coefficients);
-	sRealPdf->fixAddCoefNormalization(RooArgSet(*observable));
+	// sRealPdf->fixAddCoefNormalization(RooArgSet(*observable));
 
 	terms->Print("V");
 	coefficients->Print("V");
@@ -175,9 +165,6 @@ void FitUtils::doRooFitConvolution(TH1* hist){
 
 	// Plot data points
 	data->plotOn(spectrumPlot, RooFit::LineColor(kGray + 3), /*RooFit::ShiftToZero(),*/ RooFit::XErrorSize(0), RooFit::MarkerSize(0.5), RooFit::MarkerColor(kGray + 3), RooFit::Name("data"));
-
-	// bPdf->plotOn(spectrumPlot);
-
 	sRealPdf->plotOn(spectrumPlot);
 
 	// Plot model components
@@ -311,6 +298,99 @@ void FitUtils::doRooFit(TH1* hist){
 	}
 
 	spectrumPlot->Draw();
+}
+
+
+void FitUtils::doFit(TH1* hist){
+	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
+	TF1* func = getFuncSReal(hist, nTerms, kFALSE);
+
+	// Set default integrator
+	// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("");
+
+	// Tutorial: /fit/NumericalMinimization.C
+	//	const char* minName = "Minuit2";
+	//	const char* algoName = "";
+	//	ROOT::Math::Minimizer* minimizer = ROOT::Math::Factory::CreateMinimizer(minName, algoName);
+	//
+	//	minimizer->SetMaxFunctionCalls(1000000); // for Minuit/Minuit2
+	//	minimizer->SetMaxIterations(10000);  // for GSL
+	//	minimizer->SetTolerance(0.001);
+	//	minimizer->SetPrintLevel(1);
+
+	//	ROOT::Math::MinimizerOptions::SetDefaultStrategy(0);
+
+	// hist->Fit(func, "V");
+
+	TCanvas* canvas = new TCanvas("canvas", "testCanvas", 640, 512);
+	// GraphicsUtils::showFitParametersInStats(hist, canvas);
+	hist->Draw();
+	func->SetLineStyle(ELineStyle::kSolid);
+	func->Draw("SAME");
+
+	// Retrieve function parameters
+	Double_t* parameters = 0;
+	Int_t nPar = func->GetNpar();
+	parameters = new Double_t[func->GetNpar()];
+	func->GetParameters(parameters);
+
+	// Print func integral
+	Int_t xMin = hist->GetXaxis()->GetXmin();
+	Int_t xMax = hist->GetXaxis()->GetXmax();
+	Double_t funcIntegral = func->Integral(xMin, xMax);
+	std::cout << "func integral: " << funcIntegral << std::endl;
+
+	// Calculate term integrals (not normalized to hist integral) and full integral
+	TVectorD termIntegrals(nTerms);
+	Double_t termsIntegral = 0;
+	TList* terms = new TList();
+	for (Int_t n=0; n<nTerms; n++){
+		TString name = TString("term_%d", n);
+		TF1* term;
+		if (n==0){
+			FuncTerm0* funcTerm0 = new FuncTerm0();
+			term = new TF1(name.Data(), funcTerm0, &FuncTerm0::func, xMin, xMax, nPar, "FuncTerm0", "func");
+		}
+		else {
+			FuncTermN* funcTermN = new FuncTermN(n);
+			term = new TF1(name.Data(), funcTermN, &FuncTermN::func, xMin, xMax, nPar, "FuncTermN", "func");
+		}
+		term->SetParameters(parameters);
+		Double_t termIntegral = term->Integral(xMin, xMax);
+		termIntegrals[n] = termIntegral;
+		termsIntegral+=termIntegral;
+		terms->Add(term);
+		std::cout << "term" << n << " integral: " << termIntegral << std::endl;
+	}
+	std::cout << "all terms integral:" << termsIntegral << std::endl;
+
+	Double_t controlIntegral = 0;
+	for (Int_t n=0; n<nTerms; n++){
+		TF1* term = (TF1*)(terms->At(n));
+		if (term){
+			// term->SetParameters(parameters);
+			// Function has to be normalized on the number of the hist events
+			// and the ratio of its integral to the qumulative histogram integral
+			Double_t norm = term->Integral(xMin, xMax)/termsIntegral*funcIntegral*4.219; // why??
+			std::cout << "term" << n << " integral:" << term->Integral(xMin, xMax) << std::endl;
+			TF1Normalize* normFunc = new TF1Normalize(term, norm);
+			TString name = TString("term_%d_norm", n);
+			TF1* f = new TF1(name.Data(), normFunc, &TF1Normalize::func, xMin, xMax, nPar, "TF1Normalize", "func");
+			f->SetParameters(parameters);
+			f->SetLineStyle(ELineStyle::kDashed);
+			f->SetNpx(1000);
+			f->Draw("SAME");
+			controlIntegral+=f->Integral(xMin, xMax);
+		} else {
+			std::cout << "Error getting the term" << std::endl;
+		}
+	}
+
+	std::cout << "fit func integral: " << funcIntegral << std::endl;
+	std::cout << "control integral: " << controlIntegral << std::endl;
+
+	GraphicsUtils::alignStats(hist, canvas);
+
 }
 
 TF1* FitUtils::getFuncSReal(TH1* hist, Int_t nMax, Bool_t isFFT){
