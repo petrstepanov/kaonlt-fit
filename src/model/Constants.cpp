@@ -19,10 +19,25 @@
 #include <utility>
 #include "Constants.h"
 #include <TObjString.h>
-
+#include <RooRealVar.h>
 #include "../utils/StringUtils.h"
 
-Constants::Constants(){};
+
+Constants::Constants(){
+	fitParameters = new RooArgList();
+	fitParameters->add(*Q0);
+	fitParameters->add(*s0);
+	fitParameters->add(*Q1);
+	fitParameters->add(*s1);
+	fitParameters->add(*w);
+	fitParameters->add(*a);
+	fitParameters->add(*mu);
+
+};
+
+RooArgList* Constants::getFitParameters(){
+	return fitParameters;
+}
 
 Constants* Constants::instance = NULL;
 
@@ -55,8 +70,15 @@ const Int_t Constants::AMP_BINS = 4096;
 const Int_t Constants::AMP_MIN = 0;
 const Int_t Constants::AMP_MAX = 4096;
 
-const Int_t Constants::BELLAMY_FILL_NTIMES = 64072;
-const Int_t Constants::BELLAMY_NBINS = 294;
+// Parameter values taken from Fig.2, https://doi.org/10.1016/0168-9002(94)90183-X
+RooRealVar* Constants::Q0 = new RooRealVar("Q_{0}", "pedestal", 23.26, 10, 40, "e");
+RooRealVar* Constants::s0 = new RooRealVar("#sigma_{0}", "standard deviation of the type I background process", 0.192, 0.1, 10, "");
+RooRealVar* Constants::Q1 = new RooRealVar("Q_{1}", "average charge at the PM output", 35.04, 0, 100, "e");
+RooRealVar* Constants::s1 = new RooRealVar("#sigma_{1}", "corresponding standard deviation of the charge distribution", 11.73, 5, 50, "");
+RooRealVar* Constants::w  = new RooRealVar("w", "probability that signal is accompanied by type II background process", 0.4, 0.1, 1, "");
+RooRealVar* Constants::a  = new RooRealVar("#alpha", "coefficient of the exponential decrease of the type II background", 0.034, 0, 0.1, "");
+RooRealVar* Constants::mu = new RooRealVar("#mu", "number of photo-electrons", 1.68, 0, 20, "");
+
 
 void Constants::parseParameters(int argc, char* argv[]){
 	// Print command line argumants

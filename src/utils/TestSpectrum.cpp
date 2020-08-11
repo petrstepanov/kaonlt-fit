@@ -26,7 +26,7 @@ Int_t TestSpectrum::array[] = {2, 2, 0, 0, 0, 0, 0, 7, 2, 1, 1, 0, 2, 1, 1, 7, 2
 
 TH1* TestSpectrum::getHistogram(){
 	std::vector<Int_t> vector (array, array + sizeof(array) / sizeof(array[0]) );
-	TH1* hist = new TH1I("ballamyHist", "Histogram from E.H. Bellamy paper", (Int_t)vector.size(), 0, (Int_t)vector.size());
+	TH1* hist = new TH1I("bellamyHistDigitized", "Bellamy histogram. Digitized from figure.", (Int_t)vector.size(), 0, (Int_t)vector.size());
 	hist->GetXaxis()->SetTitle("ADC Channel");
 	hist->GetYaxis()->SetTitle("Events");
 

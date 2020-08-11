@@ -100,15 +100,15 @@ int test(){
 // Test fit histogram filled from the fitting function from the paper
 int testGenerate(){
 	// Create histogram from function
-	Int_t nBins = Constants::BELLAMY_NBINS;
-	TH1F *hist = new TH1F("h1", "test", nBins, 0, nBins);
+	Int_t nBins = TestSpectrum::getHistogram()->GetXaxis()->GetNbins();
+	TH1F *bellamyHistFillRandom = new TH1F("bellamyHistFillRandom", "Bellamy histogram. Random fill from fit function.", nBins, 0, nBins);
 
 	// Set certain bin value because AbsComponentFunc* is normalized to histogram integral
-	AbsComponentFunc* funcObject = new FuncSReal(hist);
-	FitUtils::fillHistogramFromFuncObject(hist, funcObject);
+	AbsComponentFunc* funcObject = new FuncSReal(bellamyHistFillRandom);
+	FitUtils::fillHistogramFromFuncObject(bellamyHistFillRandom, funcObject);
 
 	// Fit histogram
-	FitUtils::doFit(hist, funcObject);
+	FitUtils::doFit(bellamyHistFillRandom, funcObject);
 	return 0;
 }
 
@@ -129,8 +129,9 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	// Test fitting function on the test histigram
-//	test();
+	// Test fitting function on the digitized test histogram
+	// test();
+	// Test fitting function on the filled random test histogram
 	testGenerate();
 
 	// Iterate through input files and run analysis

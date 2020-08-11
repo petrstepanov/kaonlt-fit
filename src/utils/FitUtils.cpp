@@ -45,15 +45,6 @@ FitUtils::FitUtils() {
 FitUtils::~FitUtils() {
 }
 
-// Parameter values taken from Fig.2, https://doi.org/10.1016/0168-9002(94)90183-X
-RooRealVar* FitUtils::Q0 = new RooRealVar("Q_{0}", "pedestal", 23.26, 10, 40, "e");
-RooRealVar* FitUtils::s0 = new RooRealVar("#sigma_{0}", "standard deviation of the type I background process", 0.192, 0.1, 10, "");
-RooRealVar* FitUtils::Q1 = new RooRealVar("Q_{1}", "average charge at the PM output", 35.04, 0, 100, "e");
-RooRealVar* FitUtils::s1 = new RooRealVar("#sigma_{1}", "corresponding standard deviation of the charge distribution", 11.73, 5, 50, "");
-RooRealVar* FitUtils::w  = new RooRealVar("w", "probability that signal is accompanied by type II background process", 0.4, 0.1, 1, "");
-RooRealVar* FitUtils::a  = new RooRealVar("#alpha", "coefficient of the exponential decrease of the type II background", 0.034, 0, 0.1, "");
-RooRealVar* FitUtils::mu = new RooRealVar("#mu", "number of photo-electrons", 1.68, 0, 20, "");
-
 void FitUtils::doRooFit(TH1* hist){
 	Bool_t doConvoluton = Constants::getInstance()->parameters.doConvolution;
 	if (doConvoluton) {
@@ -80,13 +71,13 @@ void FitUtils::doRooFitConvolution(TH1* hist){
 	RooArgList* coefficients = new RooArgList();
 
 	// Init zero term PDF:
-	Term0Pdf* term0Pdf = new Term0Pdf("term0Pdf", "Term 0 of the real PM function", *observable, *Q0, *s0, *w, *a, *mu);
+	Term0Pdf* term0Pdf = new Term0Pdf("term0Pdf", "Term 0 of the real PM function", *observable, *Constants::Q0, *Constants::s0, *Constants::w, *Constants::a, *Constants::mu);
 	RooRealVar* coeff0 = new RooRealVar("coeff0", "coeff0", 1E-3, 1E-5, 1E3);
 	terms->add(*term0Pdf);
 	coefficients->add(*coeff0);
 
 	// Init terms 1..N as convolution of the background and ideal PM response function
-	BPdf* bPdf = new BPdf("bPdf", "Background", *observable, *Q0, *s0, *w, *a);
+	BPdf* bPdf = new BPdf("bPdf", "Background", *observable, *Constants::Q0, *Constants::s0, *Constants::w, *Constants::a);
 	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
 	for (UInt_t n = 1; n < nTerms; n++){
 		// Instantiate N-th component PDF
@@ -96,7 +87,7 @@ void FitUtils::doRooFitConvolution(TH1* hist){
 
 		TString name = TString::Format("sIdeal%dPdf", n);
 		TString title = TString::Format("Term %d or the ideal PM function", n);
-		SIdealNPdf* sIdealNPdf = new SIdealNPdf(name.Data(), title.Data(), *observable, *Q1, *s1, *mu, *nVar);
+		SIdealNPdf* sIdealNPdf = new SIdealNPdf(name.Data(), title.Data(), *observable, *Constants::Q1, *Constants::s1, *Constants::mu, *nVar);
 
 		// Instantiate background PDF
 		// TString nameB = TString::Format("B%dPdf", n);
@@ -132,7 +123,7 @@ void FitUtils::doRooFitConvolution(TH1* hist){
 		TString nameC = TString::Format("n%d", n);
 		RooConstVar* nVar = new RooConstVar(nameC.Data(), nameC.Data(), 1.0);
 		TString name = TString::Format("coeff%d", n);
-		RooFormulaVar* coeffN = new RooFormulaVar(name.Data(), name.Data(), "exp(-@0)*@0^@1/sqrt(@1)/sqrt(2*3.1416)/TMath::Factorial(@1)/@2", RooArgList(*mu,*nVar,*s1));
+		RooFormulaVar* coeffN = new RooFormulaVar(name.Data(), name.Data(), "exp(-@0)*@0^@1/sqrt(@1)/sqrt(2*3.1416)/TMath::Factorial(@1)/@2", RooArgList(*Constants::mu,*nVar,*Constants::s1));
 		coefficients->add(*coeffN);
 	}
 
@@ -219,11 +210,11 @@ void FitUtils::doRooFitNoConvolution(TH1* hist){
 
 	// Init zero term PDF:
 	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
-	Term0Pdf* term0Pdf = new Term0Pdf("term0Pdf", "Term 0 of the real PM function", *observable, *Q0, *s0, *w, *a, *mu);
+	Term0Pdf* term0Pdf = new Term0Pdf("term0Pdf", "Term 0 of the real PM function", *observable, *Constants::Q0, *Constants::s0, *Constants::w, *Constants::a, *Constants::mu);
 	terms->add(*term0Pdf);
 
 	// Init terms 1..N as convolution of the background and ideal PM response function
-	BPdf* bPdf = new BPdf("bPdf", "Background", *observable, *Q0, *s0, *w, *a);
+	BPdf* bPdf = new BPdf("bPdf", "Background", *observable, *Constants::Q0, *Constants::s0, *Constants::w, *Constants::a);
 	for (UInt_t n = 1; n < nTerms; n++){
 		// Instantiate N-th component PDF
 		TString nameN = TString::Format("n%d", n);
@@ -232,7 +223,7 @@ void FitUtils::doRooFitNoConvolution(TH1* hist){
 
 		TString name = TString::Format("sIdeal%dPdf", n);
 		TString title = TString::Format("Term %d or the ideal PM function", n);
-		SRealNPdf* sRealNPdf = new SRealNPdf(name.Data(), title.Data(), *observable, *Q0, *Q1, *s1, *w, *a, *mu, *nVar);
+		SRealNPdf* sRealNPdf = new SRealNPdf(name.Data(), title.Data(), *observable, *Constants::Q0, *Constants::Q1, *Constants::s1, *Constants::w, *Constants::a, *Constants::mu, *nVar);
 		terms->add(*sRealNPdf);
 	}
 
@@ -313,26 +304,14 @@ void FitUtils::doRooFitNoConvolution(TH1* hist){
 }
 
 void FitUtils::doFit(TH1* hist, AbsComponentFunc* funcObject){
-
-
 	// Number of terms in the fit function
 	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
 	Bool_t doConvoluton = Constants::getInstance()->parameters.doConvolution;
 
-	// Init array of ROOT parameters for single function
-	RooArgList* parameters = new RooArgList();
-	parameters->add(*Q0);
-	parameters->add(*s0);
-	parameters->add(*Q1);
-	parameters->add(*s1);
-	parameters->add(*w);
-	parameters->add(*a);
-	parameters->add(*mu);
+	// Get list of ROOT parameters for single function
+	RooArgList* parameters = Constants::getInstance()->getFitParameters();
 
 	// Instantiate fitting function
-	Double_t xMin = hist->GetXaxis()->GetXmin();
-	Double_t xMax = hist->GetXaxis()->GetXmax();
-
 	// NOTE: IWill experience memory leaks if define fit function
 	// inside fit function object class like this:
 	// fitFunction = new TF1("fitFunction", this, &FuncSRealOld::func, xMin, xMax, nPar, "FuncSRealOld", "func");
@@ -340,6 +319,8 @@ void FitUtils::doFit(TH1* hist, AbsComponentFunc* funcObject){
 
 	// Update: to save memory and easier access the fit components we introduce
 	// AbsComponentFunction; it stores function components
+	Double_t xMin = hist->GetXaxis()->GetXmin();
+	Double_t xMax = hist->GetXaxis()->GetXmax();
 	TF1* func = new TF1("func", funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->size());
 
 	// Set function starting parameter values, names and limits
@@ -444,17 +425,8 @@ void FitUtils::fillHistogramFromFuncObject(TH1* hist, AbsComponentFunc* funcObje
 	Double_t xMin = hist->GetXaxis()->GetXmin();
 	Double_t xMax = hist->GetXaxis()->GetXmax();
 
-	std::cout << xMin << " " << xMax << std::endl;
-
-	// Init array of ROOT parameters for single function
-	RooArgList* parameters = new RooArgList();
-	parameters->add(*Q0);
-	parameters->add(*s0);
-	parameters->add(*Q1);
-	parameters->add(*s1);
-	parameters->add(*w);
-	parameters->add(*a);
-	parameters->add(*mu);
+	// Get list of ROOT parameters for single function
+	RooArgList* parameters = Constants::getInstance()->getFitParameters();
 
 	TF1* func = new TF1("func_fill", funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->size());
 
@@ -474,27 +446,15 @@ void FitUtils::fillHistogramFromFuncObject(TH1* hist, AbsComponentFunc* funcObje
 		}
 	}
 
-	hist->SetBinContent(1, Constants::BELLAMY_FILL_NTIMES);
-	hist->FillRandom("func_fill", Constants::BELLAMY_FILL_NTIMES);
-	hist->SetBinContent(1, hist->GetBinContent(1)-Constants::BELLAMY_FILL_NTIMES);
-
-	TCanvas* c = new TCanvas("lol", "lol", 640, 480);
-	func->Draw();
-	hist->Draw();
-
+	hist->SetBinContent(1, 64000);
+	hist->FillRandom("func_fill", 64000);
+	hist->SetBinContent(1, hist->GetBinContent(1)-64000);
 }
 
 // Sun terms like in ROOT documentation "term0+term1+...." - DOES NOT WORK
 void FitUtils::doFitTest(TH1* hist){
-	// Init array of ROOT parameters for single function
-	RooArgList* parameters = new RooArgList();
-	parameters->add(*Q0);
-	parameters->add(*s0);
-	parameters->add(*Q1);
-	parameters->add(*s1);
-	parameters->add(*w);
-	parameters->add(*a);
-	parameters->add(*mu);
+	// Get list of ROOT parameters for single function
+	RooArgList* parameters = Constants::getInstance()->getFitParameters();
 
 	// Instantiate fitting function
 	Double_t xMin = hist->GetXaxis()->GetXmin();
