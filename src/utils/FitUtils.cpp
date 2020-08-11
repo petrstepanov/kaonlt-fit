@@ -6,7 +6,6 @@
  */
 
 #include "FitUtils.h"
-#include "../fit/AbsComponentFunc.h"
 #include "../fit/FuncSReal.h"
 #include "../fit/FuncSRealFFT.h"
 #include "../fit/components/FuncTerm0.h"
@@ -18,6 +17,7 @@
 #include "../model/Constants.h"
 #include "../utils/RootUtils.h"
 #include "../utils/GraphicsUtils.h"
+#include "../utils/HistUtils.h"
 #include "../helper/TF1Normalize.h"
 #include <RooRealVar.h>
 #include <RooConstVar.h>
@@ -37,6 +37,7 @@
 #include <TCanvas.h>
 #include <TVectorD.h>
 #include <TCollection.h>
+#include <Math/IntegratorOptions.h>
 
 FitUtils::FitUtils() {
 }
@@ -53,9 +54,14 @@ RooRealVar* FitUtils::w  = new RooRealVar("w", "probability that signal is accom
 RooRealVar* FitUtils::a  = new RooRealVar("#alpha", "coefficient of the exponential decrease of the type II background", 0.034, 0, 0.1, "");
 RooRealVar* FitUtils::mu = new RooRealVar("#mu", "number of photo-electrons", 1.68, 0, 20, "");
 
-void FitUtils::doRooFit(TH1* hist, Bool_t isConvolution){
-	if (isConvolution) doRooFitConvolution(hist);
-	else doRooFit(hist);
+void FitUtils::doRooFit(TH1* hist){
+	Bool_t doConvoluton = Constants::getInstance()->parameters.doConvolution;
+	if (doConvoluton) {
+		doRooFitConvolution(hist);
+	}
+	else {
+		doRooFitNoConvolution(hist);
+	}
 }
 
 // Fit not goes, weird function raise to the right
@@ -199,7 +205,7 @@ void FitUtils::doRooFitConvolution(TH1* hist){
 }
 
 // Fit without convolution, with SRealNPdf
-void FitUtils::doRooFit(TH1* hist){
+void FitUtils::doRooFitNoConvolution(TH1* hist){
 	// Define channels axis (observable)
 	RooRealVar* observable = new RooRealVar("observable", "Channels axis", hist->GetXaxis()->GetXmin(), hist->GetXaxis()->GetXmax(), "ch");
 
@@ -306,9 +312,12 @@ void FitUtils::doRooFit(TH1* hist){
 	spectrumPlot->Draw();
 }
 
-void FitUtils::doFit(TH1* hist){
+void FitUtils::doFit(TH1* hist, AbsComponentFunc* funcObject){
+
+
 	// Number of terms in the fit function
 	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
+	Bool_t doConvoluton = Constants::getInstance()->parameters.doConvolution;
 
 	// Init array of ROOT parameters for single function
 	RooArgList* parameters = new RooArgList();
@@ -324,24 +333,14 @@ void FitUtils::doFit(TH1* hist){
 	Double_t xMin = hist->GetXaxis()->GetXmin();
 	Double_t xMax = hist->GetXaxis()->GetXmax();
 
-	// Experiencing memory leaks if define fitFunction inside FuncSReal like:
+	// NOTE: IWill experience memory leaks if define fit function
+	// inside fit function object class like this:
 	// fitFunction = new TF1("fitFunction", this, &FuncSRealOld::func, xMin, xMax, nPar, "FuncSRealOld", "func");
-	// Therefore we instantiate it in the FitUtils
-	// Update: to save memory and easier access the fit components we introduce AbsComponentFunction
+	// Therefore we instantiate fit function outside of function object
 
-//	AbsComponentFunc* funcObject;
-//	TF1* func;
-//	if(isConvolution){
-//		funcObject = new FuncSRealFFT(hist, nTerms, parameters->size());
-//		func = new TF1("func", funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->size());
-//
-//	} else {
-//		funcObject = new FuncSReal(hist, nTerms, parameters->size());
-//		func = new TF1("func", funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->size());
-//	}
-
-	FuncSReal* funcObject = new FuncSReal(hist, nTerms, parameters->size());
-	TF1* func = new TF1("func", funcObject, &FuncSReal::func, xMin, xMax, parameters->size());
+	// Update: to save memory and easier access the fit components we introduce
+	// AbsComponentFunction; it stores function components
+	TF1* func = new TF1("func", funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->size());
 
 	// Set function starting parameter values, names and limits
 	TIterator* it = parameters->createIterator();
@@ -362,9 +361,9 @@ void FitUtils::doFit(TH1* hist){
 	// Set function points along x axis (for plotting)
 	func->SetNpx(1000);
 
-
-	// Set default integrator
-	// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("");
+	// Set default integrator - very important!
+	// "GAUSS", "GAUSSLEGENDRE", "ADAPTIVE", "ADAPTIVESINGULAR", "NONADAPTIVE"
+	// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("ADAPTIVE");
 
 	// Tutorial: /fit/NumericalMinimization.C
 	//	const char* minName = "Minuit2";
@@ -383,8 +382,7 @@ void FitUtils::doFit(TH1* hist){
 	GraphicsUtils::showFitParametersInStats(hist, canvas);
 
 	hist->Draw();
-//	func->SetLineStyle(ELineStyle::kSolid);
-//	func->Draw("SAME");
+	// func->Draw("SAME");
 
 	// Obtain function fit parameters
 	Int_t nFitPar = func->GetNpar();
@@ -398,73 +396,96 @@ void FitUtils::doFit(TH1* hist){
 	}
 
 	// Print histogram and fitting function integrals
-	Double_t histIntegral = hist->Integral(xMin, xMax);
+//	Double_t histIntegral = hist->Integral(xMin, xMax);
 	Double_t funcIntegral = func->Integral(xMin, xMax);
-	std::cout << "TH1 hist integral: " << histIntegral << std::endl;
-	std::cout << "TF1 func integral: " << funcIntegral << std::endl;
+//	std::cout << "TH1 hist integral: " << histIntegral << std::endl;
+//	std::cout << "TF1 func integral: " << funcIntegral << std::endl;
+
+	// Retrieve component functions
+	TList* components = funcObject->getComponents();
 
 	// Calculate component integrals (not normalized to hist integral) and total components integral
-	Double_t* componentIntegrals = new Double_t[nTerms];
-	Double_t allComponentsIntegral = 0;
-	TList* components = funcObject->getComponents();
-	for (UInt_t n=0; n<=components->LastIndex(); n++){
-		TF1* component = (TF1*)(components->At(n));
-		if (component){
-			// component->SetParameters(fitParameters);
-			Double_t componentIntegral = component->Integral(xMin, xMax);
-			componentIntegrals[n] = componentIntegral;
-			allComponentsIntegral += componentIntegral;
-			std::cout << "Component " << n << " integral: " << componentIntegrals[n] << std::endl;
-		}
-	}
-	std::cout << "All components integral: " << allComponentsIntegral << std::endl;
+//	Double_t* componentIntegrals = new Double_t[nTerms];
+//	Double_t allComponentsIntegral = 0;
+//	for (UInt_t n=0; n<=components->LastIndex(); n++){
+//		TF1* component = (TF1*)(components->At(n));
+//		if (component){
+//			component->SetParameters(fitParameters);
+//			Double_t componentIntegral = component->Integral(xMin, xMax, 1E-3);
+//			componentIntegrals[n] = componentIntegral;
+//			allComponentsIntegral += componentIntegral;
+//			std::cout << "Component " << n << " integral: " << componentIntegrals[n] << std::endl;
+//		}
+//	}
+//	std::cout << "All components integral: " << allComponentsIntegral << std::endl;
 
 	// Create and plot normalized component functions for every component
-	Double_t controlIntegral = 0;
 	for (UInt_t n=0; n<=components->LastIndex(); n++){
 		TF1* component = (TF1*)(components->At(n));
 		if (component){
 			// Component needs to be normalized to the number of the histogram events
-			// and on the ratio of component integral to the all components integral
-			Double_t normFactor = componentIntegrals[n]/allComponentsIntegral*funcIntegral; // why??
-			TF1Normalize* normFunc = new TF1Normalize(component, normFactor);
+			// and on the ratio of component integral to the all components integral ? lol just histogram events
+			TF1Normalize* normFunc = new TF1Normalize(component, funcIntegral);
 			TString name = TString("term%d_norm", n);
 			TF1* f = new TF1(name.Data(), normFunc, &TF1Normalize::func, xMin, xMax, nFitPar, "TF1Normalize", "func");
 			f->SetParameters(fitParameters);
 			f->SetLineStyle(ELineStyle::kDashed);
-//			f->SetNpx(1000);
-			std::cout << "Drawing component " << n << std::endl;
+			f->SetNpx(200);
 			f->Draw("SAME");
-			controlIntegral += f->Integral(xMin, xMax);
 		} else {
 			std::cout << "Error getting the component " << n << std::endl;
 		}
 	}
 
-	// Create combined TF1
-	TString addName = "term0_norm";
-	for (UInt_t n=1; n<=components->LastIndex(); n++){
-		TF1* component = (TF1*)(components->At(n));
-		if (component){
-			addName += "+";
-			addName += component->GetName();
-			addName += "_norm";
+	GraphicsUtils::alignStats(hist, canvas);
+}
+
+void FitUtils::fillHistogramFromFuncObject(TH1* hist, AbsComponentFunc* funcObject){
+	Double_t xMin = hist->GetXaxis()->GetXmin();
+	Double_t xMax = hist->GetXaxis()->GetXmax();
+
+	std::cout << xMin << " " << xMax << std::endl;
+
+	// Init array of ROOT parameters for single function
+	RooArgList* parameters = new RooArgList();
+	parameters->add(*Q0);
+	parameters->add(*s0);
+	parameters->add(*Q1);
+	parameters->add(*s1);
+	parameters->add(*w);
+	parameters->add(*a);
+	parameters->add(*mu);
+
+	TF1* func = new TF1("func_fill", funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->size());
+
+	// Set function starting parameter values, names and limits
+	TIterator* it = parameters->createIterator();
+	TObject* tempObj = 0;
+	Int_t i = 0;
+	while((tempObj=it->Next())){
+		RooRealVar* parameter = dynamic_cast<RooRealVar*>(tempObj);
+		if(parameter){
+			func->SetParName(i, parameter->GetName());
+			func->SetParameter(i, parameter->getVal());
+			func->SetParLimits(i, parameter->getMin(), parameter->getMax());
+			// Double checking the parameter values
+			std::cout << "Parameter " << i << ": " << parameter->GetName() << " " << parameter->getVal() << std::endl;
+			i++;
 		}
 	}
-	TF1 *addComponents = new TF1(addName.Data(), xMin, xMax, nFitPar);
-	std::cout << addName.Data() << std::endl;
-	addComponents->Draw("SAME");
 
-	//
-	std::cout << "control integral: " << controlIntegral << std::endl;
-	GraphicsUtils::alignStats(hist, canvas);
+	hist->SetBinContent(1, Constants::BELLAMY_FILL_NTIMES);
+	hist->FillRandom("func_fill", Constants::BELLAMY_FILL_NTIMES);
+	hist->SetBinContent(1, hist->GetBinContent(1)-Constants::BELLAMY_FILL_NTIMES);
+
+	TCanvas* c = new TCanvas("lol", "lol", 640, 480);
+	func->Draw();
+	hist->Draw();
+
 }
 
 // Sun terms like in ROOT documentation "term0+term1+...." - DOES NOT WORK
 void FitUtils::doFitTest(TH1* hist){
-	// Number of terms in the fit function
-	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
-
 	// Init array of ROOT parameters for single function
 	RooArgList* parameters = new RooArgList();
 	parameters->add(*Q0);
@@ -488,6 +509,7 @@ void FitUtils::doFitTest(TH1* hist){
 	components->Add(term0);
 
 	// Terms 1..N are gaussians convoluted with the background function
+	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
 	for (UInt_t n=1; n < nTerms; n++){
 		FuncTermN* funcTermN = new FuncTermN(n);
 		TString name = TString::Format("term%d", n);
@@ -535,4 +557,3 @@ void FitUtils::doFitTest(TH1* hist){
 
 	fitFunction->Draw("SAME");
 }
-

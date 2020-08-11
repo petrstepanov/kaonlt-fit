@@ -34,7 +34,7 @@ int run(const char* fileName) {
 		TreeHelper::getInstance()->plotTree();
 	}
 
-	// Temporary plot tree profiles for ch_! and ch_2
+	// Temporary plot tree profiles for ch_1 and ch_2
 	// Need to study the region between the pedestal and first peak
 	// TreeHelper::getInstance()->plotTreeProfiles();
 
@@ -80,14 +80,35 @@ int run(const char* fileName) {
 	// pmt1Hist->Draw();
 	// GraphicsUtils::alignStats(pmt1Hist, fitCanvas);
 
+	AbsComponentFunc* funcObject = new FuncSReal(pmt1Hist);
+	FitUtils::doFit(pmt1Hist, funcObject);
+
+	AbsComponentFunc* funcObject2 = new FuncSReal(pmt2Hist);
+	FitUtils::doFit(pmt2Hist, funcObject);
+
 	return 0;
 }
 
+// Test fit histogram digitized from the paper
 int test(){
 	TH1* hist = TestSpectrum::getHistogram();
-	Bool_t doConvolution = kFALSE;
-	FitUtils::doFit(hist);
-	// FitUtils::doRooFit(hist, doConvolution);
+	AbsComponentFunc* funcObject = new FuncSReal(hist);
+	FitUtils::doFit(hist, funcObject);
+	return 0;
+}
+
+// Test fit histogram filled from the fitting function from the paper
+int testGenerate(){
+	// Create histogram from function
+	Int_t nBins = Constants::BELLAMY_NBINS;
+	TH1F *hist = new TH1F("h1", "test", nBins, 0, nBins);
+
+	// Set certain bin value because AbsComponentFunc* is normalized to histogram integral
+	AbsComponentFunc* funcObject = new FuncSReal(hist);
+	FitUtils::fillHistogramFromFuncObject(hist, funcObject);
+
+	// Fit histogram
+	FitUtils::doFit(hist, funcObject);
 	return 0;
 }
 
@@ -109,7 +130,8 @@ int main(int argc, char* argv[]) {
 	}
 
 	// Test fitting function on the test histigram
-	test();
+//	test();
+	testGenerate();
 
 	// Iterate through input files and run analysis
 //	for (TObject* object : *(constants->parameters.inputFiles)) {

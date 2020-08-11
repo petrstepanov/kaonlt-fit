@@ -18,7 +18,9 @@ public:
 	Double_t func(Double_t*, Double_t*);
 	Double_t getIntegral(Double_t, Double_t, Double_t*);
 
-	Double_t indefiniteIntegral(Double_t, Double_t*);
+	// Because function is non-integratable (contains StepFunction)
+	Double_t indefiniteIntegralBeforeQ0(Double_t, Double_t*);
+	Double_t indefiniteIntegralAfterQ0(Double_t, Double_t*);
 };
 
 #endif /* SRC_FIT_FuncTerm0_H_ */

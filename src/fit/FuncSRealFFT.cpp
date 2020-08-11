@@ -14,7 +14,7 @@
 #include "./components/FuncSIdealN.h"
 #include "./components/FuncTerm0.h"
 
-FuncSRealFFT::FuncSRealFFT(TH1* h, Int_t nMaxVal, Int_t nParVal) : AbsComponentFunc(), hist(h), nMax(nMaxVal), nPar(nParVal) {
+FuncSRealFFT::FuncSRealFFT(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h), nPar(nParVal) {
 	// Init TF1 finctions used to cunstruct the final fitting function
 	Double_t xMin = hist->GetXaxis()->GetXmin();
 	Double_t xMax = hist->GetXaxis()->GetXmax();
@@ -32,6 +32,7 @@ FuncSRealFFT::FuncSRealFFT(TH1* h, Int_t nMaxVal, Int_t nParVal) : AbsComponentF
 	// Terms 1..N are background function covoluted wit the Ideal FuncSRealFFT function
 	FuncB* funcB = new FuncB();
 	TF1* b = new TF1("b", funcB, &FuncB::func, xMin, xMax, nPar, "FuncB", "func");
+	Int_t nMax = Constants::getInstance()->parameters.termsNumber;
 	for (UInt_t n=1; n < nMax; n++){
 		FuncSIdealN* funcSIdealN = new FuncSIdealN(n);
 		TString name = TString::Format("SIdeal%d", n);

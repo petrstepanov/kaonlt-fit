@@ -55,8 +55,8 @@ const Int_t Constants::AMP_BINS = 4096;
 const Int_t Constants::AMP_MIN = 0;
 const Int_t Constants::AMP_MAX = 4096;
 
-// const Double_t Constants::e = 1.6e−19;
-
+const Int_t Constants::BELLAMY_FILL_NTIMES = 64072;
+const Int_t Constants::BELLAMY_NBINS = 294;
 
 void Constants::parseParameters(int argc, char* argv[]){
 	// Print command line argumants
@@ -92,6 +92,12 @@ void Constants::parseParameters(int argc, char* argv[]){
 			// Add filename to the list of files
 			TObjString* fileName = new TObjString(pair.second);
 			parameters.inputFiles->Add(fileName);
+		}
+		else if (pair.first == "do-convolution"){
+			// Whether to use TConvolution or not
+			if (pair.second == "kTRUE" || pair.second == "1"){
+				parameters.doConvolution = kTRUE;
+			}
 		}
 		std::cout << "\t" << pair.first << ": " << pair.second << std::endl;
 	}

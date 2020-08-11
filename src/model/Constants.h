@@ -25,6 +25,7 @@ struct Parameters {
 	Float_t plotTree = kTRUE;
 	Int_t tileProfile = 55;
 	Int_t termsNumber = 50;
+	Bool_t doConvolution = kFALSE;
 	TList* inputFiles = new TList();
 };
 
@@ -46,6 +47,9 @@ class Constants {
 	static const Int_t AMP_MIN;
 	static const Int_t AMP_MAX;
 
+	// Random numbers to fill the histogram
+	static const Int_t BELLAMY_FILL_NTIMES;
+	static const Int_t BELLAMY_NBINS;
 //	static const Double_t e;
 
     void parseParameters(int argc, char* argv[]);

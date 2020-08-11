@@ -15,7 +15,7 @@
 #include "./components/FuncTermN.h"
 
 
-FuncSReal::FuncSReal(TH1* h, Int_t nMaxVal, Int_t nParVal) : AbsComponentFunc(), hist(h), nMax(nMaxVal), nPar(nParVal) {
+FuncSReal::FuncSReal(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h), nPar(nParVal) {
 	// Init TF1 finctions used to cunstruct the final fitting function
 	Double_t xMin = hist->GetXaxis()->GetXmin();
 	Double_t xMax = hist->GetXaxis()->GetXmax();
@@ -27,14 +27,15 @@ FuncSReal::FuncSReal(TH1* h, Int_t nMaxVal, Int_t nParVal) : AbsComponentFunc(),
 	// Instantiate terms of the real FuncSReal
 	// Zero term has an uncertainty. Its approximate value is taken from (10)
 	FuncTerm0* funcTerm0 = new FuncTerm0();
-	TF1* term0 = new TF1("term0", funcTerm0, &FuncTerm0::func, xMin, xMax, 7, "FuncTerm0", "func");
+	TF1* term0 = new TF1("term0", funcTerm0, &FuncTerm0::func, xMin, xMax, nPar, "FuncTerm0", "func");
 	components->Add(term0);
 
 	// Terms 1..N are background function covoluted wit the Ideal FuncSReal function
+	Int_t nMax = Constants::getInstance()->parameters.termsNumber;
 	for (UInt_t n=1; n < nMax; n++){
 		FuncTermN* funcTermN = new FuncTermN(n);
 		TString name = TString::Format("term%d", n);
-		TF1* termN = new TF1(name.Data(), funcTermN, &FuncTermN::func, xMin, xMax, 7, "FuncTermN", "func");
+		TF1* termN = new TF1(name.Data(), funcTermN, &FuncTermN::func, xMin, xMax, nPar, "FuncTermN", "func");
 		components->Add(termN);
 	}
 }
@@ -65,7 +66,22 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 		if (component){
 			value += component->EvalPar(_x, par);			// Sum the cumulated value
 		    component->SetParameters(par);					// Set parameters
-			integral += component->Integral(xMin, xMax, 1);	// Sum the total integral
+		    // Sum the total integral
+//			if (n==0){
+//				// Step function in the Pedestal requires custom analytical integral
+//				FuncTerm0* ft0 = new FuncTerm0();
+//				// My integral:
+//				Double_t myIntegral = ft0->getIntegral(xMin, xMax, par);
+//				// Alternative option would be use big epsilon
+//				Double_t rootIntegral = component->Integral(xMin, xMax);
+//				// Compare:
+//				// std::cout << "myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
+//				integral+= myIntegral;
+//			}
+//			else {
+//				integral += component->Integral(xMin, xMax, 1E-6);	// Sum the total integral
+//			}
+			integral += component->Integral(xMin, xMax, 1E-6);
 		} else {
 			std::cout << "Error getting the component" << std::endl;
 		}

@@ -11,18 +11,21 @@
 #include <TH1.h>
 #include <RooRealVar.h>
 
+#include "../fit/AbsComponentFunc.h"
+
 class FitUtils {
 public:
 	FitUtils();
 	virtual ~FitUtils();
 
-	static void doFit(TH1* hist);
+	static void doFit(TH1* hist, AbsComponentFunc* funcObject);
 	static void doFitTest(TH1* hist);
-	static void doRooFit(TH1* hist, Bool_t isConvolution);
+	static void doRooFit(TH1* hist);
+	static void fillHistogramFromFuncObject(TH1* hist, AbsComponentFunc* funcObject);
 
 private:
 	static void doRooFitConvolution(TH1* hist);
-	static void doRooFit(TH1* hist);
+	static void doRooFitNoConvolution(TH1* hist);
 	static TF1* getFuncSReal(TH1*, Int_t, Bool_t isConvolution = kFALSE);
 
 	static RooRealVar* Q0;
