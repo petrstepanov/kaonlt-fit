@@ -61,17 +61,21 @@ TH1* HistUtils::trimHistogram(TH1* hist, Int_t minBin, Int_t maxBin){
 
 TH1* HistUtils::cloneHistogram(TH1* hist, const char* newName, const char* title){
 	const char* newTitle = title!=0 ? title : hist->GetTitle();
-	Int_t nBins = hist->GetXaxis()->GetNbins();
-	Int_t xMin =  hist->GetXaxis()->GetXmin();
-	Int_t xMax =  hist->GetXaxis()->GetXmax();
 
-	TH1* histClone = new TH1F(newName, newTitle, nBins, xMin, xMax);
-	for (Int_t i = 1; i <= hist->GetXaxis()->GetNbins(); i++){
-		histClone->SetBinContent(i, hist->GetBinContent(i));
-	}
+//	Int_t nBins = hist->GetXaxis()->GetNbins();
+//	Int_t xMin =  hist->GetXaxis()->GetXmin();
+//	Int_t xMax =  hist->GetXaxis()->GetXmax();
+//
+//	TH1* histClone = new TH1F(newName, newTitle, nBins, xMin, xMax);
+//	for (Int_t i = 1; i <= hist->GetXaxis()->GetNbins(); i++){
+//		histClone->SetBinContent(i, hist->GetBinContent(i));
+//	}
+//
 
+	TH1* histClone = (TH1*)hist->Clone(newName);
 	histClone->GetXaxis()->SetTitle(hist->GetXaxis()->GetTitle());
 	histClone->GetYaxis()->SetTitle(hist->GetYaxis()->GetTitle());
+
 	return histClone;
 }
 

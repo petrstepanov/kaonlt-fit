@@ -32,8 +32,8 @@ public:
 	virtual TObject* clone(const char* newname) const { return new BPdf(*this, newname); }
 	inline virtual ~BPdf() { }
 
-//    Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-//    Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+    Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
+    Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
 
 protected:
     RooRealProxy x;
@@ -43,8 +43,8 @@ protected:
     RooRealProxy a;
 
     Double_t evaluate() const;
-//    Double_t indefiniteIntegralBeforeQ0(Double_t x) const;
-//    Double_t indefiniteIntegralAfterQ0(Double_t x) const;
+    Double_t indefiniteIntegralBeforeQ0(Double_t x) const;
+    Double_t indefiniteIntegralAfterQ0(Double_t x) const;
 private:
 
 	ClassDef(BPdf, 1)

@@ -32,8 +32,8 @@ public:
 	virtual TObject* clone(const char* newname) const { return new SIdealNPdf(*this, newname); }
 	inline virtual ~SIdealNPdf() { }
 
-//    Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-//    Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+    Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
+    Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
 
 protected:
     RooRealProxy x;
@@ -43,7 +43,7 @@ protected:
     RooRealProxy n;
 
     Double_t evaluate() const;
-//    Double_t indefiniteIntegral(Double_t x) const;
+    Double_t indefiniteIntegral(Double_t x) const;
 private:
 
 	ClassDef(SIdealNPdf, 1)

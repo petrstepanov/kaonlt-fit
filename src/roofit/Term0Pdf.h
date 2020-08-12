@@ -33,8 +33,8 @@ public:
 	virtual TObject* clone(const char* newname) const { return new Term0Pdf(*this, newname); }
 	inline virtual ~Term0Pdf() { }
 
-//    Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-//    Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+    Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
+    Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
 
 protected:
     RooRealProxy x;
@@ -45,8 +45,8 @@ protected:
     RooRealProxy mu;
 
     Double_t evaluate() const;
-//    Double_t indefiniteIntegralBeforeQ0(Double_t x) const;
-//    Double_t indefiniteIntegralAfterQ0(Double_t x) const;
+    Double_t indefiniteIntegralBeforeQ0(Double_t x) const;
+    Double_t indefiniteIntegralAfterQ0(Double_t x) const;
 private:
 
 	ClassDef(Term0Pdf, 1)

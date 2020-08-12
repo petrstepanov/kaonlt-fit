@@ -34,30 +34,30 @@ Double_t SIdealNPdf::evaluate() const {
 	return value;
 }
 
-//Double_t SIdealNPdf::indefiniteIntegral(Double_t x) const {
-//	Double_t value =  // begin mathematica code from "/mathematica/SidealN.nb"
-//			(Power(mu,n)*Erf((-(n*Q1) + x)/(Sqrt(2)*Sqrt(n)*s1)))/
-//			   (2.*Power(E,mu)*Factorial(n))
-//	; // end mathematica code
-//	return value;
-//}
-//
-//// Get analytical integral
-//Int_t SIdealNPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const {
-//	if (matchArgs(allVars, analVars, x))
-//		return 1;
-//	return 0;
-//}
-//
-//// Analytical integral
-//Double_t SIdealNPdf::analyticalIntegral(Int_t code, const char* rangeName) const {
-//	assert(code == 1);
-//
-//	if (code == 1) {
-//		Double_t x1 = x.min(rangeName);
-//		Double_t x2 = x.max(rangeName);
-//		return indefiniteIntegral(x2) - indefiniteIntegral(x1);
-//	}
-//	std::cout << "Error in SIdealNPdf::analyticalIntegral" << std::endl;
-//	return 0;
-//}
+Double_t SIdealNPdf::indefiniteIntegral(Double_t x) const {
+	Double_t value =  // begin mathematica code from "/mathematica/SidealN.nb"
+			(Power(mu,n)*Erf((-(n*Q1) + x)/(Sqrt(2)*Sqrt(n)*s1)))/
+			   (2.*Power(E,mu)*Factorial(n))
+	; // end mathematica code
+	return value;
+}
+
+// Get analytical integral
+Int_t SIdealNPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const {
+	if (matchArgs(allVars, analVars, x))
+		return 1;
+	return 0;
+}
+
+// Analytical integral
+Double_t SIdealNPdf::analyticalIntegral(Int_t code, const char* rangeName) const {
+	assert(code == 1);
+
+	if (code == 1) {
+		Double_t x1 = x.min(rangeName);
+		Double_t x2 = x.max(rangeName);
+		return indefiniteIntegral(x2) - indefiniteIntegral(x1);
+	}
+	std::cout << "Error in SIdealNPdf::analyticalIntegral" << std::endl;
+	return 0;
+}

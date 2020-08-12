@@ -76,6 +76,8 @@ int run(const char* fileName) {
 	pmt1Hist->SetBinContent(1, 0);
 	pmt2Hist->SetBinContent(1, 0);
 
+	FitUtils::doRooFit(pmt1Hist, kFALSE);
+
 	// AbsComponentFunc* funcObject = new FuncSRealNoTerm0(pmt1Hist);
 	// FitUtils::doFit(pmt1Hist, funcObject);
 
@@ -86,22 +88,20 @@ int run(const char* fileName) {
 }
 
 // Test fit histogram digitized from the paper
-int test(){
-	TH1* hist = TestSpectrum::getHistogram();
+int testDigitized(){
+	TH1* hist = TestSpectrum::getHistogramPaper();
 	AbsComponentFunc* funcObject = new FuncSReal(hist);
 	FitUtils::doFit(hist, funcObject);
 	return 0;
 }
 
 // Test fit histogram filled from the fitting function from the paper
-int testGenerate(){
+int testFillRandom(){
 	// Instantiate histogram
-	Int_t nBins = TestSpectrum::getHistogram()->GetXaxis()->GetNbins();
-	TH1F *hist = new TH1F("bellamyHistFillRandom", "Bellamy histogram. Random fill from fit function.", nBins, 0, nBins);
+	Int_t nBins = TestSpectrum::getHistogramPaper()->GetXaxis()->GetNbins();
+	TH1F *hist = new TH1F("hist", "Bellamy histogram. Random fill from fit function.", nBins, 0, nBins);
 	hist->GetXaxis()->SetTitle("ADC Channel");
 	hist->GetYaxis()->SetTitle("Events");
-
-	// Fill histogram with random events from FuncSReal function
 	AbsComponentFunc* funcObject = new FuncSReal(hist);
 	FitUtils::fillHistogramFromFuncObject(hist, funcObject);
 
@@ -109,7 +109,7 @@ int testGenerate(){
 	FitUtils::doFit(hist, funcObject);
 
 	// Fit histogram with ROOT Fit with Convolution
-	TH1* hist2 = HistUtils::cloneHistogram(hist, "hist2");
+	TH1* hist2 = HistUtils::cloneHistogram(hist, "hist_convolution");
 	AbsComponentFunc* funcObjectFFT = new FuncSRealFFT(hist2);
 	FitUtils::doFit(hist2, funcObjectFFT);
 
@@ -123,6 +123,20 @@ int testGenerate(){
 //	FitUtils::doFit(hist3, funcObjectNoTerm0);
 
 	return 0;
+}
+
+void testRooFit(){
+	// Instantiate histogram
+	Int_t nBins = TestSpectrum::getHistogramReal()->GetXaxis()->GetNbins();
+	TH1F *hist = new TH1F("bellamyHistFillRandom", "Bellamy histogram. Random fill from fit function.", nBins, 0, nBins);
+	hist->GetXaxis()->SetTitle("ADC Channel");
+	hist->GetYaxis()->SetTitle("Events");
+
+	// Fill histogram with random events from FuncSReal function
+	AbsComponentFunc* funcObject = new FuncSReal(hist);
+	FitUtils::fillHistogramFromFuncObject(hist, funcObject);
+
+	FitUtils::doRooFit(hist);
 }
 
 int main(int argc, char* argv[]) {
@@ -143,16 +157,16 @@ int main(int argc, char* argv[]) {
 	}
 
 	// Test fitting function on the digitized test histogram
-	// test();
+	// testDigitized();
 	// Test fitting function on the filled random test histogram
-	testGenerate();
-
+	// testFillRandom();
+    // testRooFit();
 	// Iterate through input files and run analysis
-//	for (TObject* object : *(constants->parameters.inputFiles)) {
-//		if (TObjString* objString = dynamic_cast<TObjString*>(object)){
-//			run(objString->GetString());
-//		}
-//	}
+	for (TObject* object : *(constants->parameters.inputFiles)) {
+		if (TObjString* objString = dynamic_cast<TObjString*>(object)){
+			run(objString->GetString());
+		}
+	}
 
 	app->Run();
 	return 0;

@@ -20,14 +20,12 @@ public:
 
 	static void doFit(TH1* hist, AbsComponentFunc* funcObject);
 	static void doFitTest(TH1* hist);
-	static void doRooFit(TH1* hist, Bool_t doConvolution);
+	static void doRooFit(TH1* hist, Bool_t useTerm0 = kTRUE);
 	static void fillHistogramFromFuncObject(TH1* hist, AbsComponentFunc* funcObject);
 	static TH1* getfillHistogramFromFuncObject(TH1* hist, AbsComponentFunc* funcObject);
 	static Double_t* getConvFitParameters(Double_t*, Int_t nPar);
 
 private:
-	static void doRooFitConvolution(TH1* hist);
-	static void doRooFitNoConvolution(TH1* hist);
 	static TF1* getFuncSReal(TH1*, Int_t, Bool_t isConvolution = kFALSE);
 
 	static RooRealVar* Q0;

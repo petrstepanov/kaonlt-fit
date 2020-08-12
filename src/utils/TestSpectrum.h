@@ -16,11 +16,13 @@ public:
 	TestSpectrum();
 	virtual ~TestSpectrum();
 
-	static TH1* getHistogram();
+	static TH1* getHistogramPaper();
+	static TH1* getHistogramReal();
 
 private:
 //	static TestSpectrum* instance;
 	static Int_t array[];
+	static Int_t array2[];
 };
 
 #endif /* SRC_UTILS_TESTSPECTRUM_H_ */
