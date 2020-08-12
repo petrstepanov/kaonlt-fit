@@ -65,10 +65,6 @@ const Int_t Constants::TILE_MAX = 146;
 const Int_t Constants::CH_MIN = -1000;
 const Int_t Constants::CH_MAX = 20000;
 
-// PMT fit spectra channel range (cutting off bin 1 with noise)
-const Int_t Constants::CH_FIT_MIN = 1;
-const Int_t Constants::CH_FIT_MAX = 5000;
-
 const Int_t Constants::AMP_MIN = 0;
 const Int_t Constants::AMP_MAX = 4096;
 

@@ -42,7 +42,7 @@ int run(const char* fileName) {
 
 	// Prepare histograms for the PMT projection spectra
 	TString pmt1HistTitle = TString::Format("PMT1 profile at tilel=%d", Constants::getInstance()->parameters.tileProfile);
-	TH1* pmt1Hist = new TH1F("pmt1Hist", pmt1HistTitle, Constants::CH_MAX-Constants::CH_MIN, Constants::CH_FIT_MIN, Constants::CH_MAX);
+	TH1* pmt1Hist = new TH1F("pmt1Hist", pmt1HistTitle, Constants::CH_MAX-Constants::CH_MIN, Constants::CH_MIN, Constants::CH_MAX);
 	pmt1Hist->GetXaxis()->SetTitle("Channel (ch_1)");
 	pmt1Hist->GetYaxis()->SetTitle("Counts");
 	TString pmt2HistTitle = TString::Format("PMT2 profile at tiler=%d", Constants::getInstance()->parameters.tileProfile);
@@ -73,10 +73,11 @@ int run(const char* fileName) {
 	pmtsCanvas->SaveAs(pngFilePath);
 
 	// Remove zero bin noise on the PMT spectra
-	pmt1Hist->SetBinContent(1, 0);
-	pmt2Hist->SetBinContent(1, 0);
+	TH1* pmt1HistFit = HistUtils::cloneHistogram(pmt1Hist, "pmt1HistFit");
+	pmt1HistFit->SetBinContent(1, 0);
+	pmt1HistFit = HistUtils::trimHistogram(pmt1HistFit, 1, 5000);
 
-	FitUtils::doRooFit(pmt1Hist, kFALSE);
+	FitUtils::doRooFit(pmt1HistFit, kFALSE);
 
 	// AbsComponentFunc* funcObject = new FuncSRealNoTerm0(pmt1Hist);
 	// FitUtils::doFit(pmt1Hist, funcObject);
