@@ -50,11 +50,12 @@ Int_t RootUtils::getNumCpu(){
 TStopwatch* RootUtils::watch = new TStopwatch();
 
 void RootUtils::startTimer(){
+	watch->Reset();
     watch->Start();
 }
 
 void RootUtils::stopAndPrintTimer(){
     watch->Stop();
     watch->Print();
-	printf("Real time = %7.3f s, Cpu Time = %7.3f s\n",watch->RealTime(),watch->CpuTime());
+	printf("Real time = %7.3f s, Cpu Time = %7.3f s\n", watch->RealTime(), watch->CpuTime());
 }

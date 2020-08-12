@@ -6,6 +6,7 @@
  */
 
 #include "../utils/HistUtils.h"
+#include <TH1F.h>
 
 HistUtils::HistUtils() {
 	// TODO Auto-generated constructor stub
@@ -39,6 +40,39 @@ TH1* HistUtils::trimHistogram(TH1* hist){
 	}
 
 	return trimmedHist;
+}
+
+TH1* HistUtils::trimHistogram(TH1* hist, Int_t minBin, Int_t maxBin){
+	Int_t nBins = maxBin - minBin + 1;
+
+	TAxis* xAxis = hist->GetXaxis();
+	TString name = TString::Format("%s-trimmed", hist->GetName());
+	TString title = TString::Format("%s Trimmed", hist->GetTitle());
+	TH1F* trimmedHist = new TH1F(name, title, nBins, xAxis->GetBinLowEdge(minBin), xAxis->GetBinUpEdge(maxBin));
+
+	for (Int_t i = 1; i <= nBins; i++){
+		trimmedHist->SetBinContent(i, hist->GetBinContent(i+minBin-1));
+		trimmedHist->SetBinError(i, hist->GetBinError(i+minBin-1));
+		std::cout << "bin: " << i << " content: " << trimmedHist->GetBinContent(i) << " error: " << trimmedHist->GetBinError(i) << std::endl;
+	}
+
+	return trimmedHist;
+}
+
+TH1* HistUtils::cloneHistogram(TH1* hist, const char* newName, const char* title){
+	const char* newTitle = title!=0 ? title : hist->GetTitle();
+	Int_t nBins = hist->GetXaxis()->GetNbins();
+	Int_t xMin =  hist->GetXaxis()->GetXmin();
+	Int_t xMax =  hist->GetXaxis()->GetXmax();
+
+	TH1* histClone = new TH1F(newName, newTitle, nBins, xMin, xMax);
+	for (Int_t i = 1; i <= hist->GetXaxis()->GetNbins(); i++){
+		histClone->SetBinContent(i, hist->GetBinContent(i));
+	}
+
+	histClone->GetXaxis()->SetTitle(hist->GetXaxis()->GetTitle());
+	histClone->GetYaxis()->SetTitle(hist->GetYaxis()->GetTitle());
+	return histClone;
 }
 
 void HistUtils::resetHistogram(TH1* hist){

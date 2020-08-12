@@ -17,11 +17,13 @@
 #include "model/Constants.h"
 #include "utils/GraphicsUtils.h"
 #include "utils/TreeUtils.h"
+#include "utils/HistUtils.h"
 #include "utils/TestSpectrum.h"
 #include "utils/FitUtils.h"
 #include "helper/TreeHelper.h"
 #include "fit/FuncSReal.h"
 #include "fit/FuncSRealFFT.h"
+#include "fit/FuncSRealNoTerm0.h"
 
 int run(const char* fileName) {
 	// Instantiate the Tree and read it from the input file
@@ -31,7 +33,7 @@ int run(const char* fileName) {
 
 	// Plot the Tree if --plot-tree=kTRUE command line argument was passed
 	if (Constants::getInstance()->parameters.plotTree == kTRUE){
-		TreeHelper::getInstance()->plotTree();
+		TreeHelper::getInstance()->plotTree(fileName);
 	}
 
 	// Temporary plot tree profiles for ch_1 and ch_2
@@ -40,11 +42,11 @@ int run(const char* fileName) {
 
 	// Prepare histograms for the PMT projection spectra
 	TString pmt1HistTitle = TString::Format("PMT1 profile at tilel=%d", Constants::getInstance()->parameters.tileProfile);
-	TH1* pmt1Hist = new TH1F("pmt1Hist", pmt1HistTitle, 2100, -1000, 20000);
+	TH1* pmt1Hist = new TH1F("pmt1Hist", pmt1HistTitle, Constants::CH_MAX-Constants::CH_MIN, Constants::CH_FIT_MIN, Constants::CH_MAX);
 	pmt1Hist->GetXaxis()->SetTitle("Channel (ch_1)");
 	pmt1Hist->GetYaxis()->SetTitle("Counts");
 	TString pmt2HistTitle = TString::Format("PMT2 profile at tiler=%d", Constants::getInstance()->parameters.tileProfile);
-	TH1* pmt2Hist = new TH1F("pmt2Hist", pmt2HistTitle, 2100, -1000, 20000);
+	TH1* pmt2Hist = new TH1F("pmt2Hist", pmt2HistTitle, Constants::CH_MAX-Constants::CH_MIN, Constants::CH_MIN, Constants::CH_MAX);
 	pmt2Hist->GetXaxis()->SetTitle("Channel (ch_2)");
 	pmt2Hist->GetYaxis()->SetTitle("Counts");
 
@@ -67,24 +69,18 @@ int run(const char* fileName) {
 	// GraphicsUtils::alignStats(pmt2HistClone, pmtsCanvasPad2);
 
 	// Save canvas with PMT profiles to file
-	TString pngFilePath = TString(pmtsCanvas->GetName()) + ".png";
+	TString pngFilePath = TString::Format("%s-%s.png",fileName, pmtsCanvas->GetName());
 	pmtsCanvas->SaveAs(pngFilePath);
 
-	// Perform fitting (just one hist for now)
-	// FuncSReal* funcSReal = new FuncSReal(pmt1Hist);
-	// TF1* func = funcSReal->getFitFunction();
-	// TCanvas* fitCanvas = new TCanvas("fitCanvas", "fitCanvas", 1024, 512);
-	// fitCanvas->SetLogy();
-	// pmt1Hist->Fit(func);
-	// GraphicsUtils::showFitParametersInStats(pmt1Hist, fitCanvas);
-	// pmt1Hist->Draw();
-	// GraphicsUtils::alignStats(pmt1Hist, fitCanvas);
+	// Remove zero bin noise on the PMT spectra
+	pmt1Hist->SetBinContent(1, 0);
+	pmt2Hist->SetBinContent(1, 0);
 
-	AbsComponentFunc* funcObject = new FuncSReal(pmt1Hist);
-	FitUtils::doFit(pmt1Hist, funcObject);
+	// AbsComponentFunc* funcObject = new FuncSRealNoTerm0(pmt1Hist);
+	// FitUtils::doFit(pmt1Hist, funcObject);
 
-	AbsComponentFunc* funcObject2 = new FuncSReal(pmt2Hist);
-	FitUtils::doFit(pmt2Hist, funcObject);
+	// AbsComponentFunc* funcObject2 = new FuncSReal(pmt2Hist);
+	// FitUtils::doFit(pmt2Hist, funcObject);
 
 	return 0;
 }
@@ -99,16 +95,33 @@ int test(){
 
 // Test fit histogram filled from the fitting function from the paper
 int testGenerate(){
-	// Create histogram from function
+	// Instantiate histogram
 	Int_t nBins = TestSpectrum::getHistogram()->GetXaxis()->GetNbins();
-	TH1F *bellamyHistFillRandom = new TH1F("bellamyHistFillRandom", "Bellamy histogram. Random fill from fit function.", nBins, 0, nBins);
+	TH1F *hist = new TH1F("bellamyHistFillRandom", "Bellamy histogram. Random fill from fit function.", nBins, 0, nBins);
+	hist->GetXaxis()->SetTitle("ADC Channel");
+	hist->GetYaxis()->SetTitle("Events");
 
-	// Set certain bin value because AbsComponentFunc* is normalized to histogram integral
-	AbsComponentFunc* funcObject = new FuncSReal(bellamyHistFillRandom);
-	FitUtils::fillHistogramFromFuncObject(bellamyHistFillRandom, funcObject);
+	// Fill histogram with random events from FuncSReal function
+	AbsComponentFunc* funcObject = new FuncSReal(hist);
+	FitUtils::fillHistogramFromFuncObject(hist, funcObject);
 
-	// Fit histogram
-	FitUtils::doFit(bellamyHistFillRandom, funcObject);
+	// Fit histogram with ROOT Fit
+	FitUtils::doFit(hist, funcObject);
+
+	// Fit histogram with ROOT Fit with Convolution
+	TH1* hist2 = HistUtils::cloneHistogram(hist, "hist2");
+	AbsComponentFunc* funcObjectFFT = new FuncSRealFFT(hist2);
+	FitUtils::doFit(hist2, funcObjectFFT);
+
+	// Generate histogram without Pedestal
+//	TH1* hist3 = HistUtils::cloneHistogram(hist, "hist3");
+//	Int_t maxBin = 30;
+//	for (Int_t i = 1; i <= maxBin; i++){
+//		hist3->SetBinContent(i, 0);
+//	}
+//	AbsComponentFunc* funcObjectNoTerm0 = new FuncSRealNoTerm0(hist3);
+//	FitUtils::doFit(hist3, funcObjectNoTerm0);
+
 	return 0;
 }
 

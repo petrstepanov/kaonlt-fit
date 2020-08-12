@@ -37,6 +37,8 @@
 #include <TCanvas.h>
 #include <TVectorD.h>
 #include <TCollection.h>
+#include <TFitResultPtr.h>
+#include <TDatime.h>
 #include <Math/IntegratorOptions.h>
 
 FitUtils::FitUtils() {
@@ -45,9 +47,8 @@ FitUtils::FitUtils() {
 FitUtils::~FitUtils() {
 }
 
-void FitUtils::doRooFit(TH1* hist){
-	Bool_t doConvoluton = Constants::getInstance()->parameters.doConvolution;
-	if (doConvoluton) {
+void FitUtils::doRooFit(TH1* hist, Bool_t doConvolution){
+	if (doConvolution) {
 		doRooFitConvolution(hist);
 	}
 	else {
@@ -72,7 +73,7 @@ void FitUtils::doRooFitConvolution(TH1* hist){
 
 	// Init zero term PDF:
 	Term0Pdf* term0Pdf = new Term0Pdf("term0Pdf", "Term 0 of the real PM function", *observable, *Constants::Q0, *Constants::s0, *Constants::w, *Constants::a, *Constants::mu);
-	RooRealVar* coeff0 = new RooRealVar("coeff0", "coeff0", 1E-3, 1E-5, 1E3);
+	RooRealVar* coeff0 = new RooRealVar("coeff0", "coeff0", 1, 1E-3, 1E3);
 	terms->add(*term0Pdf);
 	coefficients->add(*coeff0);
 
@@ -304,6 +305,8 @@ void FitUtils::doRooFitNoConvolution(TH1* hist){
 }
 
 void FitUtils::doFit(TH1* hist, AbsComponentFunc* funcObject){
+	TDatime* timestamp = new TDatime();
+
 	// Number of terms in the fit function
 	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
 	Bool_t doConvoluton = Constants::getInstance()->parameters.doConvolution;
@@ -321,7 +324,8 @@ void FitUtils::doFit(TH1* hist, AbsComponentFunc* funcObject){
 	// AbsComponentFunction; it stores function components
 	Double_t xMin = hist->GetXaxis()->GetXmin();
 	Double_t xMax = hist->GetXaxis()->GetXmax();
-	TF1* func = new TF1("func", funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->size());
+	TString funcName = TString::Format("func_%d", timestamp->Get());
+	TF1* func = new TF1(funcName.Data(), funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->size());
 
 	// Set function starting parameter values, names and limits
 	TIterator* it = parameters->createIterator();
@@ -344,8 +348,10 @@ void FitUtils::doFit(TH1* hist, AbsComponentFunc* funcObject){
 
 	// Set default integrator - very important!
 	// "GAUSS", "GAUSSLEGENDRE", "ADAPTIVE", "ADAPTIVESINGULAR", "NONADAPTIVE"
-	// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("ADAPTIVE");
+	// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("GAUSSLEGENDRE");
 
+	// For FFT Integral
+	// ROOT::Math::IntegratorOneDimOptions::SetDefaultNPoints(10000);
 	// Tutorial: /fit/NumericalMinimization.C
 	//	const char* minName = "Minuit2";
 	//	const char* algoName = "";
@@ -358,10 +364,18 @@ void FitUtils::doFit(TH1* hist, AbsComponentFunc* funcObject){
 
 	//	ROOT::Math::MinimizerOptions::SetDefaultStrategy(0);
 
-	TCanvas* canvas = new TCanvas("canvas", "testCanvas", 640, 512);
-	hist->Fit(func, "V");
-	GraphicsUtils::showFitParametersInStats(hist, canvas);
+	TString canvasName = TString::Format("canvas_%d", timestamp->Get());
+	TCanvas* canvas = new TCanvas(canvasName.Data(), "testCanvas", 640, 512);
+	// canvas->SetLeftMargin(0.15);
+	// canvas->SetRightMargin(0.05);
 
+	RootUtils::startTimer();
+	hist->Fit(func, "V");
+	RootUtils::stopAndPrintTimer();
+
+	// Display fit parameters and chi^2 in statistis box
+	// https://root.cern.ch/doc/master/classTPaveStats.html#PS02
+	GraphicsUtils::setStatsFitOption(hist, canvas, 112);
 	hist->Draw();
 	// func->Draw("SAME");
 
@@ -371,34 +385,42 @@ void FitUtils::doFit(TH1* hist, AbsComponentFunc* funcObject){
 	func->GetParameters(fitParameters);
 
 	// Print obtained parameters
-	std::cout << "Obtained parameters:" << std::endl;
-	for (UInt_t i=0; i < nFitPar; i++){
-		std::cout << "Parameter " << i << ": " << fitParameters[i] << std::endl;
-	}
+	// std::cout << "Obtained parameters:" << std::endl;
+	// for (UInt_t i=0; i < nFitPar; i++){
+	// 	std::cout << "Parameter " << i << ": " << fitParameters[i] << std::endl;
+	// }
 
 	// Print histogram and fitting function integrals
-//	Double_t histIntegral = hist->Integral(xMin, xMax);
+	// Double_t histIntegral = hist->Integral(xMin, xMax);
 	Double_t funcIntegral = func->Integral(xMin, xMax);
-//	std::cout << "TH1 hist integral: " << histIntegral << std::endl;
-//	std::cout << "TF1 func integral: " << funcIntegral << std::endl;
+	// std::cout << "TH1 hist integral: " << histIntegral << std::endl;
+	// std::cout << "TF1 func integral: " << funcIntegral << std::endl;
 
 	// Retrieve component functions
 	TList* components = funcObject->getComponents();
 
 	// Calculate component integrals (not normalized to hist integral) and total components integral
-//	Double_t* componentIntegrals = new Double_t[nTerms];
-//	Double_t allComponentsIntegral = 0;
-//	for (UInt_t n=0; n<=components->LastIndex(); n++){
-//		TF1* component = (TF1*)(components->At(n));
-//		if (component){
-//			component->SetParameters(fitParameters);
-//			Double_t componentIntegral = component->Integral(xMin, xMax, 1E-3);
-//			componentIntegrals[n] = componentIntegral;
-//			allComponentsIntegral += componentIntegral;
-//			std::cout << "Component " << n << " integral: " << componentIntegrals[n] << std::endl;
-//		}
-//	}
-//	std::cout << "All components integral: " << allComponentsIntegral << std::endl;
+	Double_t* componentIntegrals = new Double_t[nTerms];
+	Double_t allComponentsIntegral = 0;
+	for (UInt_t n=0; n<=components->LastIndex(); n++){
+		TF1* component = (TF1*)(components->At(n));
+		if (component){
+			if (component->GetNpar() == 2*nFitPar){
+				// If component is a convolution of two functions
+				Double_t* convParameters = getConvFitParameters(fitParameters, nFitPar);
+				component->SetParameters(convParameters);
+			}
+			else {
+				// If component is a regular function
+				component->SetParameters(fitParameters);
+			}
+			Double_t componentIntegral = component->Integral(xMin, xMax, 1);
+			componentIntegrals[n] = componentIntegral;
+			allComponentsIntegral += componentIntegral;
+			std::cout << "Component " << n << " integral: " << componentIntegrals[n] << std::endl;
+		}
+	}
+	std::cout << "All components integral: " << allComponentsIntegral << std::endl;
 
 	// Create and plot normalized component functions for every component
 	for (UInt_t n=0; n<=components->LastIndex(); n++){
@@ -407,9 +429,20 @@ void FitUtils::doFit(TH1* hist, AbsComponentFunc* funcObject){
 			// Component needs to be normalized to the number of the histogram events
 			// and on the ratio of component integral to the all components integral ? lol just histogram events
 			TF1Normalize* normFunc = new TF1Normalize(component, funcIntegral);
-			TString name = TString("term%d_norm", n);
-			TF1* f = new TF1(name.Data(), normFunc, &TF1Normalize::func, xMin, xMax, nFitPar, "TF1Normalize", "func");
-			f->SetParameters(fitParameters);
+			TString fName = TString::Format("%s_norm", component->GetName());
+			TF1* f;
+			if (component->GetNpar() == 2*nFitPar){
+				// If component is a convolution of two functions
+				f = new TF1(fName.Data(), normFunc, &TF1Normalize::func, xMin, xMax, nFitPar*2, "TF1Normalize", "func");
+				Double_t* convParameters = getConvFitParameters(fitParameters, nFitPar);
+				f->SetParameters(convParameters);
+			}
+			else {
+				// If component is a regular function
+				f = new TF1(fName.Data(), normFunc, &TF1Normalize::func, xMin, xMax, nFitPar, "TF1Normalize", "func");
+				f->SetParameters(fitParameters);
+			}
+			// f->SetParameters(fitParameters);
 			f->SetLineStyle(ELineStyle::kDashed);
 			f->SetNpx(200);
 			f->Draw("SAME");
@@ -441,7 +474,7 @@ void FitUtils::fillHistogramFromFuncObject(TH1* hist, AbsComponentFunc* funcObje
 			func->SetParameter(i, parameter->getVal());
 			func->SetParLimits(i, parameter->getMin(), parameter->getMax());
 			// Double checking the parameter values
-			std::cout << "Parameter " << i << ": " << parameter->GetName() << " " << parameter->getVal() << std::endl;
+			// std::cout << "Parameter " << i << ": " << parameter->GetName() << " " << parameter->getVal() << std::endl;
 			i++;
 		}
 	}
@@ -516,4 +549,14 @@ void FitUtils::doFitTest(TH1* hist){
 	// GraphicsUtils::showFitParametersInStats(hist, canvas);
 
 	fitFunction->Draw("SAME");
+}
+
+// Constructs array of parameters for convolution function
+// If parameters [1,2,5] then convParameters [1,2,5,1,2,5] doubles the array
+Double_t* FitUtils::getConvFitParameters(Double_t* parameters, Int_t nPar){
+	Double_t* convParameters = new Double_t[nPar*2];
+	for (UInt_t i = 0; i < nPar*2; i++){
+		convParameters[i] = parameters[i%nPar];
+	}
+	return convParameters;
 }

@@ -10,6 +10,7 @@
 #include "../utils/MathematicaAliases.h"
 #include <TF1Convolution.h>
 #include <TMath.h>
+#include <TDatime.h>
 #include "./components/FuncB.h"
 #include "./components/FuncSIdealN.h"
 #include "./components/FuncTerm0.h"
@@ -22,26 +23,29 @@ FuncSRealFFT::FuncSRealFFT(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h),
 	// https://root.cern.ch/doc/master/classTF1.html#F6
 	// Since fitting functions are defined in the same class, we are passing this pointer
 	// TODO: is this ok that we are passing more variables than needed for bg and termN?
+	TDatime* timestamp = new TDatime();
 
 	// Instantiate terms of the real FuncSRealFFT
 	// Zero term has an uncertainty. Its approximate value is taken from (10)
 	FuncTerm0* funcTerm0 = new FuncTerm0();
-	TF1* term0 = new TF1("term0", funcTerm0, &FuncTerm0::func, xMin, xMax, nPar, "FuncTerm0", "func");
+	TString term0Name = TString::Format("term0_%d", timestamp->Get());
+	TF1* term0 = new TF1(term0Name.Data(), funcTerm0, &FuncTerm0::func, xMin, xMax, nPar, "FuncTerm0", "func");
 	components->Add(term0);
 
 	// Terms 1..N are background function covoluted wit the Ideal FuncSRealFFT function
 	FuncB* funcB = new FuncB();
-	TF1* b = new TF1("b", funcB, &FuncB::func, xMin, xMax, nPar, "FuncB", "func");
+	TString bName = TString::Format("b_%d", timestamp->Get());
+	TF1* b = new TF1(bName.Data(), funcB, &FuncB::func, xMin, xMax, nPar, "FuncB", "func");
 	Int_t nMax = Constants::getInstance()->parameters.termsNumber;
 	for (UInt_t n=1; n < nMax; n++){
 		FuncSIdealN* funcSIdealN = new FuncSIdealN(n);
-		TString name = TString::Format("SIdeal%d", n);
-		TF1* SIdealN = new TF1(name.Data(), funcSIdealN, &FuncSIdealN::func, xMin, xMax, nPar, "FuncSIdealN", "func");
+		TString sIdealNName = TString::Format("sIdeal%d_%d", n, timestamp->Get());
+		TF1* sIdealN = new TF1(sIdealNName.Data(), funcSIdealN, &FuncSIdealN::func, xMin, xMax, nPar, "FuncSIdealN", "func");
 
-		TF1Convolution* conv = new TF1Convolution(SIdealN, b, xMin, xMax);
-		conv->SetNofPointsFFT(1024);
-		TString termName = TString::Format("term%d", n);
-		TF1 *termN = new TF1(termName.Data(),*conv, xMin, xMax, conv->GetNpar());
+		TF1Convolution* conv = new TF1Convolution(sIdealN, b, xMin, xMax);
+//		conv->SetNofPointsFFT(1024);
+		TString termNName = TString::Format("term%d_%d", n, timestamp->Get());
+		TF1 *termN = new TF1(termNName.Data(),*conv, xMin, xMax, conv->GetNpar());
 
 		components->Add(termN);
 	}
@@ -82,12 +86,13 @@ Double_t FuncSRealFFT::func(Double_t* _x, Double_t* par) {
 			else value += component->EvalPar(_x, parForConvolution);
 
 			// Sum the total integral
-			integral += component->Integral(xMin, xMax);
+			// integral += component->Integral(xMin, xMax);
 		} else {
 			std::cout << "Error getting the component" << std::endl;
 		}
 	}
 
 	// Return normalized function value
-	return value/integral*(hist->Integral());
+	// return value/integral*(hist->Integral());
+	return value*(hist->Integral());
 }

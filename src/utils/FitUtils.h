@@ -20,8 +20,10 @@ public:
 
 	static void doFit(TH1* hist, AbsComponentFunc* funcObject);
 	static void doFitTest(TH1* hist);
-	static void doRooFit(TH1* hist);
+	static void doRooFit(TH1* hist, Bool_t doConvolution);
 	static void fillHistogramFromFuncObject(TH1* hist, AbsComponentFunc* funcObject);
+	static TH1* getfillHistogramFromFuncObject(TH1* hist, AbsComponentFunc* funcObject);
+	static Double_t* getConvFitParameters(Double_t*, Int_t nPar);
 
 private:
 	static void doRooFitConvolution(TH1* hist);

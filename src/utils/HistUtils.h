@@ -17,6 +17,8 @@ public:
 	virtual ~HistUtils();
 
 	static TH1* trimHistogram(TH1*);
+	static TH1* trimHistogram(TH1*, Int_t, Int_t);
+	static TH1* cloneHistogram(TH1*, const char*, const char* = 0);
 	static void resetHistogram(TH1*);
 	static void increaseBinContent(TH1*, Float_t);
 };

@@ -6,6 +6,7 @@
  */
 
 #include <TPaveStats.h>
+#include <TLatex.h>
 #include "../utils/GraphicsUtils.h"
 
 GraphicsUtils::GraphicsUtils() {
@@ -58,14 +59,39 @@ void GraphicsUtils::alignStats(TH1* hist, TVirtualPad* pad){
 	pad->Update();
 }
 
-void GraphicsUtils::showFitParametersInStats(TH1* hist, TVirtualPad* pad){
+void GraphicsUtils::setStatsFitOption(TH1* hist, TVirtualPad* pad, Int_t fit){
 	pad->Modified();
 	pad->Update();
 	TPaveStats *stats = (TPaveStats*) hist->FindObject("stats");
-	stats->SetOptFit(1011);
+	if (stats){
+		stats->SetOptFit(fit);
+	}
 	pad->Modified();
 	pad->Update();
 }
+
+//void GraphicsUtils::addLineToStats(TH1* hist, const char* string, TVirtualPad* pad){
+//	pad->Modified();
+//	pad->Update();
+//	TPaveStats *stats = (TPaveStats*)pad->GetPrimitive("stats");
+//	// TPaveStats *stats = (TPaveStats*) hist->FindObject("stats");
+//	if (stats){
+//		stats->SetName("mystats");
+//		TLatex *text = new TLatex(0, 0, string);
+//		// text->SetTextFont(42);
+//		// text->SetTextSize(0.04);
+//		stats->GetListOfLines()->Add(text);
+//	}
+//	// Avoid the the automatic redrawing of stats
+//	hist->SetStats(0);
+//	pad->Modified();
+//	pad->Update();
+//}
+//
+//void GraphicsUtils::showChi2InStats(TH1* hist, TFitResultPtr fitResultPtr, TVirtualPad* pad){
+//	TString string = TString::Format("\\chi^2 = %f", fitResultPtr->Chi2());
+//	addLineToStats(hist, string.Data(), pad);
+//}
 
 void GraphicsUtils::styleAxis(TAxis* axis, const char* title, Double_t titleOffset, Double_t labelOffset, Bool_t isTopPad){
     Style_t fontCode = getFontCode(FONT_REGULAR);

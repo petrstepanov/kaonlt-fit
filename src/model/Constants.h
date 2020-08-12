@@ -41,11 +41,12 @@ class Constants {
 	static const Int_t TILE_MIN;
 	static const Int_t TILE_MAX;
 
-	static const Int_t CH_BINS;
 	static const Int_t CH_MIN;
 	static const Int_t CH_MAX;
 
-	static const Int_t AMP_BINS;
+	static const Int_t CH_FIT_MIN;
+	static const Int_t CH_FIT_MAX;
+
 	static const Int_t AMP_MIN;
 	static const Int_t AMP_MAX;
 
@@ -61,7 +62,6 @@ class Constants {
 	static RooRealVar* w;
 	static RooRealVar* a;
 	static RooRealVar* mu;
-
 
 	private:
 		Constants();

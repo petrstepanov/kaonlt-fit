@@ -1,11 +1,11 @@
 /*
- * FuncSReal.cpp
+ * FuncSRealNoTerm0.cpp
  *
  *  Created on: Aug 2, 2020
  *      Author: petrstepanov
  */
 
-#include "FuncSReal.h"
+#include "FuncSRealNoTerm0.h"
 #include "../model/Constants.h"
 #include "../utils/MathematicaAliases.h"
 #include <TF1Convolution.h>
@@ -16,7 +16,7 @@
 #include "./components/FuncTermN.h"
 
 
-FuncSReal::FuncSReal(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h), nPar(nParVal) {
+FuncSRealNoTerm0::FuncSRealNoTerm0(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h), nPar(nParVal) {
 	// Init TF1 finctions used to cunstruct the final fitting function
 	Double_t xMin = hist->GetXaxis()->GetXmin();
 	Double_t xMax = hist->GetXaxis()->GetXmax();
@@ -26,14 +26,8 @@ FuncSReal::FuncSReal(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h), nPar(
 	// TODO: is this ok that we are passing more variables than needed for bg and termN?
 	TDatime* timestamp = new TDatime();
 
-	// Instantiate terms of the real FuncSReal
-	// Zero term has an uncertainty. Its approximate value is taken from (10)
-	FuncTerm0* funcTerm0 = new FuncTerm0();
-	TString term0Name = TString::Format("term0_%d", timestamp->Get());
-	TF1* term0 = new TF1(term0Name.Data(), funcTerm0, &FuncTerm0::func, xMin, xMax, nPar, "FuncTerm0", "func");
-	components->Add(term0);
-
-	// Terms 1..N are background function covoluted wit the Ideal FuncSReal function
+	// Instantiate terms of the real FuncSRealNoTerm0
+	// Terms 0..N are background function covoluted wit the Ideal FuncSRealNoTerm0 function
 	Int_t nMax = Constants::getInstance()->parameters.termsNumber;
 	for (UInt_t n=1; n < nMax; n++){
 		FuncTermN* funcTermN = new FuncTermN(n);
@@ -43,12 +37,12 @@ FuncSReal::FuncSReal(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h), nPar(
 	}
 }
 
-FuncSReal::~FuncSReal() {
+FuncSRealNoTerm0::~FuncSRealNoTerm0() {
 }
 
 // Final fitting function - needs to be normalized
 // Components from ./components do not need to be normalized
-Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
+Double_t FuncSRealNoTerm0::func(Double_t* _x, Double_t* par) {
 	// Parameters
 	Double_t Q0 = par[0];		// average charge at the PM output
 	Double_t s0 = par[1];		// standard deviation of the type I background process
@@ -70,21 +64,7 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 			value += component->EvalPar(_x, par);			// Sum the cumulated value
 		    component->SetParameters(par);					// Set parameters
 		    // Sum the total integral
-//			if (n==0){
-//				// Step function in the Pedestal requires custom analytical integral
-//				FuncTerm0* ft0 = new FuncTerm0();
-//				// My integral:
-//				Double_t myIntegral = ft0->getIntegral(xMin, xMax, par);
-//				// Alternative option would be use big epsilon
-//				Double_t rootIntegral = component->Integral(xMin, xMax);
-//				// Compare:
-//				// std::cout << "myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
-//				integral+= myIntegral;
-//			}
-//			else {
-//				integral += component->Integral(xMin, xMax, 1E-6);	// Sum the total integral
-//			}
-			integral += component->Integral(xMin, xMax, 1E-3);
+			integral += component->Integral(xMin, xMax, 1E-6);
 		} else {
 			std::cout << "Error getting the component" << std::endl;
 		}
@@ -92,5 +72,4 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 
 	// Return normalized function value
 	return value/integral*(hist->Integral());
-//	return value*(hist->Integral());
 }

@@ -10,6 +10,8 @@
 
 #include <TH1.h>
 #include <TVirtualPad.h>
+#include <TFitResult.h>
+#include <TFitResultPtr.h>
 #include <vector>
 
 struct Margin {
@@ -45,7 +47,9 @@ public:
 
 	static void setMyStatsDisplay(TH1*, TVirtualPad*);
 	static void alignStats(TH1*, TVirtualPad*);
-	static void showFitParametersInStats(TH1*, TVirtualPad*);
+	static void setStatsFitOption(TH1*, TVirtualPad*, Int_t);
+//	static void addLineToStats(TH1*, const char*, TVirtualPad*);
+//	static void showChi2InStats(TH1*, TFitResultPtr, TVirtualPad*);
 	static void styleAxis(TAxis* axis, const char* title, Double_t titleOffset, Double_t labelOffset, Bool_t isTopPad);
 
 };
