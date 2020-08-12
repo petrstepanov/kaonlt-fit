@@ -51,6 +51,8 @@ FitUtils::~FitUtils() {
 
 // Fit not goes, weird function raise to the right
 void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0){
+	TDatime* timestamp = new TDatime();
+
 	// Define channels axis (observable)
 	Double_t xMin = hist->GetXaxis()->GetXmin();
 	Double_t xMax = hist->GetXaxis()->GetXmax();
@@ -174,6 +176,10 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0){
 	sRealPdf->paramOn(spectrumPlot);
 	RooChi2Var* chi2Var = new RooChi2Var("chi2Var","chi2 variable", *sRealPdf, *data2);
 	std::cout << "Chi2 value: " << chi2Var->getVal() << std::endl;
+
+
+	TString canvasName = TString::Format("canvas_%d", timestamp->Get());
+	TCanvas* canvas = new TCanvas(canvasName.Data(), "testCanvas", 640, 512);
 	spectrumPlot->Draw();
 }
 //
