@@ -9,6 +9,7 @@
 #define SRC_UTILS_FITUTILS_H_
 
 #include <TH1.h>
+#include <TVirtualPad.h>
 #include <RooRealVar.h>
 
 #include "../fit/AbsComponentFunc.h"
@@ -20,7 +21,7 @@ public:
 
 	static void doFit(TH1* hist, AbsComponentFunc* funcObject);
 	static void doFitTest(TH1* hist);
-	static void doRooFit(TH1* hist, Bool_t useTerm0 = kTRUE);
+	static void doRooFit(TH1* hist, Bool_t useTerm0 = kTRUE, TVirtualPad* pad = 0);
 	static void fillHistogramFromFuncObject(TH1* hist, AbsComponentFunc* funcObject);
 	static TH1* getfillHistogramFromFuncObject(TH1* hist, AbsComponentFunc* funcObject);
 	static Double_t* getConvFitParameters(Double_t*, Int_t nPar);

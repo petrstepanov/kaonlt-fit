@@ -50,13 +50,15 @@ FitUtils::~FitUtils() {
 }
 
 // Fit not goes, weird function raise to the right
-void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0){
+void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 	TDatime* timestamp = new TDatime();
 
 	// Define channels axis (observable)
 	Double_t xMin = hist->GetXaxis()->GetXmin();
 	Double_t xMax = hist->GetXaxis()->GetXmax();
 	RooRealVar* observable = new RooRealVar("observable", "ADC channel", xMin, xMax, "");
+	observable->setAttribute("NOCacheAndTrack");
+
 
 	// Set observable binning and convolution binning
 	observable->setBins(hist->GetNbinsX());
@@ -68,7 +70,7 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0){
 
 	// Init zero term PDF:
 	if (useTerm0){
-		Term0Pdf* term0Pdf = new Term0Pdf("term0Pdf", "Term 0 of the real PM function", *observable, *Constants::Q0, *Constants::s0, *Constants::w, *Constants::a, *Constants::mu);
+		Term0Pdf* term0Pdf = new Term0Pdf("term0Pdf", "Term 0 of the real PM function", *observable, *Constants::Q0, *Constants::s0, *Constants::w, *Constants::a);
 		terms->add(*term0Pdf);
 		// Mathematica gives definite integral ∫-∞ to ∞ = exp(-mu) - this is obvious from formula (5)
 		RooFormulaVar* coeff0 = new RooFormulaVar("coeff0", "Term 0 coefficient", "exp(-@0)", RooArgList(*Constants::mu));
@@ -86,7 +88,7 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0){
 
 		TString name = TString::Format("sIdeal%dPdf", n);
 		TString title = TString::Format("Term %d or the ideal PM function", n);
-		SIdealNPdf* sIdealNPdf = new SIdealNPdf(name.Data(), title.Data(), *observable, *Constants::Q1, *Constants::s1, *Constants::mu, *nVar);
+		SIdealNPdf* sIdealNPdf = new SIdealNPdf(name.Data(), title.Data(), *observable, *Constants::Q1, *Constants::s1, *nVar);
 
 		// Convolute ideal function with the background
 		TString nameConv = TString::Format("term%dPdf", n);
@@ -113,8 +115,14 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0){
 	coefficients->Print("V");
 
 	// Prepare data histogram
-	// RooDataHist* data = new RooDataHist("data", "Dataset", RooArgList(*observable), hist);
-	// sRealPdf->fitTo(*data, RooFit::NumCPU(RootUtils::getNumCpu()));
+	// RooDataHist* data2 = sRealPdf->generateBinned(*observable, 64000);
+	// sRealPdf->fitTo(*data2, RooFit::Extended(), RooFit::NumCPU(RootUtils::getNumCpu())) ;
+
+	RooDataHist* data = new RooDataHist("data", "Dataset", RooArgList(*observable), hist);
+	RootUtils::startTimer();
+	sRealPdf->fitTo(*data, RooFit::NumCPU(RootUtils::getNumCpu()));
+	RootUtils::stopAndPrintTimer();
+
 
 	// Chi2 fit
 	// RooChi2Var* chi2 = new RooChi2Var("chi2", "chi2", *sRealPdf, *data, RooFit::NumCPU(RootUtils::getNumCpu()));
@@ -124,15 +132,8 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0){
 	// Int_t resultHesse = m->hesse();
 	// RooFitResult* fitResult = m->save();
 
-
 	// Unbinned likelihood fit
 	// RooAbsReal::defaultIntegratorConfig()->getConfigSection("RooIntegrator1D").setRealValue("maxSteps", 30);
-
-	RooDataHist* data2 = sRealPdf->generateBinned(*observable, 64000);
-
-	RootUtils::startTimer();
-	sRealPdf->fitTo(*data2, RooFit::Extended(), RooFit::NumCPU(RootUtils::getNumCpu())) ;
-	RootUtils::stopAndPrintTimer();
 
 	// Construct and mimimize unbinned likelihood
 	// RooAbsReal *nll = model.createNLL(*data, NumCPU(2));
@@ -141,7 +142,8 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0){
 
 	// Create RooPlot from energy axis frame
 	RooPlot* spectrumPlot = observable->frame();
-	spectrumPlot->SetTitle("");  // Set Empty Graph Title
+	TString plotTitle = TString::Format("RooFit of %s", hist->GetTitle());
+	spectrumPlot->SetTitle(plotTitle.Data());  // Set Empty Graph Title
 	// spectrumPlot->GetXaxis()->SetRangeUser(fitRangeMin, fitRangeMax);      // Do we need this?
 
 	// Configure axis labels and look
@@ -149,7 +151,7 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0){
 	GraphicsUtils::styleAxis(spectrumPlot->GetYaxis(), "Counts", 1.1, 0.012, kTRUE);
 
 	// Plot data points
-	data2->plotOn(spectrumPlot, RooFit::LineColor(kGray + 3), /*RooFit::ShiftToZero(),*/ RooFit::XErrorSize(0), RooFit::MarkerSize(0.5), RooFit::MarkerColor(kGray + 3), RooFit::Name("data"));
+	data->plotOn(spectrumPlot, RooFit::LineColor(kGray + 3), /*RooFit::ShiftToZero(),*/ RooFit::XErrorSize(0), RooFit::MarkerSize(0.5), RooFit::MarkerColor(kGray + 3), RooFit::Name("data"));
 	sRealPdf->plotOn(spectrumPlot);
 
 	// Plot model components
@@ -174,12 +176,20 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0){
 	}
 
 	sRealPdf->paramOn(spectrumPlot);
-	RooChi2Var* chi2Var = new RooChi2Var("chi2Var","chi2 variable", *sRealPdf, *data2);
+	RooChi2Var* chi2Var = new RooChi2Var("chi2Var","chi2 variable", *sRealPdf, *data);
 	std::cout << "Chi2 value: " << chi2Var->getVal() << std::endl;
 
+	if (!pad){
+		TString canvasName = TString::Format("canvas_%d", timestamp->Get());
+		TCanvas* canvas = new TCanvas(canvasName.Data(), "testCanvas", 640, 512);
+		pad = canvas;
+	}
 
-	TString canvasName = TString::Format("canvas_%d", timestamp->Get());
-	TCanvas* canvas = new TCanvas(canvasName.Data(), "testCanvas", 640, 512);
+	pad->SetBottomMargin(0.15);
+	pad->GetListOfPrimitives()->Print();
+
+	// TODO: print chi2
+	// TODO: align stats
 	spectrumPlot->Draw();
 }
 //

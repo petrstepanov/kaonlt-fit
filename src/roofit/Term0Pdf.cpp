@@ -17,34 +17,31 @@
 
 ClassImp(Term0Pdf);
 
-Term0Pdf::Term0Pdf(const char *name, const char *title, RooAbsReal& _x, RooAbsReal& _Q0, RooAbsReal& _s0, RooAbsReal& _w, RooAbsReal& _a, RooAbsReal& _mu) :
-		RooAbsPdf(name, title), x("x", "x", this, _x), Q0("Q0", "Q0", this, _Q0), s0("s0", "s0", this, _s0), w("w", "w", this, _w), a("a", "a", this, _a), mu("mu", "mu", this, _mu) {
+Term0Pdf::Term0Pdf(const char *name, const char *title, RooAbsReal& _x, RooAbsReal& _Q0, RooAbsReal& _s0, RooAbsReal& _w, RooAbsReal& _a) :
+		RooAbsPdf(name, title), x("x", "x", this, _x), Q0("Q0", "Q0", this, _Q0), s0("s0", "s0", this, _s0), w("w", "w", this, _w), a("a", "a", this, _a) {
 }
 
 Term0Pdf::Term0Pdf(const Term0Pdf& other, const char* name) :
-		RooAbsPdf(other, name), x("x", this, other.x), Q0("Q0", this, other.Q0), s0("s0", this, other.s0), w("w", this, other.w), a("a", this, other.a), mu("mu", this, other.mu) {
+		RooAbsPdf(other, name), x("x", this, other.x), Q0("Q0", this, other.Q0), s0("s0", this, other.s0), w("w", this, other.w), a("a", this, other.a) {
 }
 
 // Doing like rooexponential
 Double_t Term0Pdf::evaluate() const {
 	Double_t value = // begin mathematica code from "/mathematica/term0.nb"
-			((1 - w)/(Power(E,Power(-Q0 + x,2)/(2.*Power(s0,2)))*Sqrt(2*Pi)*s0) +
-			     (a*w*UnitStep(-Q0 + x))/Power(E,a*(-Q0 + x)))/Power(E,mu)
-	; // end mathematica code
+			-(Power(E,a*Q0 - a*x)*w) + ((-1 + w)*Erf((Q0 - x)/(Sqrt(2)*s0)))/2.	; // end mathematica code
 	return value;
 }
 
 Double_t Term0Pdf::indefiniteIntegralBeforeQ0(Double_t x) const {
 	Double_t value =  // begin mathematica code from "/mathematica/B-shifted.nb"
-			(((-1 + w)*Erf((Q0 - x)/(Sqrt(2)*s0)))/2.)/Power(E,mu)
+			((-1 + w)*Erf((Q0 - x)/(Sqrt(2)*s0)))/2.
 	; // end mathematica code
 	return value;
 }
 
 Double_t Term0Pdf::indefiniteIntegralAfterQ0(Double_t x) const {
 	Double_t value =  // begin mathematica code from "/mathematica/B-shifted.nb"
-			(((-1 + w)*Erf((Q0 - x)/(Sqrt(2)*s0)))/2. +
-			     (w - Power(E,a*Q0 - a*x)*w))/Power(E,mu)
+			-(Power(E,a*Q0 - a*x)*w) + ((-1 + w)*Erf((Q0 - x)/(Sqrt(2)*s0)))/2.
 	; // end mathematica code
 	return value;
 }

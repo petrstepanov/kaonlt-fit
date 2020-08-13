@@ -26,7 +26,6 @@ public:
 		RooAbsReal& _x,
 		RooAbsReal& _Q1,
 		RooAbsReal& _s1,
-		RooAbsReal& _mu,
 		RooAbsReal& _n);
 	SIdealNPdf(const SIdealNPdf& other, const char* name = 0);
 	virtual TObject* clone(const char* newname) const { return new SIdealNPdf(*this, newname); }
@@ -39,7 +38,6 @@ protected:
     RooRealProxy x;
     RooRealProxy Q1;
     RooRealProxy s1;
-    RooRealProxy mu;
     RooRealProxy n;
 
     Double_t evaluate() const;

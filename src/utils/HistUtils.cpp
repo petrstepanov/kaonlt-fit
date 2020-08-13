@@ -42,7 +42,10 @@ TH1* HistUtils::trimHistogram(TH1* hist){
 	return trimmedHist;
 }
 
-TH1* HistUtils::trimHistogram(TH1* hist, Int_t minBin, Int_t maxBin){
+TH1* HistUtils::cutHistogram(TH1* hist, Double_t xMin, Double_t xMax){
+	Int_t minBin = hist->GetXaxis()->FindBin(xMin);
+	Int_t maxBin = hist->GetXaxis()->FindBin(xMax);
+
 	Int_t nBins = maxBin - minBin + 1;
 
 	TAxis* xAxis = hist->GetXaxis();
@@ -55,6 +58,8 @@ TH1* HistUtils::trimHistogram(TH1* hist, Int_t minBin, Int_t maxBin){
 		trimmedHist->SetBinError(i, hist->GetBinError(i+minBin-1));
 		std::cout << "bin: " << i << " content: " << trimmedHist->GetBinContent(i) << " error: " << trimmedHist->GetBinError(i) << std::endl;
 	}
+
+	// trimmedHist->SetEntries(trimmedHist->Integral());
 
 	return trimmedHist;
 }

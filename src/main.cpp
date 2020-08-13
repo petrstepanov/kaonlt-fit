@@ -72,12 +72,16 @@ int run(const char* fileName) {
 	TString pngFilePath = TString::Format("%s-%s.png",fileName, pmtsCanvas->GetName());
 	pmtsCanvas->SaveAs(pngFilePath);
 
-	// Remove zero bin noise on the PMT spectra
-	TH1* pmt1HistFit = HistUtils::cloneHistogram(pmt1Hist, "pmt1HistFit");
-	pmt1HistFit->SetBinContent(1, 0);
-	pmt1HistFit = HistUtils::trimHistogram(pmt1HistFit, 1, 5000);
+	// Trim PMT spectra to remove zero bin noise
+//	TH1* pmt1HistFit = HistUtils::cutHistogram(pmt1Hist, Constants::CH_FIT_MIN, Constants::CH_FIT_MAX);
+//	TH1* pmt2HistFit = HistUtils::cutHistogram(pmt2Hist, Constants::CH_FIT_MIN, Constants::CH_FIT_MAX);
 
-	FitUtils::doRooFit(pmt1HistFit, kFALSE);
+//	FitUtils::doRooFit(pmt1HistFit, kFALSE);
+//	FitUtils::doRooFit(pmt2HistFit, kFALSE);
+
+//	AbsComponentFunc* funcObjectFFTNoTerm0 = new FuncSRealFFTNoTerm0(hist2);
+//	FitUtils::doFit(hist2, funcObjectFFT);
+
 
 	// AbsComponentFunc* funcObject = new FuncSRealNoTerm0(pmt1Hist);
 	// FitUtils::doFit(pmt1Hist, funcObject);

@@ -27,8 +27,7 @@ public:
 		RooAbsReal& _Q0,
 		RooAbsReal& _s0,
 		RooAbsReal& _w,
-		RooAbsReal& _a,
-		RooAbsReal& _mu);
+		RooAbsReal& _a);
 	Term0Pdf(const Term0Pdf& other, const char* name = 0);
 	virtual TObject* clone(const char* newname) const { return new Term0Pdf(*this, newname); }
 	inline virtual ~Term0Pdf() { }
@@ -42,7 +41,6 @@ protected:
     RooRealProxy s0;
     RooRealProxy w;
     RooRealProxy a;
-    RooRealProxy mu;
 
     Double_t evaluate() const;
     Double_t indefiniteIntegralBeforeQ0(Double_t x) const;

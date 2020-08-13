@@ -65,6 +65,10 @@ const Int_t Constants::TILE_MAX = 146;
 const Int_t Constants::CH_MIN = -1000;
 const Int_t Constants::CH_MAX = 20000;
 
+const Int_t Constants::CH_FIT_MIN = 1;
+const Int_t Constants::CH_FIT_MAX = 2000;
+
+
 const Int_t Constants::AMP_MIN = 0;
 const Int_t Constants::AMP_MAX = 4096;
 
