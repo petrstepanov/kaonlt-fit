@@ -121,14 +121,14 @@ int main(int argc, char* argv[]) {
 	}
 
 	// Test fitting function on the test histigram
-	test();
+	// test();
 
 	// Iterate through input files and run analysis
-//	for (TObject* object : *(constants->parameters.inputFiles)) {
-//		if (TObjString* objString = dynamic_cast<TObjString*>(object)){
-//			run(objString->GetString());
-//		}
-//	}
+	for (TObject* object : *(constants->parameters.inputFiles)) {
+		if (TObjString* objString = dynamic_cast<TObjString*>(object)){
+			run(objString->GetString());
+		}
+	}
 
 	app->Run();
 	return 0;
