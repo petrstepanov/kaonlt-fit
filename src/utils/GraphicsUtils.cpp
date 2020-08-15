@@ -138,3 +138,10 @@ Double_t GraphicsUtils::getFontSizeScale(Bool_t isTopPad){
 	Double_t scale = 1/(1/(TOP_TO_BOTTOM_PAD_HEIGHT_RATIO+1));
 	return scale;
 }
+
+void GraphicsUtils::addLineToPave(TVirtualPad* pad, RooAbsPdf* pdf, const char* line){
+	TString paveTextName = TString::Format("%s_paramBox", pdf->GetName());
+	TPaveText* paveText = (TPaveText*)pad->GetListOfPrimitives()->FindObject(paveTextName.Data());
+	paveText->AddText(line);
+	paveText->SetTextSize(0.03);
+}

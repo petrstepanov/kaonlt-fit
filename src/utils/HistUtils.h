@@ -10,6 +10,14 @@
 
 #include <iostream>
 #include <TH1F.h>
+#include <RooCurve.h>
+#include <RooAbsPdf.h>
+
+struct Chi2Struct {
+	const Double_t chiSum;
+	const Int_t degreesOfFreedom;
+	const Double_t chi2;
+};
 
 class HistUtils {
 public:
@@ -21,6 +29,7 @@ public:
 	static TH1* cloneHistogram(TH1*, const char*, const char* = 0);
 	static void resetHistogram(TH1*);
 	static void increaseBinContent(TH1*, Float_t);
+    static Chi2Struct getChi2(TH1*, RooCurve*, RooAbsPdf*);
 };
 
 #endif /* SRC_UTILS_HISTUTILS_H_ */

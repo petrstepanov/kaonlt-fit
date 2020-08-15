@@ -13,6 +13,7 @@
 #include <TFitResult.h>
 #include <TPaveText.h>
 #include <TFitResultPtr.h>
+#include <RooAbsPdf.h>
 #include <vector>
 
 struct Margin {
@@ -53,7 +54,7 @@ public:
 //	static void addLineToStats(TH1*, const char*, TVirtualPad*);
 //	static void showChi2InStats(TH1*, TFitResultPtr, TVirtualPad*);
 	static void styleAxis(TAxis* axis, const char* title, Double_t titleOffset, Double_t labelOffset, Bool_t isTopPad);
-
+	static void addLineToPave(TVirtualPad* canvas, RooAbsPdf* pdf, const char* line);
 };
 
 #endif /* SRC_HELPER_GRAPHICSUTILS_H_ */
