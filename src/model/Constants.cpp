@@ -76,9 +76,9 @@ const Int_t Constants::AMP_MAX = 4096;
 RooRealVar* Constants::Q0 = new RooRealVar("Q_{0}", "pedestal", 23.26, 10, 40, "e");
 RooRealVar* Constants::s0 = new RooRealVar("#sigma_{0}", "standard deviation of the type I background process", 0.192, 0, 10, "");
 RooRealVar* Constants::Q1 = new RooRealVar("Q_{1}", "average charge at the PM output", 35.04, 0, 100, "e");
-RooRealVar* Constants::s1 = new RooRealVar("#sigma_{1}", "corresponding standard deviation of the charge distribution", 11.73, 5, 50, "");
+RooRealVar* Constants::s1 = new RooRealVar("#sigma_{1}", "corresponding standard deviation of the charge distribution", 11.73, 0, 100, "");
 RooRealVar* Constants::w  = new RooRealVar("w", "probability that signal is accompanied by type II background process", 0.4, 0., 1., "");
-RooRealVar* Constants::a  = new RooRealVar("#alpha", "coefficient of the exponential decrease of the type II background", 0.034, 0, 0.5, "");
+RooRealVar* Constants::a  = new RooRealVar("#alpha", "coefficient of the exponential decrease of the type II background", 0.034, 0, 10, "");
 RooRealVar* Constants::mu = new RooRealVar("#mu", "number of photo-electrons", 1.68, 0, 20, "");
 
 
@@ -121,10 +121,10 @@ void Constants::parseParameters(int argc, char* argv[]){
 			TObjString* fileName = new TObjString(pair.second);
 			parameters.inputFiles->Add(fileName);
 		}
-		else if (pair.first == "do-convolution"){
+		else if (pair.first == "rooFit"){
 			// Whether to use TConvolution or not
 			if (pair.second == "kTRUE" || pair.second == "1"){
-				parameters.doConvolution = kTRUE;
+				parameters.rooFit = kTRUE;
 			}
 		}
 		std::cout << "\t" << pair.first << ": " << pair.second << std::endl;

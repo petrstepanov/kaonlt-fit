@@ -28,7 +28,7 @@ struct Parameters {
 	Int_t tileProfile = 55;
 	Int_t termsNumber = 50;
 	Int_t convolutionBins = 1024;
-	Bool_t doConvolution = kFALSE;
+	Bool_t rooFit = kFALSE;
 	TList* inputFiles = new TList();
 };
 

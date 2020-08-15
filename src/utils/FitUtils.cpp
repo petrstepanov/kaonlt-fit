@@ -125,7 +125,7 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 	// RooAbsReal::defaultIntegratorConfig()->getConfigSection("RooIntegrator1D").setRealValue("maxSteps", 30);
 
 	// RooFitResult* fitResult = sRealPdf->fitTo(*data);
-	RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE));
+	RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE), RooFit::NumCPU(RootUtils::getNumCpu()));
 
 	// Chi2 fit - does not work because zero values
 	// RooChi2Var* chi2 = new RooChi2Var("#chi^{2}", "chi square", *sRealPdf, *data, kTRUE, 0, 0, RootUtils::getNumCpu());
@@ -144,8 +144,8 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 	spectrumPlot->SetTitle(plotTitle.Data());
 
 	// Configure axis labels and look
-	GraphicsUtils::styleAxis(spectrumPlot->GetXaxis(), "ADC channel", 1.5, 0.02, kTRUE); // Title, Title offset, Label offset
-	GraphicsUtils::styleAxis(spectrumPlot->GetYaxis(), "Counts", 1.3, 0.012, kTRUE);
+	GraphicsUtils::styleAxis(spectrumPlot->GetXaxis(), "ADC channel", 1.4, 0.02, kTRUE); // Title, Title offset, Label offset
+	GraphicsUtils::styleAxis(spectrumPlot->GetYaxis(), "Events", 1.3, 0.012, kTRUE);
 
 	// Plot data points
 	data->plotOn(spectrumPlot, RooFit::LineColor(kGray + 3), RooFit::MarkerSize(0.5), RooFit::Name("data"));
@@ -164,9 +164,8 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 
 	// Create canvas for drawing
 	if (!pad){
-		TString canvasName = TString::Format("canvas_%d", timestamp->Get());
-		TCanvas* canvas = new TCanvas(canvasName.Data(), "testCanvas", 640, 512);
-		pad = canvas;
+		TString padName = TString::Format("canvas_%d", timestamp->Get());
+		pad = new TCanvas(padName.Data());
 	}
 	pad->SetBottomMargin(0.15);
 
@@ -180,12 +179,11 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 	GraphicsUtils::addLineToPave(pad, sRealPdf, line.Data());
 }
 
-void FitUtils::doFit(TH1* hist, AbsComponentFunc* funcObject){
+void FitUtils::doFit(TH1* hist, AbsComponentFunc* funcObject, TVirtualPad* pad){
 	TDatime* timestamp = new TDatime();
 
 	// Number of terms in the fit function
 	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
-	Bool_t doConvoluton = Constants::getInstance()->parameters.doConvolution;
 
 	// Get list of ROOT parameters for single function
 	RooArgList* parameters = Constants::getInstance()->getFitParameters();
@@ -240,8 +238,10 @@ void FitUtils::doFit(TH1* hist, AbsComponentFunc* funcObject){
 
 	//	ROOT::Math::MinimizerOptions::SetDefaultStrategy(0);
 
-	TString canvasName = TString::Format("canvas_%d", timestamp->Get());
-	TCanvas* canvas = new TCanvas(canvasName.Data(), "testCanvas", 640, 512);
+	if (!pad){
+		TString padName = TString::Format("canvas_%d", timestamp->Get());
+		pad = new TCanvas(padName.Data());
+	}
 	// canvas->SetLeftMargin(0.15);
 	// canvas->SetRightMargin(0.05);
 
@@ -251,7 +251,7 @@ void FitUtils::doFit(TH1* hist, AbsComponentFunc* funcObject){
 
 	// Display fit parameters and chi^2 in statistis box
 	// https://root.cern.ch/doc/master/classTPaveStats.html#PS02
-	GraphicsUtils::setStatsFitOption(hist, canvas, 112);
+	GraphicsUtils::setStatsFitOption(hist, pad, 112);
 	hist->Draw();
 	// func->Draw("SAME");
 
@@ -327,7 +327,7 @@ void FitUtils::doFit(TH1* hist, AbsComponentFunc* funcObject){
 		}
 	}
 
-	GraphicsUtils::alignStats(hist, canvas);
+	GraphicsUtils::alignStats(hist, pad);
 }
 
 void FitUtils::fillHistogramFromFuncObject(TH1* hist, AbsComponentFunc* funcObject){

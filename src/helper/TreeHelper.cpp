@@ -165,7 +165,7 @@ void TreeHelper::plotTree(const char* fileName){
 
 	// Save canvas to file
 	TString pngFilePath = TString::Format("%s-%s.png", fileName, myCanvas->GetName());
-	myCanvas->SaveAs(pngFilePath);
+	myCanvas->SaveAs(pngFilePath.Data());
 }
 
 void TreeHelper::fillPmtHists(TH1* pmt1Hist, TH1* pmt2Hist){
