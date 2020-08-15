@@ -32,7 +32,6 @@ Constants::Constants(){
 	fitParameters->add(*w);
 	fitParameters->add(*a);
 	fitParameters->add(*mu);
-
 };
 
 RooArgList* Constants::getFitParameters(){
@@ -62,6 +61,7 @@ const Int_t Constants::TILE_BINS = 145;
 const Int_t Constants::TILE_MIN = 1;
 const Int_t Constants::TILE_MAX = 146;
 
+const Int_t Constants::CH_BINS = 21000;
 const Int_t Constants::CH_MIN = -1000;
 const Int_t Constants::CH_MAX = 20000;
 
@@ -74,11 +74,11 @@ const Int_t Constants::AMP_MAX = 4096;
 
 // Parameter values taken from Fig.2, https://doi.org/10.1016/0168-9002(94)90183-X
 RooRealVar* Constants::Q0 = new RooRealVar("Q_{0}", "pedestal", 23.26, 10, 40, "e");
-RooRealVar* Constants::s0 = new RooRealVar("#sigma_{0}", "standard deviation of the type I background process", 0.192, 0.1, 10, "");
+RooRealVar* Constants::s0 = new RooRealVar("#sigma_{0}", "standard deviation of the type I background process", 0.192, 0, 10, "");
 RooRealVar* Constants::Q1 = new RooRealVar("Q_{1}", "average charge at the PM output", 35.04, 0, 100, "e");
 RooRealVar* Constants::s1 = new RooRealVar("#sigma_{1}", "corresponding standard deviation of the charge distribution", 11.73, 5, 50, "");
-RooRealVar* Constants::w  = new RooRealVar("w", "probability that signal is accompanied by type II background process", 0.4, 0, 1, "");
-RooRealVar* Constants::a  = new RooRealVar("#alpha", "coefficient of the exponential decrease of the type II background", 0.034, 0, 0.1, "");
+RooRealVar* Constants::w  = new RooRealVar("w", "probability that signal is accompanied by type II background process", 0.4, 0., 1., "");
+RooRealVar* Constants::a  = new RooRealVar("#alpha", "coefficient of the exponential decrease of the type II background", 0.034, 0, 0.5, "");
 RooRealVar* Constants::mu = new RooRealVar("#mu", "number of photo-electrons", 1.68, 0, 20, "");
 
 
@@ -111,6 +111,10 @@ void Constants::parseParameters(int argc, char* argv[]){
 		else if (pair.first ==  "terms-number"){
 			// Number of terms in the fitting function
 			parameters.termsNumber = atoi(pair.second);
+		}
+		else if (pair.first ==  "convolution-bins"){
+			// Number of terms in the fitting function
+			parameters.convolutionBins = atoi(pair.second);
 		}
 		else if (pair.first ==  "file-name"){
 			// Add filename to the list of files

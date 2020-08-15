@@ -33,48 +33,48 @@ Double_t BPdf::evaluate() const {
 	return value;
 }
 
-Double_t BPdf::indefiniteIntegralBeforeQ0(Double_t x) const {
-	Double_t value =  // begin mathematica code from "/mathematica/B-shifted.nb"
-			((-1 + w)*Erf((Q0 - x)/(Sqrt(2)*s0)))/2.
-	; // end mathematica code
-	return value;
-}
-
-Double_t BPdf::indefiniteIntegralAfterQ0(Double_t x) const {
-	Double_t value =  // begin mathematica code from "/mathematica/B-shifted.nb"
-			((-1 + w)*Erf((Q0 - x)/(Sqrt(2)*s0)))/2. + (w - Power(E,a*Q0 - a*x)*w)
-	; // end mathematica code
-	return value;
-}
-
-// Get analytical integral
-Int_t BPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const {
-	if (matchArgs(allVars, analVars, x))
-		return 1;
-	return 0;
-}
-
-// Analytical integral
-Double_t BPdf::analyticalIntegral(Int_t code, const char* rangeName) const {
-	assert(code == 1);
-
-	if (code == 1) {
-		Double_t x1 = x.min(rangeName);
-		Double_t x2 = x.max(rangeName);
-
-		if (x2 < Q0){
-			return indefiniteIntegralBeforeQ0(x2) - indefiniteIntegralBeforeQ0(x1);
-		}
-		else if (x1 < Q0 && x2 >= Q0){
-			// Special case here - function is not monotone
-			Double_t integral = 0;
-			integral += indefiniteIntegralBeforeQ0(Q0) - indefiniteIntegralBeforeQ0(x1);
-			integral += indefiniteIntegralAfterQ0(x2) - indefiniteIntegralAfterQ0(Q0);
-			return integral;
-		}
-		// x1 >= Q0
-		return indefiniteIntegralAfterQ0(x2) - indefiniteIntegralAfterQ0(x1);
-	}
-	std::cout << "Error in BPdf::analyticalIntegral" << std::endl;
-	return 0;
-}
+//Double_t BPdf::indefiniteIntegralBeforeQ0(Double_t x) const {
+//	Double_t value =  // begin mathematica code from "/mathematica/B-shifted.nb"
+//			((-1 + w)*Erf((Q0 - x)/(Sqrt(2)*s0)))/2.
+//	; // end mathematica code
+//	return value;
+//}
+//
+//Double_t BPdf::indefiniteIntegralAfterQ0(Double_t x) const {
+//	Double_t value =  // begin mathematica code from "/mathematica/B-shifted.nb"
+//			((-1 + w)*Erf((Q0 - x)/(Sqrt(2)*s0)))/2. + (w - Power(E,a*Q0 - a*x)*w)
+//	; // end mathematica code
+//	return value;
+//}
+//
+//// Get analytical integral
+//Int_t BPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const {
+//	if (matchArgs(allVars, analVars, x))
+//		return 1;
+//	return 0;
+//}
+//
+//// Analytical integral
+//Double_t BPdf::analyticalIntegral(Int_t code, const char* rangeName) const {
+//	assert(code == 1);
+//
+//	if (code == 1) {
+//		Double_t x1 = x.min(rangeName);
+//		Double_t x2 = x.max(rangeName);
+//
+//		if (x2 < Q0){
+//			return indefiniteIntegralBeforeQ0(x2) - indefiniteIntegralBeforeQ0(x1);
+//		}
+//		else if (x1 < Q0 && x2 >= Q0){
+//			// Special case here - function is not monotone
+//			Double_t integral = 0;
+//			integral += indefiniteIntegralBeforeQ0(Q0) - indefiniteIntegralBeforeQ0(x1);
+//			integral += indefiniteIntegralAfterQ0(x2) - indefiniteIntegralAfterQ0(Q0);
+//			return integral;
+//		}
+//		// x1 >= Q0
+//		return indefiniteIntegralAfterQ0(x2) - indefiniteIntegralAfterQ0(x1);
+//	}
+//	std::cout << "Error in BPdf::analyticalIntegral" << std::endl;
+//	return 0;
+//}

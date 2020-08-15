@@ -54,9 +54,24 @@ void GraphicsUtils::alignStats(TH1* hist, TVirtualPad* pad){
 	// Move stats vertically
 	stats->SetY2NDC(1 - pad->GetTopMargin());
 	stats->SetY1NDC(stats->GetY2NDC() - statsHeight);
-	// Display only histogram entries
+
 	pad->Modified();
 	pad->Update();
+}
+
+void GraphicsUtils::stylePaveText(TPaveText* paveText, TVirtualPad* pad){
+	// Use smaller text size
+	paveText->SetTextSize(0.03);
+
+	// Align top right corner with the pad margin
+	Double_t newX2 = 1.0-pad->GetRightMargin(); // Align right end
+	Double_t newY2 = 1.0-pad->GetTopMargin();  // Align top end
+	paveText->SetOption("NDC");
+	paveText->SetX2NDC(newX2);
+	paveText->SetY2NDC(newY2);
+	paveText->Draw("NDC");
+
+	// pad->Update();
 }
 
 void GraphicsUtils::setStatsFitOption(TH1* hist, TVirtualPad* pad, Int_t fit){

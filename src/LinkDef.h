@@ -8,5 +8,7 @@
 #pragma link C++ class SIdealNPdf;
 #pragma link C++ class SRealNPdf;
 #pragma link C++ class BPdf;
+#pragma link C++ class ExpPdf;
+#pragma link C++ class GaussPdf;
 
 #endif

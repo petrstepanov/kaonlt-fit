@@ -14,6 +14,8 @@
 #include "../roofit/SIdealNPdf.h"
 #include "../roofit/SRealNPdf.h"
 #include "../roofit/BPdf.h"
+#include "../roofit/ExpPdf.h"
+#include "../roofit/GaussPdf.h"
 #include "../model/Constants.h"
 #include "../utils/RootUtils.h"
 #include "../utils/GraphicsUtils.h"
@@ -21,6 +23,7 @@
 #include "../helper/TF1Normalize.h"
 #include <RooRealVar.h>
 #include <RooConstVar.h>
+#include <RooAbsCollection.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooFFTConvPdf.h>
@@ -31,6 +34,7 @@
 #include <RooFormulaVar.h>
 #include <RooMinimizer.h>
 #include <RooPlot.h>
+#include <RooGaussian.h>
 #include <RooRealSumPdf.h>
 #include <RooRealSumFunc.h>
 #include <TF1.h>
@@ -38,6 +42,7 @@
 #include <TLegend.h>
 #include <TCanvas.h>
 #include <TVectorD.h>
+#include <TPaveText.h>
 #include <TCollection.h>
 #include <TFitResultPtr.h>
 #include <TDatime.h>
@@ -57,28 +62,28 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 	Double_t xMin = hist->GetXaxis()->GetXmin();
 	Double_t xMax = hist->GetXaxis()->GetXmax();
 	RooRealVar* observable = new RooRealVar("observable", "ADC channel", xMin, xMax, "");
-	observable->setAttribute("NOCacheAndTrack");
-
 
 	// Set observable binning and convolution binning
 	observable->setBins(hist->GetNbinsX());
-	observable->setBins(1024, "cache");
+	observable->setBins(Constants::getInstance()->parameters.convolutionBins, "cache");
 
 	// Instantiate list of PDF terms
 	RooArgList* terms = new RooArgList();
 	RooArgList* coefficients = new RooArgList();
 
-	// Init zero term PDF:
+	// Init zero term PDF (it's also a background function - paper has mistake - needs shifted):
+	RooGaussian* gauss = new RooGaussian("gauss", "gaussian PDF", *observable, *Constants::Q0, *Constants::s0);
+	ExpPdf* exp = new ExpPdf("exp", "exponential PDF", *observable, *Constants::Q0, *Constants::a);
+	RooAddPdf* term0Pdf = new RooAddPdf("term0Pdf", "Term 0 of the real PM function", RooArgList(*exp, *gauss), RooArgList(*Constants::w), kTRUE);
+	// term0Pdf->fixAddCoefNormalization(RooArgSet(*observable));
 	if (useTerm0){
-		Term0Pdf* term0Pdf = new Term0Pdf("term0Pdf", "Term 0 of the real PM function", *observable, *Constants::Q0, *Constants::s0, *Constants::w, *Constants::a);
 		terms->add(*term0Pdf);
-		// Mathematica gives definite integral ∫-∞ to ∞ = exp(-mu) - this is obvious from formula (5)
 		RooFormulaVar* coeff0 = new RooFormulaVar("coeff0", "Term 0 coefficient", "exp(-@0)", RooArgList(*Constants::mu));
 		coefficients->add(*coeff0);
 	}
 
 	// Init terms 1..N as convolution of the background and ideal PM response function
-	BPdf* bPdf = new BPdf("bPdf", "Background", *observable, *Constants::Q0, *Constants::s0, *Constants::w, *Constants::a);
+//	BPdf* bPdf = new BPdf("bPdf", "Background", *observable, *Constants::Q0, *Constants::s0, *Constants::w, *Constants::a);
 	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
 	for (UInt_t n = 1; n < nTerms; n++){
 		// Instantiate N-th component PDF
@@ -93,8 +98,8 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 		// Convolute ideal function with the background
 		TString nameConv = TString::Format("term%dPdf", n);
 		TString titleConv = TString::Format("Term %d or the real PM function", n);
-		RooFFTConvPdf* termNPdf = new RooFFTConvPdf(nameConv.Data(), titleConv.Data(), *observable, *sIdealNPdf, *bPdf);
-		// termNPdf->setBufferFraction(3);
+		RooFFTConvPdf* termNPdf = new RooFFTConvPdf(nameConv.Data(), titleConv.Data(), *observable, *sIdealNPdf, *term0Pdf);
+		termNPdf->setBufferFraction(2);
 
 		// Set buffer fraction so tail not piles on the start
 		terms->add(*termNPdf);
@@ -103,38 +108,40 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 		TString titleC = TString::Format("Term %d coefficient", n);
 		RooFormulaVar* coeffN = new RooFormulaVar(nameC.Data(), nameC.Data(), "exp(-@0)*@0^@1/TMath::Factorial(@1)", RooArgList(*Constants::mu,*nVar));
 		coefficients->add(*coeffN);
-
 	}
 
 	// Sum terms of the real PM responce function
+	// Create extended pdf: number of components is same as number of coefficients
 	RooAddPdf* sRealPdf = new RooAddPdf("sRealPdf", "Real PM responce function", *terms, *coefficients);
-	// RooRealSumPdf* sRealPdf = new RooRealSumPdf("sRealPdf", "Real PM responce function", *terms, *coefficients);
-	sRealPdf->fixAddCoefNormalization(RooArgSet(*observable));
+	// sRealPdf->fixAddCoefNormalization(RooArgSet(*observable));
 
-	terms->Print("V");
-	coefficients->Print("V");
+	// terms->Print("V");
+	// coefficients->Print("V");
 
 	// Prepare data histogram
-	// RooDataHist* data2 = sRealPdf->generateBinned(*observable, 64000);
-	// sRealPdf->fitTo(*data2, RooFit::Extended(), RooFit::NumCPU(RootUtils::getNumCpu())) ;
 
 	RooDataHist* data = new RooDataHist("data", "Dataset", RooArgList(*observable), hist);
-	RootUtils::startTimer();
-	sRealPdf->fitTo(*data, RooFit::NumCPU(RootUtils::getNumCpu()));
-	RootUtils::stopAndPrintTimer();
+	// RooDataHist* data = sRealPdf->generateBinned(*observable, 64000);
 
+	RootUtils::startTimer();
+
+	// Likelihood extended fit - coefficients
+//	RooFitResult* fitResult = sRealPdf->fitTo(*data);
+	 RooFitResult* fitResult = sRealPdf->chi2FitTo(*data);
 
 	// Chi2 fit
-	// RooChi2Var* chi2 = new RooChi2Var("chi2", "chi2", *sRealPdf, *data, RooFit::NumCPU(RootUtils::getNumCpu()));
-	// RooMinimizer* m = new RooMinimizer(*chi2);
-	// m->setMinimizerType("Minuit2");
-	// Int_t resultMigrad = m->migrad();
-	// Int_t resultHesse = m->hesse();
-	// RooFitResult* fitResult = m->save();
+//	RooChi2Var* chi2 = new RooChi2Var("#chi^{2}", "chi square", *sRealPdf, *data, kTRUE, 0, 0, RootUtils::getNumCpu());
+//	RooMinimizer* m = new RooMinimizer(*chi2);
+//	m->setMinimizerType("Minuit2");
+//	Int_t resultMigrad = m->migrad();
+//	Int_t resultHesse = m->hesse();
+//	RooFitResult* fitResult = m->save();
 
-	// Unbinned likelihood fit
+	RootUtils::stopAndPrintTimer();
+
 	// RooAbsReal::defaultIntegratorConfig()->getConfigSection("RooIntegrator1D").setRealValue("maxSteps", 30);
 
+	// Unbinned likelihood fit
 	// Construct and mimimize unbinned likelihood
 	// RooAbsReal *nll = model.createNLL(*data, NumCPU(2));
 	// RooMinimizer(*nll).migrad();
@@ -143,21 +150,17 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 	// Create RooPlot from energy axis frame
 	RooPlot* spectrumPlot = observable->frame();
 	TString plotTitle = TString::Format("RooFit of %s", hist->GetTitle());
-	spectrumPlot->SetTitle(plotTitle.Data());  // Set Empty Graph Title
-	// spectrumPlot->GetXaxis()->SetRangeUser(fitRangeMin, fitRangeMax);      // Do we need this?
+	spectrumPlot->SetTitle(plotTitle.Data());
 
 	// Configure axis labels and look
 	GraphicsUtils::styleAxis(spectrumPlot->GetXaxis(), "ADC channel", 1.5, 0.02, kTRUE); // Title, Title offset, Label offset
 	GraphicsUtils::styleAxis(spectrumPlot->GetYaxis(), "Counts", 1.1, 0.012, kTRUE);
 
 	// Plot data points
-	data->plotOn(spectrumPlot, RooFit::LineColor(kGray + 3), /*RooFit::ShiftToZero(),*/ RooFit::XErrorSize(0), RooFit::MarkerSize(0.5), RooFit::MarkerColor(kGray + 3), RooFit::Name("data"));
-	sRealPdf->plotOn(spectrumPlot);
+	data->plotOn(spectrumPlot, RooFit::LineColor(kGray + 3), RooFit::MarkerSize(0.5), RooFit::Name("data"));
+	sRealPdf->plotOn(spectrumPlot, RooFit::Name("fit"));
 
 	// Plot model components
-	// Problem: convoluted PDF loses normalization of components
-	// TODO: normalize components on (1-source contribution) relative!
-	sRealPdf->getComponents()->Print("V");
 	{
 		RooArgSet* components = sRealPdf->getComponents();
 		TIterator* it = components->createIterator();
@@ -169,15 +172,13 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 				// sRealPdf->plotOn(spectrumPlot, RooFit::Components(*component), RooFit::LineStyle(kDashed), RooFit::LineColor(GraphicsUtils::colorSet[i++%GraphicsUtils::colorSet.size()]));
 				sRealPdf->plotOn(spectrumPlot, RooFit::Components(*component), RooFit::LineStyle(kDashed), RooFit::LineColor(kBlue));
 			}
-//			if (component && strcmp(component->ClassName(),"BPdf")==0) {
-//				sRealPdf->plotOn(spectrumPlot, RooFit::Components(*component), RooFit::LineStyle(kDashed), RooFit::LineColor(kBlack));
-//			}
+			if (component && strcmp(component->ClassName(),"RooAddPdf")==0) {
+				sRealPdf->plotOn(spectrumPlot, RooFit::Components(*component), RooFit::LineStyle(kDashed), RooFit::LineColor(kBlue), RooFit::Precision(1e-4));
+			}
 		}
 	}
 
-	sRealPdf->paramOn(spectrumPlot);
-	RooChi2Var* chi2Var = new RooChi2Var("chi2Var","chi2 variable", *sRealPdf, *data);
-	std::cout << "Chi2 value: " << chi2Var->getVal() << std::endl;
+	sRealPdf->paramOn(spectrumPlot, RooFit::Layout(0.5, 0.9, 0.9));
 
 	if (!pad){
 		TString canvasName = TString::Format("canvas_%d", timestamp->Get());
@@ -186,11 +187,24 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 	}
 
 	pad->SetBottomMargin(0.15);
-	pad->GetListOfPrimitives()->Print();
-
-	// TODO: print chi2
-	// TODO: align stats
 	spectrumPlot->Draw();
+
+	// Get chi^2 from the plot curve and historam
+	RooAbsCollection* freeParameters = (sRealPdf->getParameters(*data))->selectByAttrib("Constant", kFALSE);
+	const Int_t degreesFreedom = observable->getBins() - freeParameters->size();
+	const Double_t chi2Value = spectrumPlot->chiSquare("fit", "data", freeParameters->size());
+	// Double_t chi2Value = chi2->getVal() / degreesFreedom;
+
+	// Print chi^2 in the Statistics box
+	TString paveTextName = TString::Format("%s_paramBox", sRealPdf->GetName());
+	TPaveText* paveText = (TPaveText*)pad->GetListOfPrimitives()->FindObject(paveTextName.Data());
+	TString line = TString::Format("#chi^{2} =  %d / %d = %.2f", (Int_t)(degreesFreedom*chi2Value), degreesFreedom, chi2Value);
+	paveText->AddText(line.Data());
+	paveText->SetTextSize(0.03);
+
+	// Align statistic box - only after RooPlot was Draw()'n
+	// GraphicsUtils::stylePaveText(paveText, pad);
+
 }
 //
 //// Fit without convolution, with SRealNPdf

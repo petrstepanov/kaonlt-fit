@@ -11,6 +11,7 @@
 #include <TH1.h>
 #include <TVirtualPad.h>
 #include <TFitResult.h>
+#include <TPaveText.h>
 #include <TFitResultPtr.h>
 #include <vector>
 
@@ -47,6 +48,7 @@ public:
 
 	static void setMyStatsDisplay(TH1*, TVirtualPad*);
 	static void alignStats(TH1*, TVirtualPad*);
+	static void stylePaveText(TPaveText* paveText, TVirtualPad* pad);
 	static void setStatsFitOption(TH1*, TVirtualPad*, Int_t);
 //	static void addLineToStats(TH1*, const char*, TVirtualPad*);
 //	static void showChi2InStats(TH1*, TFitResultPtr, TVirtualPad*);

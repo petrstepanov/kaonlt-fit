@@ -27,6 +27,7 @@ struct Parameters {
 	Float_t plotTree = kTRUE;
 	Int_t tileProfile = 55;
 	Int_t termsNumber = 50;
+	Int_t convolutionBins = 1024;
 	Bool_t doConvolution = kFALSE;
 	TList* inputFiles = new TList();
 };
@@ -41,6 +42,7 @@ class Constants {
 	static const Int_t TILE_MIN;
 	static const Int_t TILE_MAX;
 
+	static const Int_t CH_BINS;
 	static const Int_t CH_MIN;
 	static const Int_t CH_MAX;
 

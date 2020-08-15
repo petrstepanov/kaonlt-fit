@@ -24,6 +24,7 @@
 #include "fit/FuncSReal.h"
 #include "fit/FuncSRealFFT.h"
 #include "fit/FuncSRealNoTerm0.h"
+#include "fit/FuncSRealFFTNoTerm0.h"
 
 int run(const char* fileName) {
 	// Instantiate the Tree and read it from the input file
@@ -42,11 +43,11 @@ int run(const char* fileName) {
 
 	// Prepare histograms for the PMT projection spectra
 	TString pmt1HistTitle = TString::Format("PMT1 profile at tilel=%d", Constants::getInstance()->parameters.tileProfile);
-	TH1* pmt1Hist = new TH1F("pmt1Hist", pmt1HistTitle, Constants::CH_MAX-Constants::CH_MIN, Constants::CH_MIN, Constants::CH_MAX);
+	TH1* pmt1Hist = new TH1F("pmt1Hist", pmt1HistTitle, Constants::CH_BINS, Constants::CH_MIN, Constants::CH_MAX);
 	pmt1Hist->GetXaxis()->SetTitle("Channel (ch_1)");
 	pmt1Hist->GetYaxis()->SetTitle("Counts");
 	TString pmt2HistTitle = TString::Format("PMT2 profile at tiler=%d", Constants::getInstance()->parameters.tileProfile);
-	TH1* pmt2Hist = new TH1F("pmt2Hist", pmt2HistTitle, Constants::CH_MAX-Constants::CH_MIN, Constants::CH_MIN, Constants::CH_MAX);
+	TH1* pmt2Hist = new TH1F("pmt2Hist", pmt2HistTitle, Constants::CH_BINS, Constants::CH_MIN, Constants::CH_MAX);
 	pmt2Hist->GetXaxis()->SetTitle("Channel (ch_2)");
 	pmt2Hist->GetYaxis()->SetTitle("Counts");
 
@@ -73,14 +74,14 @@ int run(const char* fileName) {
 	pmtsCanvas->SaveAs(pngFilePath);
 
 	// Trim PMT spectra to remove zero bin noise
-//	TH1* pmt1HistFit = HistUtils::cutHistogram(pmt1Hist, Constants::CH_FIT_MIN, Constants::CH_FIT_MAX);
-//	TH1* pmt2HistFit = HistUtils::cutHistogram(pmt2Hist, Constants::CH_FIT_MIN, Constants::CH_FIT_MAX);
+	TH1* pmt1HistFit = HistUtils::cutHistogram(pmt1Hist, Constants::CH_FIT_MIN, Constants::CH_FIT_MAX);
+	TH1* pmt2HistFit = HistUtils::cutHistogram(pmt2Hist, Constants::CH_FIT_MIN, Constants::CH_FIT_MAX);
 
-//	FitUtils::doRooFit(pmt1HistFit, kFALSE);
-//	FitUtils::doRooFit(pmt2HistFit, kFALSE);
+	FitUtils::doRooFit(pmt1HistFit, kFALSE);
+	FitUtils::doRooFit(pmt2HistFit, kFALSE);
 
-//	AbsComponentFunc* funcObjectFFTNoTerm0 = new FuncSRealFFTNoTerm0(hist2);
-//	FitUtils::doFit(hist2, funcObjectFFT);
+	// AbsComponentFunc* funcObjectFFTNoTerm0 = new FuncSRealFFTNoTerm0(pmt2HistFit);
+	// FitUtils::doFit(pmt2HistFit, funcObjectFFTNoTerm0);
 
 
 	// AbsComponentFunc* funcObject = new FuncSRealNoTerm0(pmt1Hist);
@@ -111,12 +112,16 @@ int testFillRandom(){
 	FitUtils::fillHistogramFromFuncObject(hist, funcObject);
 
 	// Fit histogram with ROOT Fit
-	FitUtils::doFit(hist, funcObject);
+	// FitUtils::doFit(hist, funcObject);
 
 	// Fit histogram with ROOT Fit with Convolution
-	TH1* hist2 = HistUtils::cloneHistogram(hist, "hist_convolution");
-	AbsComponentFunc* funcObjectFFT = new FuncSRealFFT(hist2);
-	FitUtils::doFit(hist2, funcObjectFFT);
+	// TH1* hist2 = HistUtils::cloneHistogram(hist, "hist_conv");
+	// AbsComponentFunc* funcObjectFFT = new FuncSRealFFT(hist2);
+	// FitUtils::doFit(hist2, funcObjectFFT);
+
+	// Fit histogram with RooFit with Convolution
+	TH1* hist3 = HistUtils::cloneHistogram(hist, "hist_conv_roofit");
+	FitUtils::doRooFit(hist3, kTRUE);
 
 	// Generate histogram without Pedestal
 //	TH1* hist3 = HistUtils::cloneHistogram(hist, "hist3");
@@ -128,20 +133,6 @@ int testFillRandom(){
 //	FitUtils::doFit(hist3, funcObjectNoTerm0);
 
 	return 0;
-}
-
-void testRooFit(){
-	// Instantiate histogram
-	Int_t nBins = TestSpectrum::getHistogramReal()->GetXaxis()->GetNbins();
-	TH1F *hist = new TH1F("bellamyHistFillRandom", "Bellamy histogram. Random fill from fit function.", nBins, 0, nBins);
-	hist->GetXaxis()->SetTitle("ADC Channel");
-	hist->GetYaxis()->SetTitle("Events");
-
-	// Fill histogram with random events from FuncSReal function
-	AbsComponentFunc* funcObject = new FuncSReal(hist);
-	FitUtils::fillHistogramFromFuncObject(hist, funcObject);
-
-	FitUtils::doRooFit(hist);
 }
 
 int main(int argc, char* argv[]) {
@@ -164,12 +155,12 @@ int main(int argc, char* argv[]) {
 	// Test fitting function on the digitized test histogram
 	// testDigitized();
 	// Test fitting function on the filled random test histogram
-	// testFillRandom();
-    // testRooFit();
+	testFillRandom();
+
 	// Iterate through input files and run analysis
 	for (TObject* object : *(constants->parameters.inputFiles)) {
 		if (TObjString* objString = dynamic_cast<TObjString*>(object)){
-			run(objString->GetString());
+			// run(objString->GetString());
 		}
 	}
 

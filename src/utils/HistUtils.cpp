@@ -50,13 +50,13 @@ TH1* HistUtils::cutHistogram(TH1* hist, Double_t xMin, Double_t xMax){
 
 	TAxis* xAxis = hist->GetXaxis();
 	TString name = TString::Format("%s-trimmed", hist->GetName());
-	TString title = TString::Format("%s Trimmed", hist->GetTitle());
-	TH1F* trimmedHist = new TH1F(name, title, nBins, xAxis->GetBinLowEdge(minBin), xAxis->GetBinUpEdge(maxBin));
+	// TString title = TString::Format("%s (trimmed)", hist->GetTitle());
+	TH1F* trimmedHist = new TH1F(name, hist->GetTitle(), nBins, xAxis->GetBinLowEdge(minBin), xAxis->GetBinUpEdge(maxBin));
 
 	for (Int_t i = 1; i <= nBins; i++){
 		trimmedHist->SetBinContent(i, hist->GetBinContent(i+minBin-1));
 		trimmedHist->SetBinError(i, hist->GetBinError(i+minBin-1));
-		std::cout << "bin: " << i << " content: " << trimmedHist->GetBinContent(i) << " error: " << trimmedHist->GetBinError(i) << std::endl;
+		// std::cout << "bin: " << i << " content: " << trimmedHist->GetBinContent(i) << " error: " << trimmedHist->GetBinError(i) << std::endl;
 	}
 
 	// trimmedHist->SetEntries(trimmedHist->Integral());
