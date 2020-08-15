@@ -72,18 +72,18 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 	RooArgList* coefficients = new RooArgList();
 
 	// Init zero term PDF (it's also a background function - paper has mistake - needs shifted):
-	RooGaussian* gauss = new RooGaussian("gauss", "gaussian PDF", *observable, *Constants::Q0, *Constants::s0);
-	ExpPdf* exp = new ExpPdf("exp", "exponential PDF", *observable, *Constants::Q0, *Constants::a);
-	RooAddPdf* term0Pdf = new RooAddPdf("term0Pdf", "Term 0 of the real PM function", RooArgList(*exp, *gauss), RooArgList(*Constants::w), kTRUE);
-	// term0Pdf->fixAddCoefNormalization(RooArgSet(*observable));
+	// RooGaussian* gauss = new RooGaussian("gauss", "gaussian PDF", *observable, *Constants::Q0, *Constants::s0);
+	// ExpPdf* exp = new ExpPdf("exp", "exponential PDF", *observable, *Constants::Q0, *Constants::a);
+	// RooAddPdf* term0Pdf = new RooAddPdf("term0Pdf", "Term 0 of the real PM function", RooArgList(*exp, *gauss), RooArgList(*Constants::w), kTRUE);
+	BPdf* term0 = new BPdf("term0", "Background function shifted", *observable, *Constants::Q0, *Constants::s0, *Constants::w, *Constants::a);
 	if (useTerm0){
-		terms->add(*term0Pdf);
+		terms->add(*term0);
 		RooFormulaVar* coeff0 = new RooFormulaVar("coeff0", "Term 0 coefficient", "exp(-@0)", RooArgList(*Constants::mu));
 		coefficients->add(*coeff0);
 	}
 
 	// Init terms 1..N as convolution of the background and ideal PM response function
-//	BPdf* bPdf = new BPdf("bPdf", "Background", *observable, *Constants::Q0, *Constants::s0, *Constants::w, *Constants::a);
+	BPdf* bPdf = new BPdf("bPdf", "Background", *observable, *Constants::Q0, *Constants::s0, *Constants::w, *Constants::a);
 	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
 	for (UInt_t n = 1; n < nTerms; n++){
 		// Instantiate N-th component PDF
@@ -98,7 +98,7 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 		// Convolute ideal function with the background
 		TString nameConv = TString::Format("term%dPdf", n);
 		TString titleConv = TString::Format("Term %d or the real PM function", n);
-		RooFFTConvPdf* termNPdf = new RooFFTConvPdf(nameConv.Data(), titleConv.Data(), *observable, *sIdealNPdf, *term0Pdf);
+		RooFFTConvPdf* termNPdf = new RooFFTConvPdf(nameConv.Data(), titleConv.Data(), *observable, *sIdealNPdf, *bPdf);
 		termNPdf->setBufferFraction(2);
 
 		// Set buffer fraction so tail not piles on the start
@@ -124,6 +124,7 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 	// RooDataHist* data = sRealPdf->generateBinned(*observable, 64000);
 
 	RootUtils::startTimer();
+	// RooAbsReal::defaultIntegratorConfig()->getConfigSection("RooIntegrator1D").setRealValue("maxSteps", 30);
 
 	// Likelihood extended fit - coefficients
 	// RooFitResult* fitResult = sRealPdf->fitTo(*data);
@@ -140,7 +141,6 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 
 	RootUtils::stopAndPrintTimer();
 
-	// RooAbsReal::defaultIntegratorConfig()->getConfigSection("RooIntegrator1D").setRealValue("maxSteps", 30);
 
 	// Unbinned likelihood fit
 	// Construct and mimimize unbinned likelihood
