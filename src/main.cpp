@@ -78,7 +78,8 @@ int run(const char* fileName) {
 	TH1* pmt2HistFit = HistUtils::cutHistogram(pmt2Hist, Constants::CH_FIT_MIN, Constants::CH_FIT_MAX);
 
 	// Fit and plot PMT spectra
-	TString pmtsFitCanvasTitle = TString::Format("Fit of the PMT profile spectra (tile = %d, terms = %d)", Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber);
+	const char* fitKind = Constants::getInstance()->parameters.rooFit ? "RooFit" : "Fit";
+	TString pmtsFitCanvasTitle = TString::Format("%s of the PMT profile spectra (tile = %d, terms = %d)", fitKind, Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber);
 	TCanvas* pmtsFitCanvas = new TCanvas("pmtsFitCanvas", pmtsFitCanvasTitle.Data(), 1024, 512);
 	pmtsFitCanvas->Divide(2,1);
 
@@ -130,6 +131,28 @@ int testFillRandom(){
 
 	return 0;
 }
+
+int testRebin(){
+	// Instantiate histogram
+	Int_t nBins = TestSpectrum::getHistogramPaper()->GetXaxis()->GetNbins();
+	TH1F *hist = new TH1F("hist", "Bellamy histogram. Random fill from fit function.", nBins, 0, nBins);
+	hist->GetXaxis()->SetTitle("ADC Channel");
+	hist->GetYaxis()->SetTitle("Events");
+	AbsComponentFunc* funcObject = new FuncSReal(hist);
+	FitUtils::fillHistogramFromFuncObject(hist, funcObject);
+
+	// Fit histogram with ROOT Fit with Convolution
+	TH1* hist2 = HistUtils::cloneHistogram(hist, "hist_conv");
+	AbsComponentFunc* funcObjectFFT = new FuncSRealFFT(hist2);
+	FitUtils::doFit(hist2, funcObjectFFT);
+
+	// Fit histogram with RooFit with Convolution
+	TH1* hist3 = HistUtils::cloneHistogram(hist, "hist_conv_roofit");
+	FitUtils::doRooFit(hist3, kTRUE);
+
+	return 0;
+}
+
 
 int main(int argc, char* argv[]) {
 	// Create ROOT application
