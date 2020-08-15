@@ -19,7 +19,7 @@ public:
 
 	int init(const char*);
 	void plotTreeProfiles();
-	void plotTree();
+	void plotTree(const char*);
 	void fillPmtHists(TH1*, TH1*);
 
 private:

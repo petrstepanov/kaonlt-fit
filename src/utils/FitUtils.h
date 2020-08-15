@@ -1,24 +1,41 @@
 /*
  * FitUtils.h
  *
- *  Created on: Aug 2, 2020
+ *  Created on: Aug 6, 2020
  *      Author: petrstepanov
  */
 
 #ifndef SRC_UTILS_FITUTILS_H_
 #define SRC_UTILS_FITUTILS_H_
 
-#include <RtypesCore.h>
-#include <TF1.h>
 #include <TH1.h>
+#include <TVirtualPad.h>
+#include <RooRealVar.h>
+
+#include "../fit/AbsComponentFunc.h"
 
 class FitUtils {
 public:
 	FitUtils();
 	virtual ~FitUtils();
 
-	static TF1* getConvFitFunction(Double_t xMin, Double_t xMax);
-	static TF1* getRealFitFunction(TH1* hist);
+	static void doFit(TH1* hist, AbsComponentFunc* funcObject, TVirtualPad* pad = 0);
+	static void doFitTest(TH1* hist);
+	static void doRooFit(TH1* hist, Bool_t useTerm0 = kTRUE, TVirtualPad* pad = 0);
+	static void fillHistogramFromFuncObject(TH1* hist, AbsComponentFunc* funcObject);
+	static TH1* getfillHistogramFromFuncObject(TH1* hist, AbsComponentFunc* funcObject);
+	static Double_t* getConvFitParameters(Double_t*, Int_t nPar);
+
+private:
+	static TF1* getFuncSReal(TH1*, Int_t, Bool_t isConvolution = kFALSE);
+
+	static RooRealVar* Q0;
+	static RooRealVar* s0;
+	static RooRealVar* Q1;
+	static RooRealVar* s1;
+	static RooRealVar* w;
+	static RooRealVar* a;
+	static RooRealVar* mu;
 };
 
 #endif /* SRC_UTILS_FITUTILS_H_ */

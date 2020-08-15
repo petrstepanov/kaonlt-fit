@@ -4,9 +4,11 @@
 #pragma link off all functions;
 #pragma link C++ nestedclasses;
 
-// For signals and slots
-#pragma link C++ class Model;
-#pragma link C++ class Database;
-#pragma link C++ class Spectrum;
+#pragma link C++ class Term0Pdf;
+#pragma link C++ class SIdealNPdf;
+#pragma link C++ class SRealNPdf;
+#pragma link C++ class BPdf;
+#pragma link C++ class ExpPdf;
+#pragma link C++ class GaussPdf;
 
 #endif

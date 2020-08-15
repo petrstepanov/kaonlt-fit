@@ -59,18 +59,18 @@ int TreeHelper::init(const char* fileName){
 
 void TreeHelper::plotTreeProfiles(){
 	// Construct histograms for the TTree profiles (ch_1 and ch_2)
-	TH1F* ch1Hist = new TH1F("ch1Hist", "Channel profile for PMT1", Constants::CH_BINS, Constants::CH_MIN, Constants::CH_MAX);
+	TH1F* ch1Hist = new TH1F("ch1Hist", "Channel profile for PMT1", Constants::CH_MAX-Constants::CH_MIN, Constants::CH_MIN, Constants::CH_MAX);
 	ch1Hist->GetXaxis()->SetTitle("Events");
 	ch1Hist->SetStats(0);
 	ch1Hist->GetYaxis()->SetTitle("Channel (ch_1)");
-	TH1F* ch2Hist = new TH1F("ch2Hist", "Channel profile for PMT2", Constants::CH_BINS, Constants::CH_MIN, Constants::CH_MAX);
+	TH1F* ch2Hist = new TH1F("ch2Hist", "Channel profile for PMT2", Constants::CH_MAX-Constants::CH_MIN, Constants::CH_MIN, Constants::CH_MAX);
 	ch2Hist->GetXaxis()->SetTitle("Events");
 	ch2Hist->SetStats(0);
 	ch2Hist->GetYaxis()->SetTitle("Channel (ch_2)");
 
 	const char* treeName = myTree->GetName(); //Constants::getInstance()->parameters.treeName.Data();
 	TString myCanvasName = TString::Format("%s-ch_1-ch_2", treeName);
-	TString myCanvasTitle = TString::Format("TTree \"%s\" channel profiles. File \"%s\"", treeName, fileName->Data());
+	TString myCanvasTitle = TString::Format("TTree \"%s\" channel profiles. File \"%s\"", treeName, fileName);
 	TCanvas* myCanvas = new TCanvas(myCanvasName, myCanvasTitle, 1024, 512);
 	myCanvas->Divide(2,1);
 
@@ -97,37 +97,37 @@ void TreeHelper::plotTreeProfiles(){
 	// myCanvas->SaveAs(pngFilePath);
 }
 
-void TreeHelper::plotTree(){
+void TreeHelper::plotTree(const char* fileName){
 	// Construct histograms (ch_1:tilel) and (ch_2:tiler) from the TTree
 	TH2F* ch1TilelHist = new TH2F("ch1TilelHist", "Channel vs Tile for PMT1",
 								  Constants::TILE_BINS, Constants::TILE_MIN, Constants::TILE_MAX,
-								  Constants::CH_BINS, Constants::CH_MIN, Constants::CH_MAX);
+								  Constants::CH_MAX-Constants::CH_MIN, Constants::CH_MIN, Constants::CH_MAX);
 	ch1TilelHist->GetXaxis()->SetTitle("Tile (tilel)");
 	ch1TilelHist->GetYaxis()->SetTitle("Channel (ch_1)");
 	ch1TilelHist->SetStats(0);
 	TH2F* ch2TilerHist = new TH2F("ch2TilerHist", "Channel vs Tile for PMT2",
 			   	   	   	   	   	  Constants::TILE_BINS, Constants::TILE_MIN, Constants::TILE_MAX,
-								  Constants::CH_BINS, Constants::CH_MIN, Constants::CH_MAX);
+								  Constants::CH_MAX-Constants::CH_MIN, Constants::CH_MIN, Constants::CH_MAX);
 	ch2TilerHist->GetXaxis()->SetTitle("Tile (tiler)");
 	ch2TilerHist->GetYaxis()->SetTitle("Channel (ch_2)");
 	ch2TilerHist->SetStats(0);
 	// Construct histograms (amp_1:tilel) and (amp_2:tiler) from the TTree
 	TH2F* amp1TilelHist = new TH2F("amp1TilelHist", "Amplitude vs Tile for PMT1",
 			  	  	  	  	  	   Constants::TILE_BINS, Constants::TILE_MIN, Constants::TILE_MAX,
-								   Constants::AMP_BINS, Constants::AMP_MIN, Constants::AMP_MAX);
+								   Constants::AMP_MAX-Constants::AMP_MIN, Constants::AMP_MIN, Constants::AMP_MAX);
 	amp1TilelHist->GetXaxis()->SetTitle("Tile (tilel)");
 	amp1TilelHist->GetYaxis()->SetTitle("Amplitude (amp_1)");
 	amp1TilelHist->SetStats(0);
 	TH2F* amp2TilerHist = new TH2F("amp2TilerHist", "Amplitude vs Tile for PMT2",
 								   Constants::TILE_BINS, Constants::TILE_MIN, Constants::TILE_MAX,
-								   Constants::AMP_BINS, Constants::AMP_MIN, Constants::AMP_MAX);
+								   Constants::AMP_MAX-Constants::AMP_MIN, Constants::AMP_MIN, Constants::AMP_MAX);
 	amp2TilerHist->GetXaxis()->SetTitle("Tile (tiler)");
 	amp2TilerHist->GetYaxis()->SetTitle("Amplitude (amp_2)");
 	amp2TilerHist->SetStats(0);
 
-	const char* treeName = myTree->GetName(); //Constants::getInstance()->parameters.treeName.Data();
+	const char* treeName = myTree->GetName();
 	TString myCanvasName = TString::Format("%s-ch:tile-amp:tile", treeName);
-	TString myCanvasTitle = TString::Format("TTree \"%s\". File \"%s\"", treeName, fileName->Data());
+	TString myCanvasTitle = TString::Format("TTree \"%s\". File \"%s\"", treeName, fileName);
 	TCanvas* myCanvas = new TCanvas(myCanvasName, myCanvasTitle, 1024, 1024);
 	myCanvas->Divide(2,2);
 
@@ -164,8 +164,8 @@ void TreeHelper::plotTree(){
 	amp2TilerHist->Draw("COLZ0");
 
 	// Save canvas to file
-	TString pngFilePath = TString(myCanvas->GetName()) + ".png";
-	myCanvas->SaveAs(pngFilePath);
+	TString pngFilePath = TString::Format("%s-%s.png", fileName, myCanvas->GetName());
+	myCanvas->SaveAs(pngFilePath.Data());
 }
 
 void TreeHelper::fillPmtHists(TH1* pmt1Hist, TH1* pmt2Hist){
