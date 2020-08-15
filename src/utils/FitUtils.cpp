@@ -126,16 +126,17 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 	RootUtils::startTimer();
 
 	// Likelihood extended fit - coefficients
-//	RooFitResult* fitResult = sRealPdf->fitTo(*data);
-	 RooFitResult* fitResult = sRealPdf->chi2FitTo(*data);
+	// RooFitResult* fitResult = sRealPdf->fitTo(*data);
+	RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE));
 
-	// Chi2 fit
-//	RooChi2Var* chi2 = new RooChi2Var("#chi^{2}", "chi square", *sRealPdf, *data, kTRUE, 0, 0, RootUtils::getNumCpu());
-//	RooMinimizer* m = new RooMinimizer(*chi2);
-//	m->setMinimizerType("Minuit2");
-//	Int_t resultMigrad = m->migrad();
-//	Int_t resultHesse = m->hesse();
-//	RooFitResult* fitResult = m->save();
+	// Chi2 fit - does not work because zero values
+	// RooChi2Var* chi2 = new RooChi2Var("#chi^{2}", "chi square", *sRealPdf, *data, kTRUE, 0, 0, RootUtils::getNumCpu());
+	// RooChi2Var* chi2 = new RooChi2Var("#chi^{2}", "chi square", *sRealPdf, *data);
+	// RooMinimizer* m = new RooMinimizer(*chi2);
+	// m->setMinimizerType("Minuit2");
+	// Int_t resultMigrad = m->migrad();
+	// Int_t resultHesse = m->hesse();
+	// RooFitResult* fitResult = m->save();
 
 	RootUtils::stopAndPrintTimer();
 
@@ -161,22 +162,27 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 	sRealPdf->plotOn(spectrumPlot, RooFit::Name("fit"));
 
 	// Plot model components
-	{
-		RooArgSet* components = sRealPdf->getComponents();
-		TIterator* it = components->createIterator();
-		UInt_t i = 0;
-		// Here we have to normalize non-convoluted material components with respect to the source contribution!
-		while (TObject* tempObject = it->Next()) {
-			RooAbsPdf* component = dynamic_cast<RooAbsPdf*>(tempObject);
-			if (component && (strcmp(component->ClassName(),"Term0Pdf")==0 || strcmp(component->ClassName(),"RooFFTConvPdf")==0)) {
-				// sRealPdf->plotOn(spectrumPlot, RooFit::Components(*component), RooFit::LineStyle(kDashed), RooFit::LineColor(GraphicsUtils::colorSet[i++%GraphicsUtils::colorSet.size()]));
-				sRealPdf->plotOn(spectrumPlot, RooFit::Components(*component), RooFit::LineStyle(kDashed), RooFit::LineColor(kBlue));
-			}
-			if (component && strcmp(component->ClassName(),"RooAddPdf")==0) {
-				sRealPdf->plotOn(spectrumPlot, RooFit::Components(*component), RooFit::LineStyle(kDashed), RooFit::LineColor(kBlue), RooFit::Precision(1e-4));
-			}
+	for (UInt_t i = 0; i < terms->size(); i++){
+		RooAbsPdf* pdf = (RooAbsPdf*)terms->at(i);
+		if (pdf){
+			// Double_t normalization = intBg + (1-intBg)*intSource;
+			// RooFit::Normalization(normalization, RooAbsReal::Relative)
+			sRealPdf->plotOn(spectrumPlot, RooFit::Components(*pdf), RooFit::LineStyle(kDashed), RooFit::LineColor(kBlue));
 		}
 	}
+	sRealPdf->getComponents()->Print();
+//	{
+//		RooArgSet* components = sRealPdf->getComponents();
+//		TIterator* it = components->createIterator();
+//		UInt_t i = 0;
+//		// Here we have to normalize non-convoluted material components with respect to the source contribution!
+//		while (TObject* tempObject = it->Next()) {
+//			RooAbsPdf* component = dynamic_cast<RooAbsPdf*>(tempObject);
+//			if (component && strcmp(component->ClassName(),"RooFFTConvPdf")==0) {
+//				sRealPdf->plotOn(spectrumPlot, RooFit::Components(*component), RooFit::LineStyle(kDashed), RooFit::LineColor(kBlue));
+//			}
+//		}
+//	}
 
 	sRealPdf->paramOn(spectrumPlot, RooFit::Layout(0.5, 0.9, 0.9));
 

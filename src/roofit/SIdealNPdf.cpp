@@ -25,17 +25,17 @@ SIdealNPdf::SIdealNPdf(const SIdealNPdf& other, const char* name) :
 		RooAbsPdf(other, name), x("x", this, other.x), Q1("Q1", this, other.Q1), s1("s1", this, other.s1), n("n", this, other.n) {
 }
 
-// Doing like rooexponential
+// Doing not normalized!
 Double_t SIdealNPdf::evaluate() const {
-	Double_t value = // begin mathematica code from "/mathematica/SidealN.nb"
-			1/(Power(E,Power(-(n*Q1) + x,2)/(2.*n*Power(s1,2)))*Sqrt(n)*Sqrt(2*Pi)*s1)
+	Double_t value = // begin mathematica code from "/mathematica/RooFit/SidealN-pdf-not-norm.nb"
+			Power(E,-Power(-(n*Q1) + x,2)/(2.*n*Power(s1,2)))
 	; // end mathematica code
 	return value;
 }
 
 Double_t SIdealNPdf::indefiniteIntegral(Double_t x) const {
 	Double_t value =  // begin mathematica code from "/mathematica/SidealN.nb"
-			Erf((-(n*Q1) + x)/(Sqrt(2)*Sqrt(n)*s1))/2.
+			Sqrt(n)*Sqrt(Pi/2.)*s1*Erf((-(n*Q1) + x)/(Sqrt(2)*Sqrt(n)*s1))
 	; // end mathematica code
 	return value;
 }
