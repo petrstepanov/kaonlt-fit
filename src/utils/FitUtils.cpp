@@ -144,8 +144,8 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, TVirtua
 	spectrumPlot->SetTitle(plotTitle.Data());
 
 	// Configure axis labels and look
-	GraphicsUtils::styleAxis(spectrumPlot->GetXaxis(), "ADC channel", 1.4, 0.02, kTRUE); // Title, Title offset, Label offset
-	GraphicsUtils::styleAxis(spectrumPlot->GetYaxis(), "Events", 1.3, 0.012, kTRUE);
+	GraphicsUtils::styleAxis(spectrumPlot->GetXaxis(), "ADC channel", 1.2, 0.02, kTRUE); // Title, Title offset, Label offset
+	GraphicsUtils::styleAxis(spectrumPlot->GetYaxis(), "Events", 1.1, 0.012, kTRUE);
 
 	// Plot data points
 	data->plotOn(spectrumPlot, RooFit::LineColor(kGray + 3), RooFit::MarkerSize(0.5), RooFit::Name("data"));
@@ -167,7 +167,7 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, TVirtua
 		TString padName = TString::Format("canvas_%d", timestamp->Get());
 		pad = new TCanvas(padName.Data());
 	}
-	pad->SetBottomMargin(0.15);
+	pad->SetBottomMargin(0.1);
 
 	// Draw the plot
 	spectrumPlot->Draw();

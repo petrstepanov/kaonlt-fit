@@ -147,8 +147,8 @@ int testFillRandom(){
 	FitUtils::doFit(hist2, params, funcObjectFFT);
 
 	// Fit histogram with RooFit with Convolution
-//	TH1* hist3 = HistUtils::cloneHistogram(h, "hist_conv_roofit");
-//	FitUtils::doRooFit(hist3, params, kTRUE);
+	TH1* hist3 = HistUtils::cloneHistogram(h, "hist_conv_roofit");
+	FitUtils::doRooFit(hist3, params, kTRUE);
 
 	return 0;
 }
