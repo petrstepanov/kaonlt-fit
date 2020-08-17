@@ -9,6 +9,8 @@
 #include <iostream>
 #include <vector>
 #include <TH1I.h>
+#include "../utils/FitUtils.h"
+#include "../fit/FuncSReal.h"
 
 TestSpectrum::TestSpectrum(){};
 TestSpectrum::~TestSpectrum(){};
@@ -38,8 +40,7 @@ TH1* TestSpectrum::getHistogramPaper(){
 	return hist;
 }
 
-
-TH1* TestSpectrum::getHistogramReal(){
+TH1* TestSpectrum::getHistogramPaperFix(){
 	std::vector<Int_t> vector (array2, array2 + sizeof(array2) / sizeof(array2[0]) );
 	TH1* hist = new TH1I("bellamyHistDigitized", "Bellamy histogram. Digitized from figure.", (Int_t)vector.size(), 0, (Int_t)vector.size());
 	hist->GetXaxis()->SetTitle("ADC Channel");
@@ -49,5 +50,15 @@ TH1* TestSpectrum::getHistogramReal(){
 	for (int count : vector) {
 		hist->SetBinContent(++bin, count);
 	}
+	return hist;
+}
+
+TH1* TestSpectrum::getHistogramGenerated(FitParameters* parameters){
+	Int_t nBins = getHistogramPaper()->GetXaxis()->GetNbins();
+	TH1F *hist = new TH1F("histBellamy", "Bellamy histogram. Random fill from fit function.", nBins, 0, nBins);
+	hist->GetXaxis()->SetTitle("ADC Channel");
+	hist->GetYaxis()->SetTitle("Events");
+	FuncSReal* funcObj = new FuncSReal(hist);
+	FitUtils::fillHistogramFromFuncObject(hist, parameters, funcObj);
 	return hist;
 }

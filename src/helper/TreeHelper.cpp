@@ -59,11 +59,11 @@ int TreeHelper::init(const char* fileName){
 
 void TreeHelper::plotTreeProfiles(){
 	// Construct histograms for the TTree profiles (ch_1 and ch_2)
-	TH1F* ch1Hist = new TH1F("ch1Hist", "Channel profile for PMT1", Constants::CH_MAX-Constants::CH_MIN, Constants::CH_MIN, Constants::CH_MAX);
+	TH1F* ch1Hist = new TH1F("ch1Hist", "Channel profile for PMT1", Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
 	ch1Hist->GetXaxis()->SetTitle("Events");
 	ch1Hist->SetStats(0);
 	ch1Hist->GetYaxis()->SetTitle("Channel (ch_1)");
-	TH1F* ch2Hist = new TH1F("ch2Hist", "Channel profile for PMT2", Constants::CH_MAX-Constants::CH_MIN, Constants::CH_MIN, Constants::CH_MAX);
+	TH1F* ch2Hist = new TH1F("ch2Hist", "Channel profile for PMT2", Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
 	ch2Hist->GetXaxis()->SetTitle("Events");
 	ch2Hist->SetStats(0);
 	ch2Hist->GetYaxis()->SetTitle("Channel (ch_2)");
@@ -101,13 +101,13 @@ void TreeHelper::plotTree(const char* fileName){
 	// Construct histograms (ch_1:tilel) and (ch_2:tiler) from the TTree
 	TH2F* ch1TilelHist = new TH2F("ch1TilelHist", "Channel vs Tile for PMT1",
 								  Constants::TILE_BINS, Constants::TILE_MIN, Constants::TILE_MAX,
-								  Constants::CH_MAX-Constants::CH_MIN, Constants::CH_MIN, Constants::CH_MAX);
+								  Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
 	ch1TilelHist->GetXaxis()->SetTitle("Tile (tilel)");
 	ch1TilelHist->GetYaxis()->SetTitle("Channel (ch_1)");
 	ch1TilelHist->SetStats(0);
 	TH2F* ch2TilerHist = new TH2F("ch2TilerHist", "Channel vs Tile for PMT2",
 			   	   	   	   	   	  Constants::TILE_BINS, Constants::TILE_MIN, Constants::TILE_MAX,
-								  Constants::CH_MAX-Constants::CH_MIN, Constants::CH_MIN, Constants::CH_MAX);
+								  Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
 	ch2TilerHist->GetXaxis()->SetTitle("Tile (tiler)");
 	ch2TilerHist->GetYaxis()->SetTitle("Channel (ch_2)");
 	ch2TilerHist->SetStats(0);
@@ -183,10 +183,10 @@ void TreeHelper::fillPmtHists(TH1* pmt1Hist, TH1* pmt2Hist){
 		// std::cout << *tilel << " " << *tiler << " " << *amp_1 << " " << *amp_2  << " " << *ch_1 << " " << *ch_2 << std::endl;
 		Int_t tileProfile = Constants::getInstance()->parameters.tileProfile;
 		if (*tilel == tileProfile && *tiler > 0){ // tilel, ch_1 && tiler !=0
-			HistUtils::increaseBinContent(pmt1Hist, *ch_1);
+			HistUtils::increaseCorrespondingBinContent(pmt1Hist, *ch_1);
 		}
 		if (*tiler == tileProfile && *tilel > 0){
-			HistUtils::increaseBinContent(pmt2Hist, *ch_2);
+			HistUtils::increaseCorrespondingBinContent(pmt2Hist, *ch_2);
 		}
 	}
 }

@@ -34,8 +34,13 @@ TH1* HistUtils::trimHistogram(TH1* hist){
 	TH1F* trimmedHist = new TH1F(name, title, nBins, xAxis->GetBinLowEdge(minBin), xAxis->GetBinUpEdge(maxBin));
 
 	for (Int_t i = 1; i <= nBins; i++){
-		trimmedHist->SetBinContent(i, hist->GetBinContent(i+minBin-1));
-		trimmedHist->SetBinError(i, hist->GetBinError(i+minBin-1));
+		// Increase bin content certain number of times
+		for (UInt_t c = 0; c<= hist->GetBinContent(i+minBin-1); c++){
+			trimmedHist->AddBinContent(i);
+		}
+
+		// trimmedHist->SetBinContent(i, hist->GetBinContent(i+minBin-1));
+		// trimmedHist->SetBinError(i, hist->GetBinError(i+minBin-1));
 		std::cout << "bin: " << i << " content: " << trimmedHist->GetBinContent(i) << " error: " << trimmedHist->GetBinError(i) << std::endl;
 	}
 
@@ -55,7 +60,7 @@ TH1* HistUtils::cutHistogram(TH1* hist, Double_t xMin, Double_t xMax){
 
 	for (Int_t i = 1; i <= nBins; i++){
 		trimmedHist->SetBinContent(i, hist->GetBinContent(i+minBin-1));
-		trimmedHist->SetBinError(i, hist->GetBinError(i+minBin-1));
+		// trimmedHist->SetBinError(i, hist->GetBinError(i+minBin-1));
 		// std::cout << "bin: " << i << " content: " << trimmedHist->GetBinContent(i) << " error: " << trimmedHist->GetBinError(i) << std::endl;
 	}
 
@@ -91,7 +96,7 @@ void HistUtils::resetHistogram(TH1* hist){
 	}
 }
 
-void HistUtils::increaseBinContent(TH1* hist, Float_t val){
+void HistUtils::increaseCorrespondingBinContent(TH1* hist, Float_t val){
 	Int_t bin = hist->GetXaxis()->FindBin(val);
 	if (bin >= 1 && bin <= hist->GetNbinsX()){
 		Float_t content = hist->GetBinContent(bin);
@@ -104,14 +109,14 @@ Chi2Struct HistUtils::getChi2(TH1* hist, RooCurve* curve, RooAbsPdf* model){
 	Int_t degreesOfFreedom = 0;
 	Double_t chiSum = 0;
 	for (int i = 1; i <= hist->GetXaxis()->GetNbins(); i++){
-	Double_t value = hist->GetBinContent(i);
-	Double_t fit = curve->Eval(hist->GetXaxis()->GetBinCenter(i));
-	Double_t error = hist->GetBinError(i);
-	if (value != 0 && error != 0){
-		// std::cout << "value: " << value << " fit: " << fit << "  error: " << error << std::endl;
-		chiSum += pow(value - fit, 2) / value;
-		degreesOfFreedom++;
-	}
+		Double_t value = hist->GetBinContent(i);
+		Double_t fit = curve->Eval(hist->GetXaxis()->GetBinCenter(i));
+		Double_t error = hist->GetBinError(i);
+		if (value != 0 && error != 0){
+			// std::cout << "value: " << value << " fit: " << fit << "  error: " << error << std::endl;
+			chiSum += pow(value - fit, 2) / value;
+			degreesOfFreedom++;
+		}
 	}
 	// Subtract number of free parameters + 1
 	degreesOfFreedom -= (model->getVariables()->getSize() + 1);

@@ -55,7 +55,7 @@ FitUtils::~FitUtils() {
 }
 
 // Fit not goes, weird function raise to the right
-void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
+void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, TVirtualPad* pad){
 	TDatime* timestamp = new TDatime();
 
 	// Define channels axis (observable)
@@ -78,14 +78,14 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 
 	// TIP: cannot use the same function to convolute other components
 	if (useTerm0){
-		BPdf* term0 = new BPdf("term0", "Background function shifted", *observable, *Constants::Q0, *Constants::s0, *Constants::w, *Constants::a);
+		BPdf* term0 = new BPdf("term0", "Background function shifted", *observable, *(pars->Q0), *(pars->s0), *(pars->w), *(pars->a));
 		terms->add(*term0);
-		RooFormulaVar* coeff0 = new RooFormulaVar("coeff0", "Term 0 coefficient", "exp(-@0)", RooArgList(*Constants::mu));
+		RooFormulaVar* coeff0 = new RooFormulaVar("coeff0", "Term 0 coefficient", "exp(-@0)", RooArgList(*(pars->mu)));
 		coefficients->add(*coeff0);
 	}
 
 	// Init terms 1..N as convolution of the background and ideal PM response function
-	BPdf* bPdf = new BPdf("bPdf", "Background", *observable, *Constants::Q0, *Constants::s0, *Constants::w, *Constants::a);
+	BPdf* bPdf = new BPdf("bPdf", "Background", *observable, *(pars->Q0), *(pars->s0), *(pars->w), *(pars->a));
 	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
 	for (UInt_t n = 1; n < nTerms; n++){
 		// Instantiate N-th component PDF
@@ -95,7 +95,7 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 
 		TString name = TString::Format("sIdeal%dPdf", n);
 		TString title = TString::Format("Term %d or the ideal PM function", n);
-		SIdealNPdf* sIdealNPdf = new SIdealNPdf(name.Data(), title.Data(), *observable, *Constants::Q1, *Constants::s1, *nVar);
+		SIdealNPdf* sIdealNPdf = new SIdealNPdf(name.Data(), title.Data(), *observable, *(pars->Q1), *(pars->s1), *nVar);
 
 		// Convolute ideal function with the background
 		TString nameConv = TString::Format("term%dPdf", n);
@@ -108,7 +108,7 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 
 		TString nameC = TString::Format("coeff%d", n);
 		TString titleC = TString::Format("Term %d coefficient", n);
-		RooFormulaVar* coeffN = new RooFormulaVar(nameC.Data(), nameC.Data(), "exp(-@0)*@0^@1/TMath::Factorial(@1)", RooArgList(*Constants::mu,*nVar));
+		RooFormulaVar* coeffN = new RooFormulaVar(nameC.Data(), nameC.Data(), "exp(-@0)*@0^@1/TMath::Factorial(@1)", RooArgList(*(pars->mu),*nVar));
 		coefficients->add(*coeffN);
 	}
 
@@ -179,14 +179,14 @@ void FitUtils::doRooFit(TH1* hist, Bool_t useTerm0, TVirtualPad* pad){
 	GraphicsUtils::addLineToPave(pad, sRealPdf, line.Data());
 }
 
-void FitUtils::doFit(TH1* hist, AbsComponentFunc* funcObject, TVirtualPad* pad){
+void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject, TVirtualPad* pad){
 	TDatime* timestamp = new TDatime();
 
 	// Number of terms in the fit function
 	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
 
 	// Get list of ROOT parameters for single function
-	RooArgList* parameters = Constants::getInstance()->getFitParameters();
+	RooArgList* parameters = pars->getList();
 
 	// Instantiate fitting function
 	// NOTE: IWill experience memory leaks if define fit function
@@ -330,12 +330,12 @@ void FitUtils::doFit(TH1* hist, AbsComponentFunc* funcObject, TVirtualPad* pad){
 	GraphicsUtils::alignStats(hist, pad);
 }
 
-void FitUtils::fillHistogramFromFuncObject(TH1* hist, AbsComponentFunc* funcObject){
+void FitUtils::fillHistogramFromFuncObject(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject){
 	Double_t xMin = hist->GetXaxis()->GetXmin();
 	Double_t xMax = hist->GetXaxis()->GetXmax();
 
 	// Get list of ROOT parameters for single function
-	RooArgList* parameters = Constants::getInstance()->getFitParameters();
+	RooArgList* parameters = pars->getList();
 
 	TF1* func = new TF1("func_fill", funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->size());
 
@@ -361,9 +361,9 @@ void FitUtils::fillHistogramFromFuncObject(TH1* hist, AbsComponentFunc* funcObje
 }
 
 // Sun terms like in ROOT documentation "term0+term1+...." - DOES NOT WORK
-void FitUtils::doFitTest(TH1* hist){
+void FitUtils::doFitTest(TH1* hist, FitParameters* pars){
 	// Get list of ROOT parameters for single function
-	RooArgList* parameters = Constants::getInstance()->getFitParameters();
+	RooArgList* parameters = pars->getList();
 
 	// Instantiate fitting function
 	Double_t xMin = hist->GetXaxis()->GetXmin();

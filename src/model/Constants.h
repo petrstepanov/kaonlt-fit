@@ -43,34 +43,21 @@ class Constants {
 	static const Int_t TILE_MAX;
 
 	static const Int_t CH_BINS;
-	static const Int_t CH_MIN;
-	static const Int_t CH_MAX;
+	static const Int_t CH_MIN_VAL;
+	static const Int_t CH_MAX_VAL;
 
-	static const Int_t CH_FIT_MIN;
-	static const Int_t CH_FIT_MAX;
+	static const Int_t CH_FIT_MIN_VAL;
+	static const Int_t CH_FIT_MAX_VAL;
 
 	static const Int_t AMP_MIN;
 	static const Int_t AMP_MAX;
 
+	Parameters parameters;
     void parseParameters(int argc, char* argv[]);
 
-	Parameters parameters;
-
-	RooArgList* getFitParameters();
-	static RooRealVar* Q0;
-	static RooRealVar* s0;
-	static RooRealVar* Q1;
-	static RooRealVar* s1;
-	static RooRealVar* w;
-	static RooRealVar* a;
-	static RooRealVar* mu;
-
-	private:
-		Constants();
-		static Constants* instance;
-
-		RooArgList* fitParameters;
-    // static const std::string drawOptions[2];
+private:
+	Constants();
+	static Constants* instance;
 };
 
 #endif /* CONSTANTS_H */

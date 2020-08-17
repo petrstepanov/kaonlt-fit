@@ -15,6 +15,7 @@
 #include <Math/IntegratorOptions.h>
 
 #include "model/Constants.h"
+#include "model/FitParameters.h"
 #include "utils/GraphicsUtils.h"
 #include "utils/TreeUtils.h"
 #include "utils/HistUtils.h"
@@ -43,11 +44,11 @@ int run(const char* fileName) {
 
 	// Prepare histograms for the PMT projection spectra
 	TString pmt1HistTitle = TString::Format("PMT1 profile at tilel=%d", Constants::getInstance()->parameters.tileProfile);
-	TH1* pmt1Hist = new TH1F("pmt1Hist", pmt1HistTitle, Constants::CH_BINS, Constants::CH_MIN, Constants::CH_MAX);
+	TH1* pmt1Hist = new TH1F("pmt1Hist", pmt1HistTitle, Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
 	pmt1Hist->GetXaxis()->SetTitle("Channel (ch_1)");
 	pmt1Hist->GetYaxis()->SetTitle("Counts");
 	TString pmt2HistTitle = TString::Format("PMT2 profile at tiler=%d", Constants::getInstance()->parameters.tileProfile);
-	TH1* pmt2Hist = new TH1F("pmt2Hist", pmt2HistTitle, Constants::CH_BINS, Constants::CH_MIN, Constants::CH_MAX);
+	TH1* pmt2Hist = new TH1F("pmt2Hist", pmt2HistTitle, Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
 	pmt2Hist->GetXaxis()->SetTitle("Channel (ch_2)");
 	pmt2Hist->GetYaxis()->SetTitle("Counts");
 
@@ -74,8 +75,13 @@ int run(const char* fileName) {
 	pmtsCanvas->SaveAs(pngFilePath.Data());
 
 	// Trim PMT spectra to remove zero bin noise
-	TH1* pmt1HistFit = HistUtils::cutHistogram(pmt1Hist, Constants::CH_FIT_MIN, Constants::CH_FIT_MAX);
-	TH1* pmt2HistFit = HistUtils::cutHistogram(pmt2Hist, Constants::CH_FIT_MIN, Constants::CH_FIT_MAX);
+	// Selsect min channel value to skip the stretched noise bin
+	Int_t chMinVal = 1 * (Constants::CH_MAX_VAL - Constants::CH_MIN_VAL) / Constants::CH_BINS + 5;
+	TH1* pmt1HistFit = HistUtils::cutHistogram(pmt1Hist, chMinVal, Constants::CH_FIT_MAX_VAL);
+	TH1* pmt2HistFit = HistUtils::cutHistogram(pmt2Hist, chMinVal, Constants::CH_FIT_MAX_VAL);
+
+	// TCanvas* c = new TCanvas("c");
+	// pmt1HistFit->Draw();
 
 	// Fit and plot PMT spectra
 	const char* fitKind = Constants::getInstance()->parameters.rooFit ? "RooFit" : "Fit";
@@ -83,15 +89,18 @@ int run(const char* fileName) {
 	TCanvas* pmtsFitCanvas = new TCanvas("pmtsFitCanvas", pmtsFitCanvasTitle.Data(), 1024, 512);
 	pmtsFitCanvas->Divide(2,1);
 
+	// Retreive parameters for KaonLT Prototype histogram
+	FitParameters* params = new FitParameters(ParametersType::forKaonHist);
+
 	if (Constants::getInstance()->parameters.rooFit){
 		// TODO: separate roofit Pdf cration into a provider? will speed up?
-		FitUtils::doRooFit(pmt1HistFit, kFALSE, pmtsFitCanvas->cd(1));
-		FitUtils::doRooFit(pmt2HistFit, kFALSE, pmtsFitCanvas->cd(2));
+		FitUtils::doRooFit(pmt1HistFit, params, kFALSE, pmtsFitCanvas->cd(1));
+		FitUtils::doRooFit(pmt2HistFit, params, kFALSE, pmtsFitCanvas->cd(2));
 	} else {
-		AbsComponentFunc* funcObjectFFT1 = new FuncSRealFFT(pmt1HistFit);
-		FitUtils::doFit(pmt1HistFit, funcObjectFFT1, pmtsFitCanvas->cd(1));
-		AbsComponentFunc* funcObjectFFT2 = new FuncSRealFFT(pmt2HistFit);
-		FitUtils::doFit(pmt2HistFit, funcObjectFFT2, pmtsFitCanvas->cd(2));
+		AbsComponentFunc* funcObjectFFT1 = new FuncSRealFFTNoTerm0(pmt1HistFit);
+		FitUtils::doFit(pmt1HistFit, params, funcObjectFFT1, pmtsFitCanvas->cd(1));
+		AbsComponentFunc* funcObjectFFT2 = new FuncSRealFFTNoTerm0(pmt2HistFit);
+		FitUtils::doFit(pmt2HistFit, params, funcObjectFFT2, pmtsFitCanvas->cd(2));
 	}
 
 	// Save canvas with PMT profiles to file
@@ -104,55 +113,65 @@ int run(const char* fileName) {
 
 // Test fit histogram digitized from the paper
 int testDigitized(){
-	TH1* hist = TestSpectrum::getHistogramPaper();
-	AbsComponentFunc* funcObject = new FuncSReal(hist);
-	FitUtils::doFit(hist, funcObject);
+	// Get digitized histogram from paper
+	TH1* h = TestSpectrum::getHistogramPaper();
+
+	// Retreive parameters for test Bellamy histogram
+	FitParameters* params = new FitParameters(ParametersType::forBellamyHist);
+
+	// Instantiate fitting function object
+	AbsComponentFunc* funcObject = new FuncSReal(h);
+
+	FitUtils::doFit(h, params, funcObject);
 	return 0;
 }
 
 // Test fit histogram filled from the fitting function from the paper
 int testFillRandom(){
+	// Retreive parameters for test Bellamy histogram
+	FitParameters* params = new FitParameters(ParametersType::forBellamyHist);
 	// Instantiate histogram
-	Int_t nBins = TestSpectrum::getHistogramPaper()->GetXaxis()->GetNbins();
-	TH1F *hist = new TH1F("hist", "Bellamy histogram. Random fill from fit function.", nBins, 0, nBins);
-	hist->GetXaxis()->SetTitle("ADC Channel");
-	hist->GetYaxis()->SetTitle("Events");
-	AbsComponentFunc* funcObject = new FuncSReal(hist);
-	FitUtils::fillHistogramFromFuncObject(hist, funcObject);
+	TH1* h = TestSpectrum::getHistogramGenerated(params);
+
+	// Fit histogram with ROOT Fit
+	TH1* hist1 = HistUtils::cloneHistogram(h, "hist");
+	AbsComponentFunc* funcObject = new FuncSReal(hist1);
+	FitUtils::doFit(hist1, params, funcObject);
 
 	// Fit histogram with ROOT Fit with Convolution
-	TH1* hist2 = HistUtils::cloneHistogram(hist, "hist_conv");
+	TH1* hist2 = HistUtils::cloneHistogram(h, "hist_conv");
 	AbsComponentFunc* funcObjectFFT = new FuncSRealFFT(hist2);
-	FitUtils::doFit(hist2, funcObjectFFT);
+	FitUtils::doFit(hist2, params, funcObjectFFT);
 
 	// Fit histogram with RooFit with Convolution
-	TH1* hist3 = HistUtils::cloneHistogram(hist, "hist_conv_roofit");
-	FitUtils::doRooFit(hist3, kTRUE);
+	TH1* hist3 = HistUtils::cloneHistogram(h, "hist_conv_roofit");
+	FitUtils::doRooFit(hist3, params, kTRUE);
 
 	return 0;
 }
 
-int testRebin(){
+int testFillRandomNoTerm0(){
+	// Retreive parameters for test Bellamy histogram
+	FitParameters* params = new FitParameters(ParametersType::forBellamyHist);
 	// Instantiate histogram
-	Int_t nBins = TestSpectrum::getHistogramPaper()->GetXaxis()->GetNbins();
-	TH1F *hist = new TH1F("hist", "Bellamy histogram. Random fill from fit function.", nBins, 0, nBins);
-	hist->GetXaxis()->SetTitle("ADC Channel");
-	hist->GetYaxis()->SetTitle("Events");
-	AbsComponentFunc* funcObject = new FuncSReal(hist);
-	FitUtils::fillHistogramFromFuncObject(hist, funcObject);
+	TH1* h = TestSpectrum::getHistogramGenerated(params);
+
+	// Fit histogram with ROOT Fit
+	TH1* hist1 = HistUtils::cloneHistogram(h, "hist");
+	AbsComponentFunc* funcObject = new FuncSRealNoTerm0(hist1);
+	FitUtils::doFit(hist1, params, funcObject);
 
 	// Fit histogram with ROOT Fit with Convolution
-	TH1* hist2 = HistUtils::cloneHistogram(hist, "hist_conv");
-	AbsComponentFunc* funcObjectFFT = new FuncSRealFFT(hist2);
-	FitUtils::doFit(hist2, funcObjectFFT);
+	TH1* hist2 = HistUtils::cloneHistogram(h, "hist_conv");
+	AbsComponentFunc* funcObjectFFT = new FuncSRealFFTNoTerm0(hist2);
+	FitUtils::doFit(hist2, params, funcObjectFFT);
 
 	// Fit histogram with RooFit with Convolution
-	TH1* hist3 = HistUtils::cloneHistogram(hist, "hist_conv_roofit");
-	FitUtils::doRooFit(hist3, kTRUE);
+	TH1* hist3 = HistUtils::cloneHistogram(h, "hist_conv_roofit");
+	FitUtils::doRooFit(hist3, params, kTRUE);
 
 	return 0;
 }
-
 
 int main(int argc, char* argv[]) {
 	// Create ROOT application
@@ -174,12 +193,12 @@ int main(int argc, char* argv[]) {
 	// Test fitting function on the digitized test histogram
 	// testDigitized();
 	// Test fitting function on the filled random test histogram
-	// testFillRandom();
+	testFillRandom();
 
 	// Iterate through input files and run analysis
 	for (TObject* object : *(constants->parameters.inputFiles)) {
 		if (TObjString* objString = dynamic_cast<TObjString*>(object)){
-			run(objString->GetString());
+			// run(objString->GetString());
 		}
 	}
 

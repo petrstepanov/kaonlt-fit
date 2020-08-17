@@ -9,6 +9,7 @@
 #define SRC_UTILS_TESTSPECTRUM_H_
 
 #include <TH1.h>
+#include "../model/FitParameters.h"
 
 class TestSpectrum {
 public:
@@ -17,7 +18,8 @@ public:
 	virtual ~TestSpectrum();
 
 	static TH1* getHistogramPaper();
-	static TH1* getHistogramReal();
+	static TH1* getHistogramPaperFix();
+	static TH1* getHistogramGenerated(FitParameters* params);
 
 private:
 //	static TestSpectrum* instance;
