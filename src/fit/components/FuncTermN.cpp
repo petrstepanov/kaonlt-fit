@@ -58,7 +58,7 @@ Double_t FuncTermN::getIntegral(Double_t xMin, Double_t xMax, Double_t* par){
 	Double_t a  = par[5];		// coefficient of the exponential decrease of the type II background
 	Double_t mu = par[6];		// number of photo-electrons
 
-	// Newton-Leibniz formula
+	// Trivial sum
 	Double_t integral = 0;
 	for (UInt_t x = xMin+0.5; x <= xMax; x++){
 		integral += // begin mathematica code from "/mathematica/term0.nb"

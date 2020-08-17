@@ -36,7 +36,7 @@ FuncSRealFFTNoTerm0::FuncSRealFFTNoTerm0(TH1* h, Int_t nParVal) : AbsComponentFu
 		TF1* sIdealN = new TF1(sIdealNName.Data(), funcSIdealN, &FuncSIdealN::func, xMin, xMax, nPar, "FuncSIdealN", "func");
 
 		TF1Convolution* conv = new TF1Convolution(sIdealN, b, xMin, xMax);
-//		conv->SetNofPointsFFT(1024);
+		conv->SetNofPointsFFT(Constants::getInstance()->parameters.convolutionBins);
 		TString termNName = TString::Format("term%d_%d", n, timestamp->Get());
 		TF1 *termN = new TF1(termNName.Data(),*conv, xMin, xMax, conv->GetNpar());
 

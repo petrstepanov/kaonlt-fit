@@ -8,13 +8,12 @@
 #include "FuncSReal.h"
 #include "../model/Constants.h"
 #include "../utils/MathematicaAliases.h"
-#include <TF1Convolution.h>
 #include <TMath.h>
 #include <TDatime.h>
-#include "./components/FuncB.h"
-#include "./components/FuncTerm0.h"
-#include "./components/FuncTermN.h"
-
+#include "components/FuncB.h"
+#include "components/FuncTerm0.h"
+#include "components/FuncTermN.h"
+#include "components/FuncSIdealNShiftedQ0.h"
 
 FuncSReal::FuncSReal(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h), nPar(nParVal) {
 	// Init TF1 finctions used to cunstruct the final fitting function
@@ -70,22 +69,24 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 			value += component->EvalPar(_x, par);			// Sum the cumulated value
 		    component->SetParameters(par);					// Set parameters
 		    // Sum the total integral
-//			if (n==0){
-//				// Step function in the Pedestal requires custom analytical integral
-//				FuncTerm0* ft0 = new FuncTerm0();
-//				// My integral:
-//				Double_t myIntegral = ft0->getIntegral(xMin, xMax, par);
-//				// Alternative option would be use big epsilon
-//				Double_t rootIntegral = component->Integral(xMin, xMax);
-//				// Compare:
-//				// std::cout << "myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
-//				integral+= myIntegral;
-//			}
-//			else {
-//				integral += component->Integral(xMin, xMax, 1E-6);	// Sum the total integral
-//			}
-
-		    integral += component->Integral(xMin, xMax, 1E-3);
+			if (n==0){
+				// Step function in the Pedestal requires custom analytical integral
+				FuncTerm0* ft0 = new FuncTerm0();
+				Double_t myIntegral = ft0->getIntegral(xMin, xMax, par);
+				// Double_t rootIntegral = component->Integral(xMin, xMax);
+				// std::cout << "n=" << n<< ". myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
+				integral+= myIntegral;
+			}
+			else {
+				// Integral of the real convoluted term is ~ as unconvoluted term shifted to Q0 (analytical)
+				FuncSIdealNShiftedQ0* fSIdealNShiftedQ0 = new FuncSIdealNShiftedQ0(n);
+				Double_t myIntegral = fSIdealNShiftedQ0->getIntegral(xMin, xMax, par);
+				// Double_t rootIntegral = component->Integral(xMin, xMax);
+				// std::cout  << "n=" << n<< ". myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
+				integral+= myIntegral;
+			}
+			// Regular integral tekes forever
+		    // integral += component->Integral(xMin, xMax, 1E-3);
 		} else {
 			std::cout << "Error getting the component" << std::endl;
 		}

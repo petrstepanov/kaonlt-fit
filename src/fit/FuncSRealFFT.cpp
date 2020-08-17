@@ -11,9 +11,11 @@
 #include <TF1Convolution.h>
 #include <TMath.h>
 #include <TDatime.h>
-#include "./components/FuncB.h"
-#include "./components/FuncSIdealN.h"
-#include "./components/FuncTerm0.h"
+#include "components/FuncB.h"
+#include "components/FuncSIdealN.h"
+#include "components/FuncSIdealNShiftedQ0.h"
+#include "components/FuncTerm0.h"
+#include "components/FuncTermN.h"
 
 FuncSRealFFT::FuncSRealFFT(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h), nPar(nParVal) {
 	// Init TF1 finctions used to cunstruct the final fitting function
@@ -43,7 +45,7 @@ FuncSRealFFT::FuncSRealFFT(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h),
 		TF1* sIdealN = new TF1(sIdealNName.Data(), funcSIdealN, &FuncSIdealN::func, xMin, xMax, nPar, "FuncSIdealN", "func");
 
 		TF1Convolution* conv = new TF1Convolution(sIdealN, b, xMin, xMax);
-//		conv->SetNofPointsFFT(1024);
+		conv->SetNofPointsFFT(Constants::getInstance()->parameters.convolutionBins);
 		TString termNName = TString::Format("term%d_%d", n, timestamp->Get());
 		TF1 *termN = new TF1(termNName.Data(),*conv, xMin, xMax, conv->GetNpar());
 
@@ -74,6 +76,12 @@ Double_t FuncSRealFFT::func(Double_t* _x, Double_t* par) {
 	Int_t xMin = hist->GetXaxis()->GetXmin();
 	Int_t xMax = hist->GetXaxis()->GetXmax();
 
+	// Extend the integration range
+	// Double_t bufferFraction = 1.5;
+	// Double_t delta = (xMax - xMin)*(bufferFraction - 1);
+	// xMin = xMin - delta;
+	// xMax = xMax + delta;
+
 	for (UInt_t n = 0; n <= components->LastIndex(); n++){
 		TF1* component = (TF1*)(components->At(n));
 		if (component){
@@ -86,7 +94,24 @@ Double_t FuncSRealFFT::func(Double_t* _x, Double_t* par) {
 			else value += component->EvalPar(_x, parForConvolution);
 
 			// Sum the total integral
-			// integral += component->Integral(xMin, xMax);
+//			if (n==0){
+//				// Step function in the Pedestal requires custom analytical integral
+//				FuncTerm0* ft0 = new FuncTerm0();
+//				Double_t myIntegral = ft0->getIntegral(xMin, xMax, par);
+//				// Double_t rootIntegral = component->Integral(xMin, xMax);
+//				// std::cout << "n=" << n<< ". myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
+//				integral+= myIntegral;
+//			}
+//			else {
+//				// Integral of the real convoluted term is ~ as unconvoluted term shifted to Q0 (analytical)
+//				FuncSIdealNShiftedQ0* fSIdealNShiftedQ0 = new FuncSIdealNShiftedQ0(n);
+//				Double_t myIntegral = fSIdealNShiftedQ0->getIntegral(xMin, xMax, par);
+//				// Double_t rootIntegral = component->Integral(xMin, xMax);
+//				// std::cout  << "n=" << n<< ". myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
+//				integral+= myIntegral;
+//			}
+			// Regular integral tekes forever
+			// integral += component->Integral(xMin, xMax, 1e-3);
 		} else {
 			std::cout << "Error getting the component" << std::endl;
 		}
@@ -96,3 +121,4 @@ Double_t FuncSRealFFT::func(Double_t* _x, Double_t* par) {
 	// return value/integral*(hist->Integral());
 	return value*(hist->Integral());
 }
+

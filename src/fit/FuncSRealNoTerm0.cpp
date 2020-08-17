@@ -8,7 +8,6 @@
 #include "FuncSRealNoTerm0.h"
 #include "../model/Constants.h"
 #include "../utils/MathematicaAliases.h"
-#include <TF1Convolution.h>
 #include <TMath.h>
 #include <TDatime.h>
 #include "./components/FuncB.h"

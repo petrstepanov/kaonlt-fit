@@ -133,6 +133,9 @@ int testFillRandom(){
 	// Instantiate histogram
 	TH1* h = TestSpectrum::getHistogramGenerated(params);
 
+	// Play with different mimimizers
+	// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
+
 	// Fit histogram with ROOT Fit
 	TH1* hist1 = HistUtils::cloneHistogram(h, "hist");
 	AbsComponentFunc* funcObject = new FuncSReal(hist1);
@@ -144,17 +147,18 @@ int testFillRandom(){
 	FitUtils::doFit(hist2, params, funcObjectFFT);
 
 	// Fit histogram with RooFit with Convolution
-	TH1* hist3 = HistUtils::cloneHistogram(h, "hist_conv_roofit");
-	FitUtils::doRooFit(hist3, params, kTRUE);
+//	TH1* hist3 = HistUtils::cloneHistogram(h, "hist_conv_roofit");
+//	FitUtils::doRooFit(hist3, params, kTRUE);
 
 	return 0;
 }
 
-int testFillRandomNoTerm0(){
+int testNoTerm0(){
+	// Get digitized histogram from paper
+	TH1* h = TestSpectrum::getHistogramPaperNoTerm0();
+
 	// Retreive parameters for test Bellamy histogram
 	FitParameters* params = new FitParameters(ParametersType::forBellamyHist);
-	// Instantiate histogram
-	TH1* h = TestSpectrum::getHistogramGenerated(params);
 
 	// Fit histogram with ROOT Fit
 	TH1* hist1 = HistUtils::cloneHistogram(h, "hist");
@@ -168,7 +172,7 @@ int testFillRandomNoTerm0(){
 
 	// Fit histogram with RooFit with Convolution
 	TH1* hist3 = HistUtils::cloneHistogram(h, "hist_conv_roofit");
-	FitUtils::doRooFit(hist3, params, kTRUE);
+	FitUtils::doRooFit(hist3, params, kFALSE);
 
 	return 0;
 }
@@ -194,6 +198,7 @@ int main(int argc, char* argv[]) {
 	// testDigitized();
 	// Test fitting function on the filled random test histogram
 	testFillRandom();
+	// testNoTerm0();
 
 	// Iterate through input files and run analysis
 	for (TObject* object : *(constants->parameters.inputFiles)) {

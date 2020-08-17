@@ -19,12 +19,14 @@ public:
 
 	static TH1* getHistogramPaper();
 	static TH1* getHistogramPaperFix();
+	static TH1* getHistogramPaperNoTerm0();
 	static TH1* getHistogramGenerated(FitParameters* params);
 
 private:
 //	static TestSpectrum* instance;
 	static Int_t array[];
 	static Int_t array2[];
+	static Int_t array3[];
 };
 
 #endif /* SRC_UTILS_TESTSPECTRUM_H_ */
