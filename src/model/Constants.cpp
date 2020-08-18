@@ -100,10 +100,13 @@ void Constants::parseParameters(int argc, char* argv[]){
 			TObjString* fileName = new TObjString(pair.second);
 			parameters.inputFiles->Add(fileName);
 		}
-		else if (pair.first == "roofit"){
-			// Whether to use TConvolution or not
-			if (pair.second == "kTRUE" || pair.second == "1"){
-				parameters.rooFit = kTRUE;
+		else if (pair.first == "fit"){
+			if (pair.second == "root"){
+				parameters.fitType = FitType::root;
+			} else if (pair.second == "rootConv"){
+				parameters.fitType = FitType::rootConv;
+			} else {
+				parameters.fitType = FitType::rooFit;
 			}
 		}
 		std::cout << "\t" << pair.first << ": " << pair.second << std::endl;

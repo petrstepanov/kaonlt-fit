@@ -84,7 +84,13 @@ int run(const char* fileName) {
 	// pmt1HistFit->Draw();
 
 	// Fit and plot PMT spectra
-	const char* fitKind = Constants::getInstance()->parameters.rooFit ? "RooFit" : "Fit";
+	FitType fitType = Constants::getInstance()->parameters.fitType;
+
+	const char* fitKind;
+	if (fitType == FitType::root) fitKind = "ROOT Fit";
+	else if (fitType == FitType::rootConv) fitKind = "ROOT Fit with Convolution";
+	else fitKind = "RooFit";
+
 	TString pmtsFitCanvasTitle = TString::Format("%s of the PMT profile spectra (tile = %d, terms = %d)", fitKind, Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber);
 	TCanvas* pmtsFitCanvas = new TCanvas("pmtsFitCanvas", pmtsFitCanvasTitle.Data(), 1024, 512);
 	pmtsFitCanvas->Divide(2,1);
@@ -92,20 +98,23 @@ int run(const char* fileName) {
 	// Retreive parameters for KaonLT Prototype histogram
 	FitParameters* params = new FitParameters(ParametersType::forKaonHist);
 
-	if (Constants::getInstance()->parameters.rooFit){
-		// TODO: separate roofit Pdf cration into a provider? will speed up?
-		FitUtils::doRooFit(pmt1HistFit, params, kFALSE, pmtsFitCanvas->cd(1));
-		FitUtils::doRooFit(pmt2HistFit, params, kFALSE, pmtsFitCanvas->cd(2));
+	if (fitType == FitType::root){
+		AbsComponentFunc* funcObject1 = new FuncSRealNoTerm0(pmt1HistFit);
+		FitUtils::doFit(pmt1HistFit, params, funcObject1, pmtsFitCanvas->cd(1));
+		// AbsComponentFunc* funcObject2 = new FuncSRealNoTerm0(pmt2HistFit);
+		// FitUtils::doFit(pmt2HistFit, params, funcObject2, pmtsFitCanvas->cd(2));
+	} else if (fitType == FitType::rootConv){
+		AbsComponentFunc* funcObject1 = new FuncSRealFFTNoTerm0(pmt1HistFit);
+		FitUtils::doFit(pmt1HistFit, params, funcObject1, pmtsFitCanvas->cd(1));
+		// AbsComponentFunc* funcObject2 = new FuncSRealFFTNoTerm0(pmt2HistFit);
+		// FitUtils::doFit(pmt2HistFit, params, funcObject2, pmtsFitCanvas->cd(2));
 	} else {
-		AbsComponentFunc* funcObjectFFT1 = new FuncSRealFFTNoTerm0(pmt1HistFit);
-		FitUtils::doFit(pmt1HistFit, params, funcObjectFFT1, pmtsFitCanvas->cd(1));
-		AbsComponentFunc* funcObjectFFT2 = new FuncSRealFFTNoTerm0(pmt2HistFit);
-		FitUtils::doFit(pmt2HistFit, params, funcObjectFFT2, pmtsFitCanvas->cd(2));
+		FitUtils::doRooFit(pmt1HistFit, params, kFALSE, pmtsFitCanvas->cd(1));
+		// FitUtils::doRooFit(pmt2HistFit, params, kFALSE, pmtsFitCanvas->cd(2));
 	}
 
 	// Save canvas with PMT profiles to file
-	const char* fitType = Constants::getInstance()->parameters.rooFit ? "-roofit" : "";
-	TString pngFitFilePath = TString::Format("%s-%s-tile%d-terms%d%s.png",fileName, pmtsCanvas->GetName(), Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber, fitType);
+	TString pngFitFilePath = TString::Format("%s-%s-tile%d-terms%d%s.png", fileName, pmtsCanvas->GetName(), Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber, fitKind);
 	pmtsCanvas->SaveAs(pngFitFilePath.Data());
 
 	return 0;
@@ -197,13 +206,13 @@ int main(int argc, char* argv[]) {
 	// Test fitting function on the digitized test histogram
 	// testDigitized();
 	// Test fitting function on the filled random test histogram
-	testFillRandom();
+	// testFillRandom();
 	// testNoTerm0();
 
 	// Iterate through input files and run analysis
 	for (TObject* object : *(constants->parameters.inputFiles)) {
 		if (TObjString* objString = dynamic_cast<TObjString*>(object)){
-			// run(objString->GetString());
+			run(objString->GetString());
 		}
 	}
 

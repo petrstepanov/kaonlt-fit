@@ -22,13 +22,20 @@
 #include <RooRealVar.h>
 
 // Command-line parameters
+
+enum class FitType {
+	root,
+	rootConv,
+	rooFit
+};
+
 struct Parameters {
 	TString treeName = "tree1;3";
 	Float_t plotTree = kTRUE;
 	Int_t tileProfile = 55;
 	Int_t termsNumber = 50;
 	Int_t convolutionBins = 1024;
-	Bool_t rooFit = kFALSE;
+	FitType fitType = FitType::root;
 	TList* inputFiles = new TList();
 };
 

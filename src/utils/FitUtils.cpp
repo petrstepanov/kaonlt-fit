@@ -101,7 +101,7 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, TVirtua
 		TString nameConv = TString::Format("term%dPdf", n);
 		TString titleConv = TString::Format("Term %d or the real PM function", n);
 		RooFFTConvPdf* termNPdf = new RooFFTConvPdf(nameConv.Data(), titleConv.Data(), *observable, *sIdealNPdf, *bPdf);
-		termNPdf->setBufferFraction(2);
+		// termNPdf->setBufferFraction(2);
 
 		// Set buffer fraction so tail not piles on the start
 		terms->add(*termNPdf);
@@ -124,8 +124,8 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, TVirtua
 	RootUtils::startTimer();
 	// RooAbsReal::defaultIntegratorConfig()->getConfigSection("RooIntegrator1D").setRealValue("maxSteps", 30);
 
-	// RooFitResult* fitResult = sRealPdf->fitTo(*data);
-	RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE), RooFit::NumCPU(RootUtils::getNumCpu()));
+	RooFitResult* fitResult = sRealPdf->fitTo(*data, RooFit::Save(kTRUE), RooFit::NumCPU(RootUtils::getNumCpu()));
+	// RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE), RooFit::NumCPU(RootUtils::getNumCpu()));
 
 	// Chi2 fit - does not work because zero values
 	// RooChi2Var* chi2 = new RooChi2Var("#chi^{2}", "chi square", *sRealPdf, *data, kTRUE, 0, 0, RootUtils::getNumCpu());
@@ -304,7 +304,8 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 		if (component){
 			// Component needs to be normalized to the number of the histogram events
 			// and on the ratio of component integral to the all components integral ? lol just histogram events
-			TF1Normalize* normFunc = new TF1Normalize(component, funcIntegral);
+			Double_t ratio = componentIntegrals[n]/allComponentsIntegral;
+			TF1Normalize* normFunc = new TF1Normalize(component, ratio*funcIntegral);
 			TString fName = TString::Format("%s_norm", component->GetName());
 			TF1* f;
 			if (component->GetNpar() == 2*nFitPar){
