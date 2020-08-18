@@ -111,14 +111,14 @@ Double_t FuncSRealFFT::func(Double_t* _x, Double_t* par) {
 //				integral+= myIntegral;
 //			}
 			// Regular integral tekes forever
-			// integral += component->Integral(xMin, xMax, 1e-3);
+			integral += component->Integral(xMin, xMax, 1e-3);
 		} else {
 			std::cout << "Error getting the component" << std::endl;
 		}
 	}
 
 	// Return normalized function value
-	// return value/integral*(hist->Integral());
-	return value*(hist->Integral());
+	return value/integral*(hist->Integral());
+	// return value*(hist->Integral());
 }
 

@@ -69,24 +69,24 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 			value += component->EvalPar(_x, par);			// Sum the cumulated value
 		    component->SetParameters(par);					// Set parameters
 		    // Sum the total integral
-			if (n==0){
-				// Step function in the Pedestal requires custom analytical integral
-				FuncTerm0* ft0 = new FuncTerm0();
-				Double_t myIntegral = ft0->getIntegral(xMin, xMax, par);
-				// Double_t rootIntegral = component->Integral(xMin, xMax);
-				// std::cout << "n=" << n<< ". myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
-				integral+= myIntegral;
-			}
-			else {
-				// Integral of the real convoluted term is ~ as unconvoluted term shifted to Q0 (analytical)
-				FuncSIdealNShiftedQ0* fSIdealNShiftedQ0 = new FuncSIdealNShiftedQ0(n);
-				Double_t myIntegral = fSIdealNShiftedQ0->getIntegral(xMin, xMax, par);
-				// Double_t rootIntegral = component->Integral(xMin, xMax);
-				// std::cout  << "n=" << n<< ". myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
-				integral+= myIntegral;
-			}
+//			if (n==0){
+//				// Step function in the Pedestal requires custom analytical integral
+//				FuncTerm0* ft0 = new FuncTerm0();
+//				Double_t myIntegral = ft0->getIntegral(xMin, xMax, par);
+//				// Double_t rootIntegral = component->Integral(xMin, xMax);
+//				// std::cout << "n=" << n<< ". myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
+//				integral+= myIntegral;
+//			}
+//			else {
+//				// Integral of the real convoluted term is ~ as unconvoluted term shifted to Q0 (analytical)
+//				FuncSIdealNShiftedQ0* fSIdealNShiftedQ0 = new FuncSIdealNShiftedQ0(n);
+//				Double_t myIntegral = fSIdealNShiftedQ0->getIntegral(xMin, xMax, par);
+//				// Double_t rootIntegral = component->Integral(xMin, xMax);
+//				// std::cout  << "n=" << n<< ". myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
+//				integral+= myIntegral;
+//			}
 			// Regular integral tekes forever
-		    // integral += component->Integral(xMin, xMax, 1E-3);
+		    integral += component->Integral(xMin, xMax, 1E-3);
 		} else {
 			std::cout << "Error getting the component" << std::endl;
 		}

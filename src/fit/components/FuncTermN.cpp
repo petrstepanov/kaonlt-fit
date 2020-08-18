@@ -30,7 +30,7 @@ Double_t FuncTermN::func(Double_t* _x, Double_t* par) {
 	Double_t mu = par[6];		// number of photo-electrons
 
 	// Calculate function value
-	Double_t value = // begin mathematica code from "/mathematica/term0.nb"
+	Double_t value = // begin mathematica code from "/mathematica/termN.nb"
 			(Power(mu,n)*((1 - w)/
 			        (Power(E,Power(-Q0 - n*Q1 + x,2)/(2.*n*Power(s1,2)))*
 			          Sqrt(n)*Sqrt(2*Pi)*s1) +
@@ -61,7 +61,7 @@ Double_t FuncTermN::getIntegral(Double_t xMin, Double_t xMax, Double_t* par){
 	// Trivial sum
 	Double_t integral = 0;
 	for (UInt_t x = xMin+0.5; x <= xMax; x++){
-		integral += // begin mathematica code from "/mathematica/term0.nb"
+		integral += // begin mathematica code from "/mathematica/termN.nb"
 				(Power(mu,n)*((1 - w)/
 				        (Power(E,Power(-Q0 - n*Q1 + x,2)/(2.*n*Power(s1,2)))*
 				          Sqrt(n)*Sqrt(2*Pi)*s1) +
