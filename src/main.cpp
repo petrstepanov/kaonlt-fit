@@ -101,16 +101,16 @@ int run(const char* fileName) {
 	if (fitType == FitType::root){
 		AbsComponentFunc* funcObject1 = new FuncSRealNoTerm0(pmt1HistFit);
 		FitUtils::doFit(pmt1HistFit, params, funcObject1, pmtsFitCanvas->cd(1));
-		// AbsComponentFunc* funcObject2 = new FuncSRealNoTerm0(pmt2HistFit);
-		// FitUtils::doFit(pmt2HistFit, params, funcObject2, pmtsFitCanvas->cd(2));
+		AbsComponentFunc* funcObject2 = new FuncSRealNoTerm0(pmt2HistFit);
+		FitUtils::doFit(pmt2HistFit, params, funcObject2, pmtsFitCanvas->cd(2));
 	} else if (fitType == FitType::rootConv){
 		AbsComponentFunc* funcObject1 = new FuncSRealFFTNoTerm0(pmt1HistFit);
 		FitUtils::doFit(pmt1HistFit, params, funcObject1, pmtsFitCanvas->cd(1));
-		// AbsComponentFunc* funcObject2 = new FuncSRealFFTNoTerm0(pmt2HistFit);
-		// FitUtils::doFit(pmt2HistFit, params, funcObject2, pmtsFitCanvas->cd(2));
+		AbsComponentFunc* funcObject2 = new FuncSRealFFTNoTerm0(pmt2HistFit);
+		FitUtils::doFit(pmt2HistFit, params, funcObject2, pmtsFitCanvas->cd(2));
 	} else {
 		FitUtils::doRooFit(pmt1HistFit, params, kFALSE, pmtsFitCanvas->cd(1));
-		// FitUtils::doRooFit(pmt2HistFit, params, kFALSE, pmtsFitCanvas->cd(2));
+		FitUtils::doRooFit(pmt2HistFit, params, kFALSE, pmtsFitCanvas->cd(2));
 	}
 
 	// Save canvas with PMT profiles to file

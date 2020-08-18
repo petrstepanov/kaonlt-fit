@@ -152,7 +152,7 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, TVirtua
 	sRealPdf->plotOn(spectrumPlot, RooFit::Name("fit"));
 
 	// Plot model components
-	for (UInt_t i = 0; i < terms->size(); i++){
+	for (UInt_t i = 0; i < terms->getSize(); i++){
 		RooAbsPdf* pdf = (RooAbsPdf*)terms->at(i);
 		if (pdf){
 			sRealPdf->plotOn(spectrumPlot, RooFit::Components(*pdf), RooFit::LineStyle(kDashed), RooFit::LineColor(kBlue));
@@ -199,7 +199,7 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 	Double_t xMin = hist->GetXaxis()->GetXmin();
 	Double_t xMax = hist->GetXaxis()->GetXmax();
 	TString funcName = TString::Format("func_%d", timestamp->Get());
-	TF1* func = new TF1(funcName.Data(), funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->size());
+	TF1* func = new TF1(funcName.Data(), funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->getSize());
 
 	// Set function starting parameter values, names and limits
 	TIterator* it = parameters->createIterator();
@@ -338,7 +338,7 @@ void FitUtils::fillHistogramFromFuncObject(TH1* hist, FitParameters* pars, AbsCo
 	// Get list of ROOT parameters for single function
 	RooArgList* parameters = pars->getList();
 
-	TF1* func = new TF1("func_fill", funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->size());
+	TF1* func = new TF1("func_fill", funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->getSize());
 
 	// Set function starting parameter values, names and limits
 	TIterator* it = parameters->createIterator();
@@ -375,7 +375,7 @@ void FitUtils::doFitTest(TH1* hist, FitParameters* pars){
 
 	// Term 0 is Pedestal and eponential background
 	FuncTerm0* funcTerm0 = new FuncTerm0();
-	TF1* term0 = new TF1("term0", funcTerm0, &FuncTerm0::func, xMin, xMax, parameters->size(), 1, TF1::EAddToList::kAdd);
+	TF1* term0 = new TF1("term0", funcTerm0, &FuncTerm0::func, xMin, xMax, parameters->getSize(), 1, TF1::EAddToList::kAdd);
 	components->Add(term0);
 
 	// Terms 1..N are gaussians convoluted with the background function
@@ -383,7 +383,7 @@ void FitUtils::doFitTest(TH1* hist, FitParameters* pars){
 	for (UInt_t n=1; n < nTerms; n++){
 		FuncTermN* funcTermN = new FuncTermN(n);
 		TString name = TString::Format("term%d", n);
-		TF1* termN = new TF1(name.Data(), funcTermN, &FuncTermN::func, xMin, xMax, parameters->size());
+		TF1* termN = new TF1(name.Data(), funcTermN, &FuncTermN::func, xMin, xMax, parameters->getSize());
 		components->Add(termN);
 	}
 
@@ -401,7 +401,7 @@ void FitUtils::doFitTest(TH1* hist, FitParameters* pars){
 	TF1 *fitFunction = new TF1("fitFunction", addName.Data());
 
 	TF1Normalize* normFitObject = new TF1Normalize(fitFunction, hist->Integral());
-	TF1 *normFitFunction = new TF1("normFitFuntion", normFitObject, &TF1Normalize::func, xMin, xMax, parameters->size(), 1, TF1::EAddToList::kAdd);
+	TF1 *normFitFunction = new TF1("normFitFuntion", normFitObject, &TF1Normalize::func, xMin, xMax, parameters->getSize(), 1, TF1::EAddToList::kAdd);
 
 	// For each component set parameter names, values and limits
 	TIterator* it = parameters->createIterator();

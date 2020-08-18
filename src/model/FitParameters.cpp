@@ -44,8 +44,8 @@ FitParameters::~FitParameters() {
 }
 
 Double_t* FitParameters::getArray(){
-	Double_t* array = new Double_t(parameters->size());
-	for (UInt_t i = 0; i < parameters->size(); i++){
+	Double_t* array = new Double_t(parameters->getSize());
+	for (UInt_t i = 0; i < parameters->getSize(); i++){
 		 RooRealVar* parameter = (RooRealVar*)parameters->at(i);
 		 array[i] = parameter->getVal();
 	}
