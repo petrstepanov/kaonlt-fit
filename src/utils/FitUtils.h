@@ -20,7 +20,7 @@ public:
 	FitUtils();
 	virtual ~FitUtils();
 
-	static void doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject, Int_t fitMin = 0, TVirtualPad* pad = 0);
+	static void doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject, Int_t fitMin = 0, TVirtualPad* pad = 0, Bool_t noTerm0 = kFALSE);
 	static void doFitTest(TH1* hist, FitParameters* pars);
 	static void doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0 = kTRUE, Int_t fitMin = 0, TVirtualPad* pad = 0);
 	static void fillHistogramFromFuncObject(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject);

@@ -22,11 +22,11 @@ FitParameters::FitParameters(ParametersType type) {
 		// for KaonLT Prototype spectra fit
 		Q0 = new RooRealVar("Q_{0}", "pedestal", 200, 100, 300, "");
 		s0 = new RooRealVar("#sigma_{0}", "standard deviation of the type I background process", 1, 0, 10, "");
-		Q1 = new RooRealVar("Q_{1}", "average charge at the PM output", 200, 100, 300, ""); // more intense avalanche?
+		Q1 = new RooRealVar("Q_{1}", "average charge at the PM output", 200, 50, 300, ""); // more intense avalanche?
 		s1 = new RooRealVar("#sigma_{1}", "corresponding standard deviation of the charge distribution", 15, 0, 50, "");
 		w  = new RooRealVar("w", "probability that signal is accompanied by type II background process", 0.4, 0., 1., "");
 		a  = new RooRealVar("#alpha", "coefficient of the exponential decrease of the type II background", 0.03, 0, 0.1, "");
-		mu = new RooRealVar("#mu", "number of photo-electrons", 3, 1, 20, "");
+		mu = new RooRealVar("#mu", "number of photo-electrons", 3, 0, 20, "");
 	}
 	// Fill list with parameters
 	parameters = new RooArgList();

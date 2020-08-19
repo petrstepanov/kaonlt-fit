@@ -112,8 +112,8 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t f
 		RooFormulaVar* coeffN = new RooFormulaVar(nameC.Data(), nameC.Data(), "exp(-@0)*@0^@1/TMath::Factorial(@1)", RooArgList(*(pars->mu),*nVar));
 
 		// Last coeficient do not include. Root will automatically set it to 1-sum (N-1)
-		if (n != nTerms - 1) coefficients->add(*coeffN);
-		// coefficients->add(*coeffN);
+//		if (n != nTerms - 1) coefficients->add(*coeffN);
+		coefficients->add(*coeffN);
 	}
 
 	// Sum terms of the real PM responce function
@@ -189,7 +189,7 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t f
 	GraphicsUtils::addLineToPave(pad, sRealPdf, line.Data());
 }
 
-void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject, Int_t fitMin, TVirtualPad* pad){
+void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject, Int_t fitMin, TVirtualPad* pad, Bool_t noTerm0){
 	gSystem->Sleep(100);
 	TDatime* timestamp = new TDatime();
 
@@ -319,7 +319,17 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 			// and on the ratio of component integral to the all components integral ? lol just histogram events
 			// Double_t ratio = componentIntegrals[n]/allComponentsIntegral;
 			Double_t mu = fitParameters[6];		// number of photo-electrons
-			Double_t coefficient = pow(mu,n)*pow(TMath::E(),-mu)/TMath::Factorial(n);
+			Double_t coefficient = 0;
+
+			// Account on the absence of the term 0
+			if (noTerm0) {
+				coefficient = pow(mu,n+1)*pow(TMath::E(),-mu)/TMath::Factorial(n+1);
+				coefficient = coefficient / (1-pow(TMath::E(),-mu));
+			}
+			else {
+				coefficient = pow(mu,n)*pow(TMath::E(),-mu)/TMath::Factorial(n);
+			}
+
 			TF1Normalize* normFunc = new TF1Normalize(component, coefficient*funcIntegral);
 			TString fName = TString::Format("%s_norm", component->GetName());
 			TF1* f;

@@ -74,16 +74,7 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 		    component->SetParameters(par);
 
 		    // Calculate term coefficient
-		    Double_t coefficient;
-		    if (n < components->LastIndex()){
-		    	coefficient = Power(mu,n)*Power(E,-mu)/Factorial(n);
-		    	sumCoefficients += coefficient;
-		    	// std::cout << "coefficient=" << coefficient << std::endl;
-		    	// std::cout << "sumCoefficients=" << sumCoefficients << std::endl;
-		    }
-		    else {
-		    	coefficient = 1 - sumCoefficients;
-		    }
+		    Double_t coefficient = Power(mu,n)*Power(E,-mu)/Factorial(n);
 
 		    // Add component contribution
 			value += coefficient*component->EvalPar(_x, par);
@@ -109,13 +100,13 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 //				integral+= coefficient*myIntegral;
 //			}
 			// Regular integral takes forever
-		    // integral += coefficient*(component->Integral(xMin, xMax, 1E-6));
+		    integral += coefficient*(component->Integral(xMin, xMax, 1E-6));
 		} else {
 			std::cout << "Error getting the component" << std::endl;
 		}
 	}
 
 	// Return normalized function value
-	return value*(hist->Integral());
-	// return value/integral*(hist->Integral());
+//	return value*(hist->Integral());
+	 return value/integral*(hist->Integral());
 }
