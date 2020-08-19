@@ -56,7 +56,7 @@ FitUtils::~FitUtils() {
 }
 
 // Fit not goes, weird function raise to the right
-void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, TVirtualPad* pad){
+void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t fitMin, TVirtualPad* pad){
 	TDatime* timestamp = new TDatime();
 
 	// Define channels axis (observable)
@@ -112,8 +112,8 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, TVirtua
 		RooFormulaVar* coeffN = new RooFormulaVar(nameC.Data(), nameC.Data(), "exp(-@0)*@0^@1/TMath::Factorial(@1)", RooArgList(*(pars->mu),*nVar));
 
 		// Last coeficient do not include. Root will automatically set it to 1-sum (N-1)
-		// if (n < nTerms - 1) coefficients->add(*coeffN);
-		coefficients->add(*coeffN);
+		if (n != nTerms - 1) coefficients->add(*coeffN);
+		// coefficients->add(*coeffN);
 	}
 
 	// Sum terms of the real PM responce function
@@ -126,11 +126,16 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, TVirtua
 	// RooDataHist* data = sRealPdf->generateBinned(*observable, 64000);
 
 	RootUtils::startTimer();
+
+	// Why pdf integration value is zero
+	// RooAbsReal::defaultIntegratorConfig()->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D");
 	// RooAbsReal::defaultIntegratorConfig()->getConfigSection("RooIntegrator1D").setRealValue("maxSteps", 30);
+	// RooAbsReal::defaultIntegratorConfig()->setEpsAbs(1e-6);
+	// RooAbsReal::defaultIntegratorConfig()->setEpsRel(1e-6);
 
 	// Perform fit
 	// RooFitResult* fitResult = sRealPdf->fitTo(*data, RooFit::Save(kTRUE));
-	RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE)); // RooFit::NumCPU(RootUtils::getNumCpu())
+	RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE), RooFit::NumCPU(RootUtils::getNumCpu()), RooFit::Range(fitMin, xMax));
 
 	// Chi2 fit - does not work because zero values
 	// RooChi2Var* chi2 = new RooChi2Var("#chi^{2}", "chi square", *sRealPdf, *data, kTRUE, 0, 0, RootUtils::getNumCpu());
@@ -184,7 +189,7 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, TVirtua
 	GraphicsUtils::addLineToPave(pad, sRealPdf, line.Data());
 }
 
-void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject, TVirtualPad* pad){
+void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject, Int_t fitMin, TVirtualPad* pad){
 	gSystem->Sleep(100);
 	TDatime* timestamp = new TDatime();
 
@@ -254,7 +259,7 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 
 	// Perform fit
 	RootUtils::startTimer();
-	hist->Fit(func, "V"); // Add range here
+	hist->Fit(func, "V", "", fitMin); // Add range here
 	RootUtils::stopAndPrintTimer();
 
 	// Display fit parameters and chi^2 in statistis box

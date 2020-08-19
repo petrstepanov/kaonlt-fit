@@ -96,6 +96,14 @@ void HistUtils::resetHistogram(TH1* hist){
 	}
 }
 
+void HistUtils::removeHistogramZeros(TH1* hist){
+	for (Int_t i = 1; i <= hist->GetNbinsX(); i++){
+		if (hist->GetBinContent(i)==0){
+			hist->SetBinContent(i, 1E-9);
+		}
+	};
+}
+
 void HistUtils::increaseCorrespondingBinContent(TH1* hist, Float_t val){
 	Int_t bin = hist->GetXaxis()->FindBin(val);
 	if (bin >= 1 && bin <= hist->GetNbinsX()){
