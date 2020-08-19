@@ -59,6 +59,7 @@ Double_t FuncSRealNoTerm0::func(Double_t* _x, Double_t* par) {
 
 	// Evaluate sum coeficients for the last term
 	Double_t sumCoefficients = 0;
+	Double_t integral = 0;
 
 	for (Int_t n = 0; n <= components->LastIndex(); n++){
 		TF1* component = (TF1*)(components->At(n));
@@ -71,6 +72,8 @@ Double_t FuncSRealNoTerm0::func(Double_t* _x, Double_t* par) {
 		    if (n < components->LastIndex()){
 		    	coefficient = Power(mu,n)*Power(E,-mu)/Factorial(n);
 		    	sumCoefficients += coefficient;
+		    	// std::cout << "coefficient=" << coefficient << std::endl;
+		    	// std::cout << "sumCoefficients=" << sumCoefficients << std::endl;
 		    }
 		    else {
 		    	coefficient = 1 - sumCoefficients;
@@ -79,6 +82,9 @@ Double_t FuncSRealNoTerm0::func(Double_t* _x, Double_t* par) {
 		    // Add component contribution
 			value += coefficient*component->EvalPar(_x, par);
 
+			// Need to add normalization for some reason - don't understand why!
+			// Thought everything is already normalized!!
+
 		    // Sum the total integral
 //			if (n==0){
 //				// Step function in the Pedestal requires custom analytical integral
@@ -86,7 +92,7 @@ Double_t FuncSRealNoTerm0::func(Double_t* _x, Double_t* par) {
 //				Double_t myIntegral = ft0->getIntegral(xMin, xMax, par);
 //				// Double_t rootIntegral = component->Integral(xMin, xMax);
 //				// std::cout << "n=" << n<< ". myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
-//				integral+= myIntegral;
+//				integral+= coefficient*myIntegral;
 //			}
 //			else {
 //				// Integral of the real convoluted term is ~ as unconvoluted term shifted to Q0 (analytical)
@@ -94,10 +100,10 @@ Double_t FuncSRealNoTerm0::func(Double_t* _x, Double_t* par) {
 //				Double_t myIntegral = fSIdealNShiftedQ0->getIntegral(xMin, xMax, par);
 //				// Double_t rootIntegral = component->Integral(xMin, xMax);
 //				// std::cout  << "n=" << n<< ". myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
-//				integral+= myIntegral;
+//				integral+= coefficient*myIntegral;
 //			}
 			// Regular integral takes forever
-		    // integral += component->Integral(xMin, xMax, 1E-3);
+		    // integral += coefficient*(component->Integral(xMin, xMax, 1E-6));
 		} else {
 			std::cout << "Error getting the component" << std::endl;
 		}

@@ -102,21 +102,21 @@ int run(const char* fileName) {
 	// Retreive parameters for KaonLT Prototype histogram
 	FitParameters* params = new FitParameters(ParametersType::forKaonHist);
 
-	Int_t fitMin = 250;
+	Int_t fitMin = 0;
 
 	if (fitType == FitType::root){
 		AbsComponentFunc* funcObject1 = new FuncSRealNoTerm0(pmt1HistFit);
 		FitUtils::doFit(pmt1HistFit, params, funcObject1, fitMin, pmtsFitCanvas->cd(1));
-		AbsComponentFunc* funcObject2 = new FuncSRealNoTerm0(pmt2HistFit);
-		FitUtils::doFit(pmt2HistFit, params, funcObject2, fitMin, pmtsFitCanvas->cd(2));
+		// AbsComponentFunc* funcObject2 = new FuncSRealNoTerm0(pmt2HistFit);
+		// FitUtils::doFit(pmt2HistFit, params, funcObject2, fitMin, pmtsFitCanvas->cd(2));
 	} else if (fitType == FitType::rootConv){
 		AbsComponentFunc* funcObject1 = new FuncSRealFFTNoTerm0(pmt1HistFit);
 		FitUtils::doFit(pmt1HistFit, params, funcObject1, fitMin, pmtsFitCanvas->cd(1));
-		AbsComponentFunc* funcObject2 = new FuncSRealFFTNoTerm0(pmt2HistFit);
-		FitUtils::doFit(pmt2HistFit, params, funcObject2, fitMin, pmtsFitCanvas->cd(2));
+		// AbsComponentFunc* funcObject2 = new FuncSRealFFTNoTerm0(pmt2HistFit);
+		// FitUtils::doFit(pmt2HistFit, params, funcObject2, fitMin, pmtsFitCanvas->cd(2));
 	} else {
 		FitUtils::doRooFit(pmt1HistFit, params, kFALSE, fitMin, pmtsFitCanvas->cd(1));
-		FitUtils::doRooFit(pmt2HistFit, params, kFALSE, fitMin, pmtsFitCanvas->cd(2));
+		// FitUtils::doRooFit(pmt2HistFit, params, kFALSE, fitMin, pmtsFitCanvas->cd(2));
 	}
 
 	// Save canvas with PMT profiles to file
@@ -217,13 +217,13 @@ int main(int argc, char* argv[]) {
 	// Test fitting function on the digitized test histogram
 	// testDigitized();
 	// Test fitting function on the filled random test histogram
-	testFillRandom();
+	// testFillRandom();
 	// testNoTerm0();
 
 	// Iterate through input files and run analysis
 	for (TObject* object : *(constants->parameters.inputFiles)) {
 		if (TObjString* objString = dynamic_cast<TObjString*>(object)){
-			// run(objString->GetString());
+			run(objString->GetString());
 		}
 	}
 

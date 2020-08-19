@@ -88,6 +88,8 @@ Double_t FuncSRealFFTNoTerm0::func(Double_t* _x, Double_t* par) {
 		    if (n < components->LastIndex()){
 		    	coefficient = Power(mu,n)*Power(E,-mu)/Factorial(n);
 		    	sumCoefficients += coefficient;
+		    	// std::cout << "coefficient=" << coefficient << std::endl;
+		    	// std::cout << "sumCoefficients=" << sumCoefficients << std::endl;
 		    }
 		    else {
 		    	coefficient = 1 - sumCoefficients;

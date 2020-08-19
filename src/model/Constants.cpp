@@ -103,7 +103,7 @@ void Constants::parseParameters(int argc, char* argv[]){
 		else if (pair.first == "fit"){
 			if (pair.second == "root"){
 				parameters.fitType = FitType::root;
-			} else if (pair.second == "rootConv"){
+			} else if (pair.second == "rootconv" || pair.second == "rootConv"){
 				parameters.fitType = FitType::rootConv;
 			} else {
 				parameters.fitType = FitType::rooFit;

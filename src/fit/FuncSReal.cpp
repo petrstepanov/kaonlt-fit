@@ -109,13 +109,13 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 //				integral+= coefficient*myIntegral;
 //			}
 			// Regular integral takes forever
-		    integral += coefficient*(component->Integral(xMin, xMax, 1E-6));
+		    // integral += coefficient*(component->Integral(xMin, xMax, 1E-6));
 		} else {
 			std::cout << "Error getting the component" << std::endl;
 		}
 	}
 
 	// Return normalized function value
-	// return value*(hist->Integral());
-	return value/integral*(hist->Integral());
+	return value*(hist->Integral());
+	// return value/integral*(hist->Integral());
 }
