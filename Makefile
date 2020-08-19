@@ -8,7 +8,7 @@ endif
 # Variables for compiling and linking
 CXXFLAGS=`root-config --cflags` -fPIC
 LDFLAGS=`root-config --ldflags`
-LIBS=`root-config --glibs` -lRooFit -lRooFitCore -lHtml -lMinuit -lFumili
+LIBS=`root-config --glibs` -lRooFit -lRooFitCore -lHtml -lMinuit -lFumili -lTree -lTreeViewer -lTreePlayer
 INCDIR=`root-config --incdir`
 
 # Define variables for directories
