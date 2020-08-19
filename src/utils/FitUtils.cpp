@@ -47,6 +47,7 @@
 #include <TFitResultPtr.h>
 #include <TDatime.h>
 #include <Math/IntegratorOptions.h>
+#include <TSystem.h>
 
 FitUtils::FitUtils() {
 }
@@ -109,6 +110,9 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, TVirtua
 		TString nameC = TString::Format("coeff%d", n);
 		TString titleC = TString::Format("Term %d coefficient", n);
 		RooFormulaVar* coeffN = new RooFormulaVar(nameC.Data(), nameC.Data(), "exp(-@0)*@0^@1/TMath::Factorial(@1)", RooArgList(*(pars->mu),*nVar));
+
+		// Last coeficient do not include. Root will automatically set it to 1-sum (N-1)
+		// if (n < nTerms - 1) coefficients->add(*coeffN);
 		coefficients->add(*coeffN);
 	}
 
@@ -124,8 +128,9 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, TVirtua
 	RootUtils::startTimer();
 	// RooAbsReal::defaultIntegratorConfig()->getConfigSection("RooIntegrator1D").setRealValue("maxSteps", 30);
 
-	RooFitResult* fitResult = sRealPdf->fitTo(*data, RooFit::Save(kTRUE), RooFit::NumCPU(RootUtils::getNumCpu()));
-	// RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE), RooFit::NumCPU(RootUtils::getNumCpu()));
+	// Perform fit
+	// RooFitResult* fitResult = sRealPdf->fitTo(*data, RooFit::Save(kTRUE));
+	RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE)); // RooFit::NumCPU(RootUtils::getNumCpu())
 
 	// Chi2 fit - does not work because zero values
 	// RooChi2Var* chi2 = new RooChi2Var("#chi^{2}", "chi square", *sRealPdf, *data, kTRUE, 0, 0, RootUtils::getNumCpu());
@@ -180,6 +185,7 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, TVirtua
 }
 
 void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject, TVirtualPad* pad){
+	gSystem->Sleep(100);
 	TDatime* timestamp = new TDatime();
 
 	// Number of terms in the fit function
@@ -245,15 +251,17 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 	// canvas->SetLeftMargin(0.15);
 	// canvas->SetRightMargin(0.05);
 
+
+	// Perform fit
 	RootUtils::startTimer();
-	hist->Fit(func, "V");
+	hist->Fit(func, "V"); // Add range here
 	RootUtils::stopAndPrintTimer();
 
 	// Display fit parameters and chi^2 in statistis box
 	// https://root.cern.ch/doc/master/classTPaveStats.html#PS02
 	GraphicsUtils::setStatsFitOption(hist, pad, 112);
 	hist->Draw();
-	// func->Draw("SAME");
+	func->Draw("SAME");
 
 	// Obtain function fit parameters
 	Int_t nFitPar = func->GetNpar();
@@ -267,36 +275,36 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 	// }
 
 	// Print histogram and fitting function integrals
-	// Double_t histIntegral = hist->Integral(xMin, xMax);
+	Double_t histIntegral = hist->Integral(xMin, xMax);
 	Double_t funcIntegral = func->Integral(xMin, xMax);
-	// std::cout << "TH1 hist integral: " << histIntegral << std::endl;
-	// std::cout << "TF1 func integral: " << funcIntegral << std::endl;
+	std::cout << "TH1 hist integral: " << histIntegral << std::endl;
+	std::cout << "TF1 func integral: " << funcIntegral << std::endl;
 
 	// Retrieve component functions
 	TList* components = funcObject->getComponents();
 
 	// Calculate component integrals (not normalized to hist integral) and total components integral
-	Double_t* componentIntegrals = new Double_t[nTerms];
-	Double_t allComponentsIntegral = 0;
-	for (UInt_t n=0; n<=components->LastIndex(); n++){
-		TF1* component = (TF1*)(components->At(n));
-		if (component){
-			if (component->GetNpar() == 2*nFitPar){
-				// If component is a convolution of two functions
-				Double_t* convParameters = getConvFitParameters(fitParameters, nFitPar);
-				component->SetParameters(convParameters);
-			}
-			else {
-				// If component is a regular function
-				component->SetParameters(fitParameters);
-			}
-			Double_t componentIntegral = component->Integral(xMin, xMax, 1);
-			componentIntegrals[n] = componentIntegral;
-			allComponentsIntegral += componentIntegral;
-			std::cout << "Component " << n << " integral: " << componentIntegrals[n] << std::endl;
-		}
-	}
-	std::cout << "All components integral: " << allComponentsIntegral << std::endl;
+//	Double_t* componentIntegrals = new Double_t[nTerms];
+//	Double_t allComponentsIntegral = 0;
+//	for (UInt_t n=0; n<=components->LastIndex(); n++){
+//		TF1* component = (TF1*)(components->At(n));
+//		if (component){
+//			if (component->GetNpar() == 2*nFitPar){
+//				// If component is a convolution of two functions
+//				Double_t* convParameters = getConvFitParameters(fitParameters, nFitPar);
+//				component->SetParameters(convParameters);
+//			}
+//			else {
+//				// If component is a regular function
+//				component->SetParameters(fitParameters);
+//			}
+//			Double_t componentIntegral = component->Integral(xMin, xMax);
+//			componentIntegrals[n] = componentIntegral;
+//			allComponentsIntegral += componentIntegral;
+//			std::cout << "Component " << n << " integral: " << componentIntegrals[n] << std::endl;
+//		}
+//	}
+//	std::cout << "All components integral: " << allComponentsIntegral << std::endl;
 
 	// Create and plot normalized component functions for every component
 	for (UInt_t n=0; n<=components->LastIndex(); n++){
@@ -304,8 +312,10 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 		if (component){
 			// Component needs to be normalized to the number of the histogram events
 			// and on the ratio of component integral to the all components integral ? lol just histogram events
-			Double_t ratio = componentIntegrals[n]/allComponentsIntegral;
-			TF1Normalize* normFunc = new TF1Normalize(component, ratio*funcIntegral);
+			// Double_t ratio = componentIntegrals[n]/allComponentsIntegral;
+			Double_t mu = fitParameters[6];		// number of photo-electrons
+			Double_t coefficient = pow(mu,n)*pow(TMath::E(),-mu)/TMath::Factorial(n);
+			TF1Normalize* normFunc = new TF1Normalize(component, coefficient*funcIntegral);
 			TString fName = TString::Format("%s_norm", component->GetName());
 			TF1* f;
 			if (component->GetNpar() == 2*nFitPar){

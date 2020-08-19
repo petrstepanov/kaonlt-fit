@@ -53,33 +53,50 @@ Double_t FuncSRealNoTerm0::func(Double_t* _x, Double_t* par) {
 
 	// Loop over components
 	Double_t value = 0;
-	Double_t integral = 0;
+	// Double_t integral = 0;
 	Int_t xMin = hist->GetXaxis()->GetXmin();
 	Int_t xMax = hist->GetXaxis()->GetXmax();
+
+	// Evaluate sum coeficients for the last term
+	Double_t sumCoefficients = 0;
 
 	for (Int_t n = 0; n <= components->LastIndex(); n++){
 		TF1* component = (TF1*)(components->At(n));
 		if (component){
-			value += component->EvalPar(_x, par);			// Sum the cumulated value
-		    component->SetParameters(par);					// Set parameters
+			// Set parameters
+		    component->SetParameters(par);
+
+		    // Calculate term coefficient
+		    Double_t coefficient;
+		    if (n < components->LastIndex()){
+		    	coefficient = Power(mu,n)*Power(E,-mu)/Factorial(n);
+		    	sumCoefficients += coefficient;
+		    }
+		    else {
+		    	coefficient = 1 - sumCoefficients;
+		    }
+
+		    // Add component contribution
+			value += coefficient*component->EvalPar(_x, par);
+
 		    // Sum the total integral
-			if (n==0){
-				// Step function in the Pedestal requires custom analytical integral
-				FuncTerm0* ft0 = new FuncTerm0();
-				Double_t myIntegral = ft0->getIntegral(xMin, xMax, par);
-				// Double_t rootIntegral = component->Integral(xMin, xMax);
-				// std::cout << "n=" << n<< ". myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
-				integral+= myIntegral;
-			}
-			else {
-				// Integral of the real convoluted term is ~ as unconvoluted term shifted to Q0 (analytical)
-				FuncSIdealNShiftedQ0* fSIdealNShiftedQ0 = new FuncSIdealNShiftedQ0(n);
-				Double_t myIntegral = fSIdealNShiftedQ0->getIntegral(xMin, xMax, par);
-				// Double_t rootIntegral = component->Integral(xMin, xMax);
-				// std::cout  << "n=" << n<< ". myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
-				integral+= myIntegral;
-			}
-			// Regular integral tekes forever
+//			if (n==0){
+//				// Step function in the Pedestal requires custom analytical integral
+//				FuncTerm0* ft0 = new FuncTerm0();
+//				Double_t myIntegral = ft0->getIntegral(xMin, xMax, par);
+//				// Double_t rootIntegral = component->Integral(xMin, xMax);
+//				// std::cout << "n=" << n<< ". myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
+//				integral+= myIntegral;
+//			}
+//			else {
+//				// Integral of the real convoluted term is ~ as unconvoluted term shifted to Q0 (analytical)
+//				FuncSIdealNShiftedQ0* fSIdealNShiftedQ0 = new FuncSIdealNShiftedQ0(n);
+//				Double_t myIntegral = fSIdealNShiftedQ0->getIntegral(xMin, xMax, par);
+//				// Double_t rootIntegral = component->Integral(xMin, xMax);
+//				// std::cout  << "n=" << n<< ". myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
+//				integral+= myIntegral;
+//			}
+			// Regular integral takes forever
 		    // integral += component->Integral(xMin, xMax, 1E-3);
 		} else {
 			std::cout << "Error getting the component" << std::endl;
@@ -87,6 +104,6 @@ Double_t FuncSRealNoTerm0::func(Double_t* _x, Double_t* par) {
 	}
 
 	// Return normalized function value
-	// return value*(hist->Integral());
-	return value/integral*(hist->Integral());
+	return value*(hist->Integral());
+	// return value/integral*(hist->Integral());
 }

@@ -28,8 +28,11 @@ Double_t FuncSIdealN::func(Double_t* _x, Double_t* par) {
 
 	// Calculate function value
 	Double_t value = // begin mathematica code from "/mathematica/sIdealN.nb"
-			(Power(E,-mu - Power(-(n*Q1) + x,2)/(2.*n*Power(s1,2)))*Power(mu,n))/
-			   (Sqrt(n)*Sqrt(2*Pi)*s1*Factorial(n))
+// With Coefficient
+//			(Power(E,-mu - Power(-(n*Q1) + x,2)/(2.*n*Power(s1,2)))*Power(mu,n))/
+//			   (Sqrt(n)*Sqrt(2*Pi)*s1*Factorial(n))
+// Without Coefficient
+			1/(Power(E,Power(-(n*Q1) + x,2)/(2.*n*Power(s1,2)))*Sqrt(n)*Sqrt(2*Pi)*s1)
 	; // end mathematica code
 
 	return value;
@@ -51,8 +54,11 @@ Double_t FuncSIdealN::indefiniteIntegral(Double_t x, Double_t* par) {
 	Double_t mu = par[6];		// number of photo-electrons
 
 	Double_t value =  // begin mathematica code from "/mathematica/sIdealN.nb"
-			(Power(mu,n)*Erf((-(n*Q1) + x)/(Sqrt(2)*Sqrt(n)*s1)))/
-			   (2.*Power(E,mu)*Factorial(n))
+// With Coefficient
+//			(Power(mu,n)*Erf((-(n*Q1) + x)/(Sqrt(2)*Sqrt(n)*s1)))/
+//			   (2.*Power(E,mu)*Factorial(n))
+// Without coefficient
+			Erf((-(n*Q1) + x)/(Sqrt(2)*Sqrt(n)*s1))/2.
 	; // end mathematica code
 
 	return value;

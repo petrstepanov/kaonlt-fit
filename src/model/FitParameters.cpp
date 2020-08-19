@@ -11,13 +11,13 @@ FitParameters::FitParameters(ParametersType type) {
 	// Instantiate initial fit parameter vaues
 	if (type == ParametersType::forBellamyHist){
 		// For Bellamy spectrum fit
-		Q0 = new RooRealVar("Q_{0}", "pedestal", 23.26, 10, 40, "");
-		s0 = new RooRealVar("#sigma_{0}", "standard deviation of the type I background process", 0.192, 0, 0.5, ""); // ->10
-		Q1 = new RooRealVar("Q_{1}", "average charge at the PM output", 35.04, 25, 45, "");
-		s1 = new RooRealVar("#sigma_{1}", "corresponding standard deviation of the charge distribution", 11.73, 0, 20, ""); // ->100
-		w  = new RooRealVar("w", "probability that signal is accompanied by type II background process", 0.4, 0.2, 0.7, "");
-		a  = new RooRealVar("#alpha", "coefficient of the exponential decrease of the type II background", 0.034, 0, 0.1, ""); // ->10
-		mu = new RooRealVar("#mu", "number of photo-electrons", 1.68, 0, 10, "");  // -> 20
+		Q0 = new RooRealVar("Q_{0}", "pedestal", 23.26, 10., 40., "");
+		s0 = new RooRealVar("#sigma_{0}", "standard deviation of the type I background process", 0.192, 0., 0.3, ""); // ->10
+		Q1 = new RooRealVar("Q_{1}", "average charge at the PM output", 35.04, 15., 50., "");
+		s1 = new RooRealVar("#sigma_{1}", "corresponding standard deviation of the charge distribution", 11.73, 0., 20., ""); // ->100
+		w  = new RooRealVar("w", "probability that signal is accompanied by type II background process", 0.383, 0., 1., "");
+		a  = new RooRealVar("#alpha", "coefficient of the exponential decrease of the type II background", 0.034, 0., 0.1, ""); // ->10
+		mu = new RooRealVar("#mu", "number of photo-electrons", 1.68, 1, 5, "");  // -> 20
 	} else {
 		// for KaonLT Prototype spectra fit
 		Q0 = new RooRealVar("Q_{0}", "pedestal", 200, 100, 300, "");

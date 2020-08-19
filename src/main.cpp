@@ -139,11 +139,15 @@ int testDigitized(){
 int testFillRandom(){
 	// Retreive parameters for test Bellamy histogram
 	FitParameters* params = new FitParameters(ParametersType::forBellamyHist);
+
 	// Instantiate histogram
+	// TH1* h = TestSpectrum::getHistogramPaperFix();
 	TH1* h = TestSpectrum::getHistogramGenerated(params);
 
-	// Play with different mimimizers
+	// Play with different mimimizers?
 	// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
+	// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("Gauss");
+	// ROOT::Math::MinimizerOptions::SetDefaultTolerance(1.E-3);
 
 	// Fit histogram with ROOT Fit
 	TH1* hist1 = HistUtils::cloneHistogram(h, "hist");
@@ -180,8 +184,8 @@ int testNoTerm0(){
 	FitUtils::doFit(hist2, params, funcObjectFFT);
 
 	// Fit histogram with RooFit with Convolution
-	TH1* hist3 = HistUtils::cloneHistogram(h, "hist_conv_roofit");
-	FitUtils::doRooFit(hist3, params, kFALSE);
+	// TH1* hist3 = HistUtils::cloneHistogram(h, "hist_conv_roofit");
+	// FitUtils::doRooFit(hist3, params, kFALSE);
 
 	return 0;
 }
@@ -206,13 +210,13 @@ int main(int argc, char* argv[]) {
 	// Test fitting function on the digitized test histogram
 	// testDigitized();
 	// Test fitting function on the filled random test histogram
-	// testFillRandom();
+	testFillRandom();
 	// testNoTerm0();
 
 	// Iterate through input files and run analysis
 	for (TObject* object : *(constants->parameters.inputFiles)) {
 		if (TObjString* objString = dynamic_cast<TObjString*>(object)){
-			run(objString->GetString());
+			// run(objString->GetString());
 		}
 	}
 
