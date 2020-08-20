@@ -164,7 +164,7 @@ void TreeHelper::plotTree(const char* fileName){
 	amp2TilerHist->Draw("COLZ0");
 
 	// Save canvas to file
-	TString pngFilePath = TString::Format("%s-%s.png", fileName, myCanvas->GetName());
+	TString pngFilePath = TString::Format("%s-%s.png",fileName, treeName);
 	myCanvas->SaveAs(pngFilePath.Data());
 }
 

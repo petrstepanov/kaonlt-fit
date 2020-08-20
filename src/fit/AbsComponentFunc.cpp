@@ -17,3 +17,4 @@ AbsComponentFunc::~AbsComponentFunc() {
 TList* AbsComponentFunc::getComponents(){
 	return components;
 }
+

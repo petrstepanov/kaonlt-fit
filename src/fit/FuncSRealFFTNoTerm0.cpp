@@ -42,6 +42,10 @@ FuncSRealFFTNoTerm0::FuncSRealFFTNoTerm0(TH1* h, Int_t nParVal) : AbsComponentFu
 
 		components->Add(termN);
 	}
+
+	// Initialize coeficient formula
+	TString formulaName = TString::Format("formula_%d", timestamp->Get());
+	coefficientN = new TFormula(formulaName.Data(), "[mu]^[n]*e^(-[mu])/TMath::Factorial([n])/(1-e^(-[mu]))");
 }
 
 FuncSRealFFTNoTerm0::~FuncSRealFFTNoTerm0() {
@@ -59,11 +63,8 @@ Double_t FuncSRealFFTNoTerm0::func(Double_t* _x, Double_t* par) {
 
 	Double_t parForConvolution[] = {Q0, s0, Q1, s1, w, a, mu, Q0, s0, Q1, s1, w, a, mu};
 
-	// Set component parameters
-
 	// Loop over components
 	Double_t value = 0;
-	Double_t integral = 0;
 	Int_t xMin = hist->GetXaxis()->GetXmin();
 	Int_t xMax = hist->GetXaxis()->GetXmax();
 
@@ -71,21 +72,19 @@ Double_t FuncSRealFFTNoTerm0::func(Double_t* _x, Double_t* par) {
 		TF1* component = (TF1*)(components->At(n));
 		if (component){
 			// Set parameters
-		    if (n==0) component->SetParameters(par);
-		    else component->SetParameters(parForConvolution);
+		    component->SetParameters(parForConvolution);
 
-		    // Sum the cumulated value
-			if (n==0) value += component->EvalPar(_x, par);
-			else value += component->EvalPar(_x, parForConvolution);
+		    // Calculate term coefficient
+		    Double_t coeffParams[2] = {mu, (Double_t)n};
+		    Double_t coefficient = coefficientN->EvalPar(nullptr, coeffParams);
 
-			// Sum the total integral
-			// integral += component->Integral(xMin, xMax);
+		    // Add component contribution
+			value += coefficient*component->EvalPar(_x, parForConvolution);
+
 		} else {
 			std::cout << "Error getting the component" << std::endl;
 		}
 	}
 
-	// Return normalized function value
-	// return value/integral*(hist->Integral());
 	return value*(hist->Integral());
 }

@@ -31,7 +31,10 @@ Double_t FuncTerm0::func(Double_t* _x, Double_t* par) {
 
 	// Calculate function value
 	Double_t value = // begin mathematica code from "/mathematica/term0.nb"
-			((1 - w)/(Power(E,Power(-Q0 + x,2)/(2.*Power(s0,2)))*Sqrt(2*Pi)*s0) + (a*w*UnitStep(-Q0 + x))/Power(E,a*(-Q0 + x)))/Power(E,mu)
+// With coeficient
+//			((1 - w)/(Power(E,Power(-Q0 + x,2)/(2.*Power(s0,2)))*Sqrt(2*Pi)*s0) + (a*w*UnitStep(-Q0 + x))/Power(E,a*(-Q0 + x)))/Power(E,mu)
+// Without coefficient
+			(1 - w)/(Power(E,Power(-Q0 + x,2)/(2.*Power(s0,2)))*Sqrt(2*Pi)*s0) + (a*w*UnitStep(-Q0 + x))/Power(E,a*(-Q0 + x))
 	; // end mathematica code
 
 	return value;
@@ -63,7 +66,10 @@ Double_t FuncTerm0::indefiniteIntegralBeforeQ0(Double_t x, Double_t* par) {
 	Double_t mu = par[6];		// number of photo-electrons
 
 	Double_t value =  // begin mathematica code from "/mathematica/term0.nb" but UnitStep=0
-			((-1 + w)*Erf((Q0 - x)/(Sqrt(2)*s0)))/(2.*Power(E,mu))
+// With coefficient
+//			((-1 + w)*Erf((Q0 - x)/(Sqrt(2)*s0)))/(2.*Power(E,mu))
+// Without coefficient
+			((-1 + w)*Erf((Q0 - x)/(Sqrt(2)*s0)))/2.
 	; // end mathematica code
 
 	return value;
@@ -80,7 +86,10 @@ Double_t FuncTerm0::indefiniteIntegralAfterQ0(Double_t x, Double_t* par) {
 	Double_t mu = par[6];		// number of photo-electrons
 
 	Double_t value =  // begin mathematica code from "/mathematica/term0.nb" but UnitStep=1
-			(-(Power(E,a*Q0 - a*x)*w) + ((-1 + w)*Erf((Q0 - x)/(Sqrt(2)*s0)))/2.)/Power(E,mu)
+// With coefficient
+//			(-(Power(E,a*Q0 - a*x)*w) + ((-1 + w)*Erf((Q0 - x)/(Sqrt(2)*s0)))/2.)/Power(E,mu)
+// Without coefficient
+			-(Power(E,a*Q0 - a*x)*w) + ((-1 + w)*Erf((Q0 - x)/(Sqrt(2)*s0)))/2.
 	; // end mathematica code
 
 	return value;

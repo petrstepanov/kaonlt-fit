@@ -28,7 +28,10 @@ Double_t FuncSIdealNShiftedQ0::func(Double_t* _x, Double_t* par) {
 
 	// Calculate function value
 	Double_t value = // begin mathematica code from "/mathematica/sIdealN.nb"
-			(Power(E,-mu - Power(-Q0 - n*Q1 + x,2)/(2.*n*Power(s1,2)))*Power(mu,n))/(Sqrt(n)*Sqrt(2*Pi)*s1*Factorial(n))
+// Without normalization
+//			(Power(E,-mu - Power(-Q0 - n*Q1 + x,2)/(2.*n*Power(s1,2)))*Power(mu,n))/(Sqrt(n)*Sqrt(2*Pi)*s1*Factorial(n))
+// With normalization
+			(Sqrt(n)*Sqrt(2*Pi)*s1)/Power(E,Power(-Q0 - n*Q1 + x,2)/(2.*n*Power(s1,2)))
 	; // end mathematica code
 
 	return value;
@@ -50,7 +53,10 @@ Double_t FuncSIdealNShiftedQ0::indefiniteIntegral(Double_t x, Double_t* par) {
 	Double_t mu = par[6];		// number of photo-electrons
 
 	Double_t value =  // begin mathematica code from "/mathematica/sIdealN.nb"
-			-(Power(mu,n)*Erf((Q0 + n*Q1 - x)/(Sqrt(2)*Sqrt(n)*s1)))/(2.*Power(E,mu)*Factorial(n))
+// Without normalization
+//			-(Power(mu,n)*Erf((Q0 + n*Q1 - x)/(Sqrt(2)*Sqrt(n)*s1)))/(2.*Power(E,mu)*Factorial(n))
+// With normalization
+			-(n*Pi*Power(s1,2)*Erf((Q0 + n*Q1 - x)/(Sqrt(2)*Sqrt(n)*s1)))
 	; // end mathematica code
 
 	return value;

@@ -13,7 +13,6 @@
 #include <TDatime.h>
 #include "components/FuncB.h"
 #include "components/FuncSIdealN.h"
-#include "components/FuncSIdealNShiftedQ0.h"
 #include "components/FuncTerm0.h"
 #include "components/FuncTermN.h"
 
@@ -45,12 +44,19 @@ FuncSRealFFT::FuncSRealFFT(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h),
 		TF1* sIdealN = new TF1(sIdealNName.Data(), funcSIdealN, &FuncSIdealN::func, xMin, xMax, nPar, "FuncSIdealN", "func");
 
 		TF1Convolution* conv = new TF1Convolution(sIdealN, b, xMin, xMax);
+		// conv->SetExtraRange(0.5); // Screws up everything
+		// conv->SetNumConv(kTRUE);
+		// conv->SetRange(xMin, xMax);
 		conv->SetNofPointsFFT(Constants::getInstance()->parameters.convolutionBins);
 		TString termNName = TString::Format("term%d_%d", n, timestamp->Get());
 		TF1 *termN = new TF1(termNName.Data(),*conv, xMin, xMax, conv->GetNpar());
 
 		components->Add(termN);
 	}
+
+	// Initialize coeficient formula
+	TString formulaName = TString::Format("formula_%d", timestamp->Get());
+	coefficientN = new TFormula(formulaName.Data(), "[mu]^[n]*e^(-[mu])/TMath::Factorial([n])");
 }
 
 FuncSRealFFT::~FuncSRealFFT() {
@@ -82,6 +88,7 @@ Double_t FuncSRealFFT::func(Double_t* _x, Double_t* par) {
 	// xMin = xMin - delta;
 	// xMax = xMax + delta;
 
+	// Evaluate sum coeficients for the last term
 	for (UInt_t n = 0; n <= components->LastIndex(); n++){
 		TF1* component = (TF1*)(components->At(n));
 		if (component){
@@ -89,9 +96,13 @@ Double_t FuncSRealFFT::func(Double_t* _x, Double_t* par) {
 		    if (n==0) component->SetParameters(par);
 		    else component->SetParameters(parForConvolution);
 
-		    // Sum the cumulated value
-			if (n==0) value += component->EvalPar(_x, par);
-			else value += component->EvalPar(_x, parForConvolution);
+		    // Calculate term coefficient
+		    Double_t coeffParams[2] = {mu, (Double_t)n};
+		    Double_t coefficient = coefficientN->EvalPar(nullptr, coeffParams);
+
+		    // Add component contribution
+			if (n==0) value += coefficient*component->EvalPar(_x, par);
+			else value += coefficient*component->EvalPar(_x, parForConvolution);
 
 			// Sum the total integral
 //			if (n==0){
@@ -111,14 +122,14 @@ Double_t FuncSRealFFT::func(Double_t* _x, Double_t* par) {
 //				integral+= myIntegral;
 //			}
 			// Regular integral tekes forever
-			integral += component->Integral(xMin, xMax, 1e-3);
+			// integral += component->Integral(xMin, xMax, 1e-3);
 		} else {
 			std::cout << "Error getting the component" << std::endl;
 		}
 	}
 
-	// Return normalized function value
-	return value/integral*(hist->Integral());
-	// return value*(hist->Integral());
+	// Return function value
+	// return value/integral*(hist->Integral());
+	return value*(hist->Integral());
 }
 

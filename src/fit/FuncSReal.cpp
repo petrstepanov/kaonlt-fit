@@ -40,6 +40,10 @@ FuncSReal::FuncSReal(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h), nPar(
 		TF1* termN = new TF1(termNName.Data(), funcTermN, &FuncTermN::func, xMin, xMax, nPar, "FuncTermN", "func");
 		components->Add(termN);
 	}
+
+	// Initialize coeficient formula
+	TString formulaName = TString::Format("formula_%d", timestamp->Get());
+	coefficientN = new TFormula(formulaName.Data(), "[mu]^[n]*e^(-[mu])/TMath::Factorial([n])");
 }
 
 FuncSReal::~FuncSReal() {
@@ -59,15 +63,30 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 
 	// Loop over components
 	Double_t value = 0;
-	Double_t integral = 0;
+	// Double_t integral = 0;
 	Int_t xMin = hist->GetXaxis()->GetXmin();
 	Int_t xMax = hist->GetXaxis()->GetXmax();
+
+	// Evaluate sum coeficients for the last term
+	Double_t sumCoefficients = 0;
+	Double_t integral = 0;
 
 	for (Int_t n = 0; n <= components->LastIndex(); n++){
 		TF1* component = (TF1*)(components->At(n));
 		if (component){
-			value += component->EvalPar(_x, par);			// Sum the cumulated value
-		    component->SetParameters(par);					// Set parameters
+			// Set parameters
+		    component->SetParameters(par);
+
+		    // Calculate term coefficient
+		    Double_t coeffParams[2] = {mu, (Double_t)n};
+		    Double_t coefficient = coefficientN->EvalPar(nullptr, coeffParams);
+
+		    // Add component contribution
+			value += coefficient*component->EvalPar(_x, par);
+
+			// Need to add normalization for some reason - don't understand why!
+			// Thought everything is already normalized!!
+
 		    // Sum the total integral
 //			if (n==0){
 //				// Step function in the Pedestal requires custom analytical integral
@@ -75,7 +94,7 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 //				Double_t myIntegral = ft0->getIntegral(xMin, xMax, par);
 //				// Double_t rootIntegral = component->Integral(xMin, xMax);
 //				// std::cout << "n=" << n<< ". myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
-//				integral+= myIntegral;
+//				integral+= coefficient*myIntegral;
 //			}
 //			else {
 //				// Integral of the real convoluted term is ~ as unconvoluted term shifted to Q0 (analytical)
@@ -83,16 +102,16 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 //				Double_t myIntegral = fSIdealNShiftedQ0->getIntegral(xMin, xMax, par);
 //				// Double_t rootIntegral = component->Integral(xMin, xMax);
 //				// std::cout  << "n=" << n<< ". myIntegral: " << myIntegral << "\t rootIntegral: " << rootIntegral << std::endl;
-//				integral+= myIntegral;
+//				integral+= coefficient*myIntegral;
 //			}
-			// Regular integral tekes forever
-		    integral += component->Integral(xMin, xMax, 1E-3);
+			// Regular integral takes forever
+		    // integral += coefficient*(component->Integral(xMin, xMax, 1E-6));
 		} else {
 			std::cout << "Error getting the component" << std::endl;
 		}
 	}
 
-	// Return normalized function value
-	// return value*(hist->Integral());
-	return value/integral*(hist->Integral());
+	// Return function value
+	return value*(hist->Integral());
+	// return value/integral*(hist->Integral());
 }

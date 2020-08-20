@@ -26,10 +26,9 @@ public:
 	Double_t* getArray();
 	Int_t getSize();
 
-	RooRealVar *Q0, *s0, *Q1, *s1, *w, *a, *mu;
-
 private:
 	RooArgList* parameters;
+	RooArgList* readParametersFromFile(const char* fileName);
 };
 
 #endif /* SRC_MODEL_FITPARAMETERS_H_ */
