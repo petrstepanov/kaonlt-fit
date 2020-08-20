@@ -32,11 +32,13 @@ enum class FitType {
 struct Parameters {
 	TString treeName = "tree1;3";
 	Float_t plotTree = kTRUE;
+	Float_t plotProfiles = kTRUE;
 	Int_t tileProfile = 55;
 	Int_t termsNumber = 50;
 	Int_t convolutionBins = 1024;
 	FitType fitType = FitType::root;
 	TList* inputFiles = new TList();
+	TString fitParamsFileName = "fit-parameters.txt";
 };
 
 class Constants {

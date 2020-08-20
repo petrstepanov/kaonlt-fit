@@ -34,6 +34,10 @@ FuncSRealNoTerm0::FuncSRealNoTerm0(TH1* h, Int_t nParVal) : AbsComponentFunc(), 
 		TF1* termN = new TF1(termNName.Data(), funcTermN, &FuncTermN::func, xMin, xMax, nPar, "FuncTermN", "func");
 		components->Add(termN);
 	}
+
+	// Initialize coeficient formula
+	TString formulaName = TString::Format("formula_%d", timestamp->Get());
+	coefficientN = new TFormula(formulaName.Data(), "[mu]^[n]*e^(-[mu])/TMath::Factorial([n])/(1-e^(-[mu]))");
 }
 
 FuncSRealNoTerm0::~FuncSRealNoTerm0() {
@@ -65,8 +69,8 @@ Double_t FuncSRealNoTerm0::func(Double_t* _x, Double_t* par) {
 		    component->SetParameters(par);
 
 		    // Calculate term coefficient
-		    Double_t coefficient = Power(mu,n+1)*Power(E,-mu)/Factorial(n+1);
-			coefficient = coefficient / (1 - Power(E,-mu));
+		    Double_t coeffParams[2] = {mu, (Double_t)n};
+		    Double_t coefficient = coefficientN->EvalPar(nullptr, coeffParams);
 
 		    // Add component contribution
 			value += coefficient*component->EvalPar(_x, par);

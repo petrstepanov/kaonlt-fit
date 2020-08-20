@@ -40,6 +40,10 @@ FuncSReal::FuncSReal(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h), nPar(
 		TF1* termN = new TF1(termNName.Data(), funcTermN, &FuncTermN::func, xMin, xMax, nPar, "FuncTermN", "func");
 		components->Add(termN);
 	}
+
+	// Initialize coeficient formula
+	TString formulaName = TString::Format("formula_%d", timestamp->Get());
+	coefficientN = new TFormula(formulaName.Data(), "[mu]^[n]*e^(-[mu])/TMath::Factorial([n])");
 }
 
 FuncSReal::~FuncSReal() {
@@ -74,7 +78,8 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 		    component->SetParameters(par);
 
 		    // Calculate term coefficient
-		    Double_t coefficient = Power(mu,n)*Power(E,-mu)/Factorial(n);
+		    Double_t coeffParams[2] = {mu, (Double_t)n};
+		    Double_t coefficient = coefficientN->EvalPar(nullptr, coeffParams);
 
 		    // Add component contribution
 			value += coefficient*component->EvalPar(_x, par);
@@ -100,13 +105,13 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 //				integral+= coefficient*myIntegral;
 //			}
 			// Regular integral takes forever
-		    integral += coefficient*(component->Integral(xMin, xMax, 1E-6));
+		    // integral += coefficient*(component->Integral(xMin, xMax, 1E-6));
 		} else {
 			std::cout << "Error getting the component" << std::endl;
 		}
 	}
 
-	// Return normalized function value
-//	return value*(hist->Integral());
-	 return value/integral*(hist->Integral());
+	// Return function value
+	return value*(hist->Integral());
+	// return value/integral*(hist->Integral());
 }

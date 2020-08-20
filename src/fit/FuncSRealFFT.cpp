@@ -45,12 +45,18 @@ FuncSRealFFT::FuncSRealFFT(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h),
 
 		TF1Convolution* conv = new TF1Convolution(sIdealN, b, xMin, xMax);
 		// conv->SetExtraRange(0.5); // Screws up everything
+		// conv->SetNumConv(kTRUE);
+		// conv->SetRange(xMin, xMax);
 		conv->SetNofPointsFFT(Constants::getInstance()->parameters.convolutionBins);
 		TString termNName = TString::Format("term%d_%d", n, timestamp->Get());
 		TF1 *termN = new TF1(termNName.Data(),*conv, xMin, xMax, conv->GetNpar());
 
 		components->Add(termN);
 	}
+
+	// Initialize coeficient formula
+	TString formulaName = TString::Format("formula_%d", timestamp->Get());
+	coefficientN = new TFormula(formulaName.Data(), "[mu]^[n]*e^(-[mu])/TMath::Factorial([n])");
 }
 
 FuncSRealFFT::~FuncSRealFFT() {
@@ -83,8 +89,6 @@ Double_t FuncSRealFFT::func(Double_t* _x, Double_t* par) {
 	// xMax = xMax + delta;
 
 	// Evaluate sum coeficients for the last term
-	Double_t sumCoefficients = 0;
-
 	for (UInt_t n = 0; n <= components->LastIndex(); n++){
 		TF1* component = (TF1*)(components->At(n));
 		if (component){
@@ -93,16 +97,8 @@ Double_t FuncSRealFFT::func(Double_t* _x, Double_t* par) {
 		    else component->SetParameters(parForConvolution);
 
 		    // Calculate term coefficient
-		    Double_t coefficient;
-		    if (n < components->LastIndex()){
-		    	coefficient = Power(mu,n)*Power(E,-mu)/Factorial(n);
-		    	sumCoefficients += coefficient;
-		    	// std::cout << "coefficient=" << coefficient << std::endl;
-		    	// std::cout << "sumCoefficients=" << sumCoefficients << std::endl;
-		    }
-		    else {
-		    	coefficient = 1 - sumCoefficients;
-		    }
+		    Double_t coeffParams[2] = {mu, (Double_t)n};
+		    Double_t coefficient = coefficientN->EvalPar(nullptr, coeffParams);
 
 		    // Add component contribution
 			if (n==0) value += coefficient*component->EvalPar(_x, par);
@@ -132,9 +128,7 @@ Double_t FuncSRealFFT::func(Double_t* _x, Double_t* par) {
 		}
 	}
 
-
-
-	// Return normalized function value
+	// Return function value
 	// return value/integral*(hist->Integral());
 	return value*(hist->Integral());
 }

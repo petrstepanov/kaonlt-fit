@@ -9,6 +9,7 @@
 #define SRC_FIT_COMPONENTS_ABSCOMPONENTFUNC_H_
 
 #include <TList.h>
+#include <TFormula.h>
 
 class AbsComponentFunc {
 public:
@@ -17,6 +18,8 @@ public:
 
 	TList* getComponents();
 	TList* components;
+
+	TFormula* coefficientN;
 
 	virtual Double_t func(Double_t*, Double_t*)=0;
 };

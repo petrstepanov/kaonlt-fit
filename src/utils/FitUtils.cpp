@@ -78,15 +78,23 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t f
 	// RooAddPdf* term0Pdf = new RooAddPdf("term0Pdf", "Term 0 of the real PM function", RooArgList(*exp, *gauss), RooArgList(*Constants::w), kTRUE);
 
 	// TIP: cannot use the same function to convolute other components
+	RooRealVar* Q0 = (RooRealVar*) pars->getList()->find("Q_{0}");
+	RooRealVar* s0 = (RooRealVar*) pars->getList()->find("#sigma_{0}");
+	RooRealVar* Q1 = (RooRealVar*) pars->getList()->find("Q_{1}");
+	RooRealVar* s1 = (RooRealVar*) pars->getList()->find("#sigma_{1}");
+	RooRealVar* w  = (RooRealVar*) pars->getList()->find("w");
+	RooRealVar* a  = (RooRealVar*) pars->getList()->find("#alpha");
+	RooRealVar* mu = (RooRealVar*) pars->getList()->find("#mu");
+
 	if (useTerm0){
-		BPdf* term0 = new BPdf("term0", "Background function shifted", *observable, *(pars->Q0), *(pars->s0), *(pars->w), *(pars->a));
+		BPdf* term0 = new BPdf("term0", "Background function shifted", *observable, *Q0, *s0, *w, *a);
 		terms->add(*term0);
-		RooFormulaVar* coeff0 = new RooFormulaVar("coeff0", "Term 0 coefficient", "exp(-@0)", RooArgList(*(pars->mu)));
+		RooFormulaVar* coeff0 = new RooFormulaVar("coeff0", "Term 0 coefficient", "exp(-@0)", RooArgList(*mu));
 		coefficients->add(*coeff0);
 	}
 
 	// Init terms 1..N as convolution of the background and ideal PM response function
-	BPdf* bPdf = new BPdf("bPdf", "Background", *observable, *(pars->Q0), *(pars->s0), *(pars->w), *(pars->a));
+	BPdf* bPdf = new BPdf("bPdf", "Background", *observable, *Q0, *s0, *w, *a);
 	Int_t nTerms = Constants::getInstance()->parameters.termsNumber;
 	for (UInt_t n = 1; n < nTerms; n++){
 		// Instantiate N-th component PDF
@@ -96,24 +104,27 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t f
 
 		TString name = TString::Format("sIdeal%dPdf", n);
 		TString title = TString::Format("Term %d or the ideal PM function", n);
-		SIdealNPdf* sIdealNPdf = new SIdealNPdf(name.Data(), title.Data(), *observable, *(pars->Q1), *(pars->s1), *nVar);
+		SIdealNPdf* sIdealNPdf = new SIdealNPdf(name.Data(), title.Data(), *observable, *Q1, *s1, *nVar);
 
 		// Convolute ideal function with the background
 		TString nameConv = TString::Format("term%dPdf", n);
 		TString titleConv = TString::Format("Term %d or the real PM function", n);
 		RooFFTConvPdf* termNPdf = new RooFFTConvPdf(nameConv.Data(), titleConv.Data(), *observable, *sIdealNPdf, *bPdf);
-		// termNPdf->setBufferFraction(2);
 
 		// Set buffer fraction so tail not piles on the start
+		// termNPdf->setBufferFraction(2);
+
 		terms->add(*termNPdf);
 
 		TString nameC = TString::Format("coeff%d", n);
 		TString titleC = TString::Format("Term %d coefficient", n);
-		RooFormulaVar* coeffN = new RooFormulaVar(nameC.Data(), nameC.Data(), "exp(-@0)*@0^@1/TMath::Factorial(@1)", RooArgList(*(pars->mu),*nVar));
+		RooFormulaVar* coeffN = useTerm0 ?
+			new RooFormulaVar(nameC.Data(), nameC.Data(), "exp(-@0)*@0^@1/TMath::Factorial(@1)", RooArgList(*mu,*nVar)) :
+			new RooFormulaVar(nameC.Data(), nameC.Data(), "exp(-@0)*@0^@1/TMath::Factorial(@1)/(1-exp(-@0))", RooArgList(*mu,*nVar));
 
 		// Last coeficient do not include. Root will automatically set it to 1-sum (N-1)
-//		if (n != nTerms - 1) coefficients->add(*coeffN);
-		coefficients->add(*coeffN);
+		if (n != nTerms - 1) coefficients->add(*coeffN);
+		// coefficients->add(*coeffN);
 	}
 
 	// Sum terms of the real PM responce function
@@ -134,8 +145,12 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t f
 	// RooAbsReal::defaultIntegratorConfig()->setEpsRel(1e-6);
 
 	// Perform fit
-	// RooFitResult* fitResult = sRealPdf->fitTo(*data, RooFit::Save(kTRUE));
-	RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE), RooFit::NumCPU(RootUtils::getNumCpu()), RooFit::Range(fitMin, xMax));
+
+	UInt_t nFreeParameters = sRealPdf->getParameters(*data)->selectByAttrib("Constant", kFALSE)->getSize();
+	if (nFreeParameters > 0){
+		RooFitResult* fitResult = sRealPdf->fitTo(*data, RooFit::Save(kTRUE),  RooFit::NumCPU(RootUtils::getNumCpu()), fitMin!=0 ? RooFit::Range(fitMin, xMax) : RooCmdArg::none());
+		// RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE), RooFit::NumCPU(RootUtils::getNumCpu()), fitMin!=0 ? RooFit::Range(fitMin, xMax) : RooCmdArg::none());
+	}
 
 	// Chi2 fit - does not work because zero values
 	// RooChi2Var* chi2 = new RooChi2Var("#chi^{2}", "chi square", *sRealPdf, *data, kTRUE, 0, 0, RootUtils::getNumCpu());
@@ -155,7 +170,7 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t f
 
 	// Configure axis labels and look
 	GraphicsUtils::styleAxis(spectrumPlot->GetXaxis(), "ADC channel", 1.2, 0.02, kTRUE); // Title, Title offset, Label offset
-	GraphicsUtils::styleAxis(spectrumPlot->GetYaxis(), "Events", 1.1, 0.012, kTRUE);
+	GraphicsUtils::styleAxis(spectrumPlot->GetYaxis(), "Events", 1.3, 0.012, kTRUE);
 
 	// Plot data points
 	data->plotOn(spectrumPlot, RooFit::LineColor(kGray + 3), RooFit::MarkerSize(0.5), RooFit::Name("data"));
@@ -178,6 +193,7 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t f
 		pad = new TCanvas(padName.Data());
 	}
 	pad->SetBottomMargin(0.1);
+	pad->SetLeftMargin(0.12);
 
 	// Draw the plot
 	spectrumPlot->Draw();
@@ -289,27 +305,27 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 	TList* components = funcObject->getComponents();
 
 	// Calculate component integrals (not normalized to hist integral) and total components integral
-//	Double_t* componentIntegrals = new Double_t[nTerms];
-//	Double_t allComponentsIntegral = 0;
-//	for (UInt_t n=0; n<=components->LastIndex(); n++){
-//		TF1* component = (TF1*)(components->At(n));
-//		if (component){
-//			if (component->GetNpar() == 2*nFitPar){
-//				// If component is a convolution of two functions
-//				Double_t* convParameters = getConvFitParameters(fitParameters, nFitPar);
-//				component->SetParameters(convParameters);
-//			}
-//			else {
-//				// If component is a regular function
-//				component->SetParameters(fitParameters);
-//			}
-//			Double_t componentIntegral = component->Integral(xMin, xMax);
-//			componentIntegrals[n] = componentIntegral;
-//			allComponentsIntegral += componentIntegral;
-//			std::cout << "Component " << n << " integral: " << componentIntegrals[n] << std::endl;
-//		}
-//	}
-//	std::cout << "All components integral: " << allComponentsIntegral << std::endl;
+	Double_t* componentIntegrals = new Double_t[nTerms];
+	Double_t allComponentsIntegral = 0;
+	for (UInt_t n=0; n<=components->LastIndex(); n++){
+		TF1* component = (TF1*)(components->At(n));
+		if (component){
+			if (component->GetNpar() == 2*nFitPar){
+				// If component is a convolution of two functions
+				Double_t* convParameters = getConvFitParameters(fitParameters, nFitPar);
+				component->SetParameters(convParameters);
+			}
+			else {
+				// If component is a regular function
+				component->SetParameters(fitParameters);
+			}
+			Double_t componentIntegral = component->Integral(xMin, xMax, 1e-6);
+			componentIntegrals[n] = componentIntegral;
+			allComponentsIntegral += componentIntegral;
+			std::cout << "Component " << n << " integral: " << componentIntegrals[n] << std::endl;
+		}
+	}
+	std::cout << "All components integral: " << allComponentsIntegral << std::endl;
 
 	// Create and plot normalized component functions for every component
 	for (UInt_t n=0; n<=components->LastIndex(); n++){
