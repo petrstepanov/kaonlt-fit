@@ -21,7 +21,7 @@ public:
 	static TH1* getHistogramPaperFix();
 	static TH1* getHistogramPaperNoTerm0();
 	static TH1* getHistogramGenerated(FitParameters* params);
-
+	static TH1* getHistogramGeneratedNoTerm0(FitParameters* params);
 private:
 //	static TestSpectrum* instance;
 	static Int_t array[];

@@ -7,7 +7,9 @@
 
 #include "FitUtils.h"
 #include "../fit/FuncSReal.h"
+#include "../fit/FuncSRealNoTerm0.h"
 #include "../fit/FuncSRealFFT.h"
+#include "../fit/FuncSRealFFTNoTerm0.h"
 #include "../fit/components/FuncTerm0.h"
 #include "../fit/components/FuncTermN.h"
 #include "../roofit/Term0Pdf.h"
@@ -57,6 +59,8 @@ FitUtils::~FitUtils() {
 
 // Fit not goes, weird function raise to the right
 void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t fitMin, TVirtualPad* pad){
+	// Wait for the unique timestamp
+	gSystem->Sleep(1000);
 	TDatime* timestamp = new TDatime();
 
 	// Define channels axis (observable)
@@ -148,7 +152,10 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t f
 
 	UInt_t nFreeParameters = sRealPdf->getParameters(*data)->selectByAttrib("Constant", kFALSE)->getSize();
 	if (nFreeParameters > 0){
+		// Use fitTo for the KaonLT histagrams
 		RooFitResult* fitResult = sRealPdf->fitTo(*data, RooFit::Save(kTRUE),  RooFit::NumCPU(RootUtils::getNumCpu()), fitMin!=0 ? RooFit::Range(fitMin, xMax) : RooCmdArg::none());
+
+		// Use chi2 fit for test Bellamy histogram
 		// RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE), RooFit::NumCPU(RootUtils::getNumCpu()), fitMin!=0 ? RooFit::Range(fitMin, xMax) : RooCmdArg::none());
 	}
 
@@ -206,7 +213,8 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t f
 }
 
 void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject, Int_t fitMin, TVirtualPad* pad, Bool_t noTerm0){
-	gSystem->Sleep(100);
+	// Wait for the unique timestamp
+	gSystem->Sleep(1000);
 	TDatime* timestamp = new TDatime();
 
 	// Number of terms in the fit function
@@ -215,18 +223,13 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 	// Get list of ROOT parameters for single function
 	RooArgList* parameters = pars->getList();
 
-	// Instantiate fitting function
-	// NOTE: IWill experience memory leaks if define fit function
-	// inside fit function object class like this:
-	// fitFunction = new TF1("fitFunction", this, &FuncSRealOld::func, xMin, xMax, nPar, "FuncSRealOld", "func");
-	// Therefore we instantiate fit function outside of function object
-
 	// Update: to save memory and easier access the fit components we introduce
 	// AbsComponentFunction; it stores function components
 	Double_t xMin = hist->GetXaxis()->GetXmin();
 	Double_t xMax = hist->GetXaxis()->GetXmax();
 	TString funcName = TString::Format("func_%d", timestamp->Get());
-	TF1* func = new TF1(funcName.Data(), funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->getSize());
+	TF1* func = new TF1(funcName.Data(), funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->getSize(), "AbsComponentFunc", "func");
+	func->SetNpx(Constants::N_PX);
 
 	// Set function starting parameter values, names and limits
 	TIterator* it = parameters->createIterator();
@@ -239,13 +242,11 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 			func->SetParameter(i, parameter->getVal());
 			func->SetParLimits(i, parameter->getMin(), parameter->getMax());
 			// Double checking the parameter values
+
 			std::cout << "Parameter " << i << ": " << parameter->GetName() << " " << parameter->getVal() << std::endl;
 			i++;
 		}
 	}
-
-	// Set function points along x axis (for plotting)
-	func->SetNpx(1000);
 
 	// Set default integrator - very important!
 	// "GAUSS", "GAUSSLEGENDRE", "ADAPTIVE", "ADAPTIVESINGULAR", "NONADAPTIVE"
@@ -269,19 +270,32 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 		TString padName = TString::Format("canvas_%d", timestamp->Get());
 		pad = new TCanvas(padName.Data());
 	}
-	// canvas->SetLeftMargin(0.15);
-	// canvas->SetRightMargin(0.05);
+	// pad->SetLeftMargin(0.15);
+	// pad->SetRightMargin(0.05);
 
 
 	// Perform fit
 	RootUtils::startTimer();
-	hist->Fit(func, "V", "", fitMin); // Add range here
+	if (fitMin != 0){
+		hist->Fit(func, "V", "", fitMin); // Add range here
+	}
+	else {
+		hist->Fit(func, "V");
+	}
 	RootUtils::stopAndPrintTimer();
 
 	// Display fit parameters and chi^2 in statistis box
 	// https://root.cern.ch/doc/master/classTPaveStats.html#PS02
+
 	GraphicsUtils::setStatsFitOption(hist, pad, 112);
 	hist->Draw();
+
+	// If not fitting
+	// Trouble here - setting parameters - something with the memory!
+	// Double_t* parsArray = pars->getArray();
+	// func->SetParameters(parsArray);
+
+	// Draw fit function
 	func->Draw("SAME");
 
 	// Obtain function fit parameters
@@ -319,7 +333,7 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 				// If component is a regular function
 				component->SetParameters(fitParameters);
 			}
-			Double_t componentIntegral = component->Integral(xMin, xMax, 1e-6);
+			Double_t componentIntegral = component->Integral(xMin, xMax);
 			componentIntegrals[n] = componentIntegral;
 			allComponentsIntegral += componentIntegral;
 			std::cout << "Component " << n << " integral: " << componentIntegrals[n] << std::endl;
@@ -335,40 +349,32 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 			// and on the ratio of component integral to the all components integral ? lol just histogram events
 			// Double_t ratio = componentIntegrals[n]/allComponentsIntegral;
 			Double_t mu = fitParameters[6];		// number of photo-electrons
-			Double_t coefficient = 0;
 
 			// Account on the absence of the term 0
-			if (noTerm0) {
-				coefficient = pow(mu,n+1)*pow(TMath::E(),-mu)/TMath::Factorial(n+1);
-				coefficient = coefficient / (1-pow(TMath::E(),-mu));
-			}
-			else {
-				coefficient = pow(mu,n)*pow(TMath::E(),-mu)/TMath::Factorial(n);
-			}
+			TFormula* coeffFormula = funcObject->coefficientN;
+		    Double_t coeffParams[2] = {mu, (Double_t)n};
+		    Double_t coefficient = coeffFormula->EvalPar(nullptr, coeffParams);
 
-			TF1Normalize* normFunc = new TF1Normalize(component, coefficient*funcIntegral);
+		    TF1Normalize* normFunc = new TF1Normalize(component, coefficient*histIntegral); // TODO: funcIntegral
 			TString fName = TString::Format("%s_norm", component->GetName());
-			TF1* f;
+			TF1* f = new TF1(fName.Data(), normFunc, &TF1Normalize::func, xMin, xMax, component->GetNpar(), "TF1Normalize", "func");
 			if (component->GetNpar() == 2*nFitPar){
 				// If component is a convolution of two functions
-				f = new TF1(fName.Data(), normFunc, &TF1Normalize::func, xMin, xMax, nFitPar*2, "TF1Normalize", "func");
 				Double_t* convParameters = getConvFitParameters(fitParameters, nFitPar);
 				f->SetParameters(convParameters);
 			}
 			else {
 				// If component is a regular function
-				f = new TF1(fName.Data(), normFunc, &TF1Normalize::func, xMin, xMax, nFitPar, "TF1Normalize", "func");
 				f->SetParameters(fitParameters);
 			}
-			// f->SetParameters(fitParameters);
 			f->SetLineStyle(ELineStyle::kDashed);
-			f->SetNpx(200);
 			f->Draw("SAME");
 		} else {
 			std::cout << "Error getting the component " << n << std::endl;
 		}
 	}
 
+	// Align and scale statistics box
 	GraphicsUtils::alignStats(hist, pad);
 }
 
@@ -379,7 +385,12 @@ void FitUtils::fillHistogramFromFuncObject(TH1* hist, FitParameters* pars, AbsCo
 	// Get list of ROOT parameters for single function
 	RooArgList* parameters = pars->getList();
 
-	TF1* func = new TF1("func_fill", funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->getSize());
+	// Wait for the unique timestamp
+	gSystem->Sleep(1000);
+	TDatime* timestamp = new TDatime();
+
+	TString funcName = TString::Format("func_fill_%d", timestamp->Get());
+	TF1* func = new TF1(funcName.Data(), funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->getSize(), "AbsComponentFunc", "func");
 
 	// Set function starting parameter values, names and limits
 	TIterator* it = parameters->createIterator();
@@ -398,7 +409,7 @@ void FitUtils::fillHistogramFromFuncObject(TH1* hist, FitParameters* pars, AbsCo
 	}
 
 	hist->SetBinContent(1, 64000);
-	hist->FillRandom("func_fill", 64000);
+	hist->FillRandom(funcName.Data(), 64000);
 	hist->SetBinContent(1, hist->GetBinContent(1)-64000);
 }
 

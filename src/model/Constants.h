@@ -61,6 +61,8 @@ class Constants {
 	static const Int_t AMP_MIN;
 	static const Int_t AMP_MAX;
 
+	static const Int_t N_PX;
+
 	Parameters parameters;
     void parseParameters(int argc, char* argv[]);
 

@@ -25,23 +25,30 @@ FuncSRealFFT::FuncSRealFFT(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h),
 	// Since fitting functions are defined in the same class, we are passing this pointer
 	// TODO: is this ok that we are passing more variables than needed for bg and termN?
 	TDatime* timestamp = new TDatime();
+	Int_t nPx = Constants::N_PX;
 
 	// Instantiate terms of the real FuncSRealFFT
 	// Zero term has an uncertainty. Its approximate value is taken from (10)
 	FuncTerm0* funcTerm0 = new FuncTerm0();
 	TString term0Name = TString::Format("term0_%d", timestamp->Get());
 	TF1* term0 = new TF1(term0Name.Data(), funcTerm0, &FuncTerm0::func, xMin, xMax, nPar, "FuncTerm0", "func");
+	// https://root-forum.cern.ch/t/why-is-my-integral-zero/21999/4
+	term0->SetNpx(nPx);
 	components->Add(term0);
 
 	// Terms 1..N are background function covoluted wit the Ideal FuncSRealFFT function
 	FuncB* funcB = new FuncB();
 	TString bName = TString::Format("b_%d", timestamp->Get());
 	TF1* b = new TF1(bName.Data(), funcB, &FuncB::func, xMin, xMax, nPar, "FuncB", "func");
+	// https://root-forum.cern.ch/t/why-is-my-integral-zero/21999/4
+	b->SetNpx(nPx);
+
 	Int_t nMax = Constants::getInstance()->parameters.termsNumber;
 	for (UInt_t n=1; n < nMax; n++){
 		FuncSIdealN* funcSIdealN = new FuncSIdealN(n);
 		TString sIdealNName = TString::Format("sIdeal%d_%d", n, timestamp->Get());
 		TF1* sIdealN = new TF1(sIdealNName.Data(), funcSIdealN, &FuncSIdealN::func, xMin, xMax, nPar, "FuncSIdealN", "func");
+		sIdealN->SetNpx(nPx);
 
 		TF1Convolution* conv = new TF1Convolution(sIdealN, b, xMin, xMax);
 		// conv->SetExtraRange(0.5); // Screws up everything
@@ -50,6 +57,7 @@ FuncSRealFFT::FuncSRealFFT(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h),
 		conv->SetNofPointsFFT(Constants::getInstance()->parameters.convolutionBins);
 		TString termNName = TString::Format("term%d_%d", n, timestamp->Get());
 		TF1 *termN = new TF1(termNName.Data(),*conv, xMin, xMax, conv->GetNpar());
+		termN->SetNpx(nPx);
 
 		components->Add(termN);
 	}

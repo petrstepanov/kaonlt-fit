@@ -60,6 +60,8 @@ const Int_t Constants::CH_FIT_MAX_VAL = 2000;
 const Int_t Constants::AMP_MIN = 0;
 const Int_t Constants::AMP_MAX = 4096;
 
+const Int_t Constants::N_PX = 2048;
+
 // Parse command line parameters
 void Constants::parseParameters(int argc, char* argv[]){
 	// Print command line argumants

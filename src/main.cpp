@@ -108,7 +108,8 @@ int run(const char* fileName) {
 
 	if (fitType == FitType::root){
 		AbsComponentFunc* funcObject1 = new FuncSRealNoTerm0(pmt1HistFit);
-		FitUtils::doFit(pmt1HistFit, params, funcObject1, fitMin, pmtsFitCanvas->cd(1), kTRUE);
+		TVirtualPad* pad = pmtsFitCanvas->cd(1);
+		FitUtils::doFit(pmt1HistFit, params, funcObject1, fitMin, pad, kTRUE);
 		AbsComponentFunc* funcObject2 = new FuncSRealNoTerm0(pmt2HistFit);
 		FitUtils::doFit(pmt2HistFit, params, funcObject2, fitMin, pmtsFitCanvas->cd(2), kTRUE);
 	} else if (fitType == FitType::rootConv){
@@ -127,7 +128,7 @@ int run(const char* fileName) {
 	else if (fitType == FitType::rootConv) fitSuffix = "rootconv";
 	else fitSuffix = "roofit";
 	TString pngFitFilePath = TString::Format("%s-fit-tile%d-terms%d-%s.png", fileName, Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber, fitSuffix);
-	pmtsFitCanvas->SaveAs(pngFitFilePath.Data());
+	// pmtsFitCanvas->SaveAs(pngFitFilePath.Data());
 
 	return 0;
 }
@@ -177,35 +178,35 @@ int testFillRandom(){
 	FitUtils::doFit(hist2, params, funcObjectFFT);
 
 	// Fit histogram with RooFit with Convolution
-	TH1* hist3 = HistUtils::cloneHistogram(h, "hist_conv_roofit");
-	FitUtils::doRooFit(hist3, params, kTRUE);
+	// TH1* hist3 = HistUtils::cloneHistogram(h, "hist_conv_roofit");
+	// FitUtils::doRooFit(hist3, params, kTRUE);
 
 	return 0;
 }
 
-//int testNoTerm0(){
-//	// Get digitized histogram from paper
-//	TH1* h = TestSpectrum::getHistogramPaperNoTerm0();
-//
-//	// Retreive parameters for test Bellamy histogram
-//	FitParameters* params = new FitParameters(ParametersType::forBellamyHist);
-//
-//	// Fit histogram with ROOT Fit
-//	TH1* hist1 = HistUtils::cloneHistogram(h, "hist");
-//	AbsComponentFunc* funcObject = new FuncSRealNoTerm0(hist1);
-//	FitUtils::doFit(hist1, params, funcObject);
-//
-//	// Fit histogram with ROOT Fit with Convolution
-//	TH1* hist2 = HistUtils::cloneHistogram(h, "hist_conv");
-//	AbsComponentFunc* funcObjectFFT = new FuncSRealFFTNoTerm0(hist2);
-//	FitUtils::doFit(hist2, params, funcObjectFFT);
-//
-//	// Fit histogram with RooFit with Convolution
-//	// TH1* hist3 = HistUtils::cloneHistogram(h, "hist_conv_roofit");
-//	// FitUtils::doRooFit(hist3, params, kFALSE);
-//
-//	return 0;
-//}
+int testNoTerm0(){
+	// Retreive parameters for test Bellamy histogram
+	FitParameters* params = new FitParameters(ParametersType::forBellamyHist);
+
+	// Instantiate histogram
+	TH1* h = TestSpectrum::getHistogramGeneratedNoTerm0(params);
+
+	// Fit histogram with ROOT Fit
+	TH1* hist1 = HistUtils::cloneHistogram(h, "hist_no_term0");
+	AbsComponentFunc* funcObject = new FuncSRealNoTerm0(hist1);
+	FitUtils::doFit(hist1, params, funcObject);
+
+	// Fit histogram with ROOT Fit with Convolution
+	TH1* hist2 = HistUtils::cloneHistogram(h, "hist_no_term0_conv");
+	AbsComponentFunc* funcObjectFFT = new FuncSRealFFTNoTerm0(hist2);
+	FitUtils::doFit(hist2, params, funcObjectFFT);
+
+	// Fit histogram with RooFit with Convolution
+	// TH1* hist3 = HistUtils::cloneHistogram(h, "hist_no_term0_conv_roofit");
+	// FitUtils::doRooFit(hist3, params, kFALSE);
+
+	return 0;
+}
 
 int main(int argc, char* argv[]) {
 	// Create ROOT application
@@ -224,11 +225,19 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
+	// Warning in <TF1::IntegralOneDim>: Error found in integrating function term11_1714168353 in [10.000000,2010.000000] using AdaptiveSingular. Result = 3818596.214063 +/- 453.771721  - status = 18
+	// Info in <TF1::IntegralOneDim>: 		Function Parameters = { p0 =  220.198026 , p1 =  0.044300 , p2 =  165.000000 , p3 =  63.506987 , p4 =  0.700397 , p5 =  0.027247 , p6 =  0.500000 }
+	ROOT::Math::IntegratorOneDimOptions::SetDefaultRelTolerance(1.E-4); // ~= 453/3818596
+
 	// Test fitting function on the digitized test histogram
 	// testDigitized();
 	// Test fitting function on the filled random test histogram
 	// testFillRandom();
 	// testNoTerm0();
+
+	// NOTE: ROOT default "kADAPTIVESINGULAR" integrator crashes when integrating FuncSRealNoTerm0...?
+	// Even when we are not fitting at all, just drawing the function and its components
+	// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("Gauss");
 
 	// Iterate through input files and run analysis
 	for (TObject* object : *(constants->parameters.inputFiles)) {
