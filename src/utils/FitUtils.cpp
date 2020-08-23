@@ -241,6 +241,9 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 			func->SetParName(i, parameter->GetName());
 			func->SetParameter(i, parameter->getVal());
 			func->SetParLimits(i, parameter->getMin(), parameter->getMax());
+			if (parameter->isConstant()){
+				func->FixParameter(i, parameter->getVal());
+			}
 			// Double checking the parameter values
 
 			std::cout << "Parameter " << i << ": " << parameter->GetName() << " " << parameter->getVal() << std::endl;

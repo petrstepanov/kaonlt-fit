@@ -138,6 +138,6 @@ Double_t FuncSRealFFT::func(Double_t* _x, Double_t* par) {
 
 	// Return function value
 	// return value/integral*(hist->Integral());
-	return value*(hist->Integral());
+	return value*(hist->Integral())*(hist->GetXaxis()->GetBinWidth(1));
 }
 

@@ -21,6 +21,7 @@
 #include <TObjString.h>
 #include <RooRealVar.h>
 #include "../utils/StringUtils.h"
+#include <TMath.h>
 
 
 Constants::Constants(){
@@ -61,6 +62,8 @@ const Int_t Constants::AMP_MIN = 0;
 const Int_t Constants::AMP_MAX = 4096;
 
 const Int_t Constants::N_PX = 1024;
+
+const Double_t Constants::SIGMA_TO_FWHM = TMath::Sqrt(8*TMath::Log(2));
 
 // Parse command line parameters
 void Constants::parseParameters(int argc, char* argv[]){
@@ -109,9 +112,10 @@ void Constants::parseParameters(int argc, char* argv[]){
 			parameters.inputFiles->Add(fileName);
 		}
 		else if (pair.first == "fit"){
+			pair.second.ToLower();
 			if (pair.second == "root"){
 				parameters.fitType = FitType::root;
-			} else if (pair.second == "rootconv" || pair.second == "rootConv"){
+			} else if (pair.second == "rootfft"){
 				parameters.fitType = FitType::rootConv;
 			} else {
 				parameters.fitType = FitType::rooFit;

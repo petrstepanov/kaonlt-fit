@@ -82,6 +82,8 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 			// Set parameters
 		    component->SetParameters(par);
 
+		    // TODO: last component coeff (sum - 1)
+
 		    // Calculate term coefficient
 		    Double_t coeffParams[2] = {mu, (Double_t)n};
 		    Double_t coefficient = coefficientN->EvalPar(nullptr, coeffParams);
@@ -118,6 +120,6 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 	}
 
 	// Return function value
-	return value*(hist->Integral());
+	return value*(hist->Integral())*(hist->GetXaxis()->GetBinWidth(1));
 	// return value/integral*(hist->Integral());
 }

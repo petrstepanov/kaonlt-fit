@@ -30,20 +30,20 @@ FuncSRealFFTNoTerm0::FuncSRealFFTNoTerm0(TH1* h, Int_t nParVal) : AbsComponentFu
 	FuncB* funcB = new FuncB();
 	TString bName = TString::Format("b_%d", timestamp->Get());
 	TF1* b = new TF1(bName.Data(), funcB, &FuncB::func, xMin, xMax, nPar, "FuncB", "func");
-	b->SetNpx(nPx);
+	// b->SetNpx(nPx);
 
 	Int_t nMax = Constants::getInstance()->parameters.termsNumber;
 	for (UInt_t n=1; n < nMax; n++){
 		FuncSIdealN* funcSIdealN = new FuncSIdealN(n);
 		TString sIdealNName = TString::Format("sIdeal%d_%d", n, timestamp->Get());
 		TF1* sIdealN = new TF1(sIdealNName.Data(), funcSIdealN, &FuncSIdealN::func, xMin, xMax, nPar, "FuncSIdealN", "func");
-		sIdealN->SetNpx(nPx);
+		// sIdealN->SetNpx(nPx);
 
 		TF1Convolution* conv = new TF1Convolution(sIdealN, b, xMin, xMax);
-		conv->SetNofPointsFFT(Constants::getInstance()->parameters.convolutionBins);
+		// conv->SetNofPointsFFT(Constants::getInstance()->parameters.convolutionBins);
 		TString termNName = TString::Format("term%d_%d", n, timestamp->Get());
 		TF1 *termN = new TF1(termNName.Data(),*conv, xMin, xMax, conv->GetNpar());
-		termN->SetNpx(nPx);
+		// termN->SetNpx(nPx);
 
 		components->Add(termN);
 	}
@@ -91,5 +91,5 @@ Double_t FuncSRealFFTNoTerm0::func(Double_t* _x, Double_t* par) {
 		}
 	}
 
-	return value*(hist->Integral());
+	return value*(hist->Integral())*(hist->GetXaxis()->GetBinWidth(1));
 }

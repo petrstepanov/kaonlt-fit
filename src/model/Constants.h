@@ -63,6 +63,8 @@ class Constants {
 
 	static const Int_t N_PX;
 
+	static const Double_t SIGMA_TO_FWHM;
+
 	Parameters parameters;
     void parseParameters(int argc, char* argv[]);
 

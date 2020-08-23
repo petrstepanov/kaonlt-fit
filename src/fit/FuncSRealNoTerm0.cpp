@@ -110,6 +110,6 @@ Double_t FuncSRealNoTerm0::func(Double_t* _x, Double_t* par) {
 	}
 
 	// Return function value
-	return value*(hist->Integral());
+	return value*(hist->Integral())*(hist->GetXaxis()->GetBinWidth(1));
 	// return value/integral*(hist->Integral());
 }

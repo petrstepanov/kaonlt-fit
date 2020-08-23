@@ -245,8 +245,8 @@ int main(int argc, char* argv[]) {
 	// ROOT::Math::MinimizerOptions::SetDefaultTolerance(1); // Default 1.E-2
 	// ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(1.E4);
 
-	// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Migrad"); // Default
-	ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Simplex");
+	ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Migrad"); // Default
+	// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Simplex");
 
 	// The probelm was that MIGRAD was unable to do a correct error estimates for 60 parameters although it was displaying a perfect fit. With Minosit takes more time but it does a good error estimate.
 
