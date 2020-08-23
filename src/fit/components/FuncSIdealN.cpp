@@ -35,7 +35,7 @@ Double_t FuncSIdealN::func(Double_t* _x, Double_t* par) {
 			1/(Power(E,Power(-(n*Q1) + x,2)/(2.*n*Power(s1,2)))*Sqrt(n)*Sqrt(2*Pi)*s1)
 	; // end mathematica code
 
-	return value;
+	return value < 0 ? 0 : value;
 }
 
 Double_t FuncSIdealN::getIntegral(Double_t xMin, Double_t xMax, Double_t* par){

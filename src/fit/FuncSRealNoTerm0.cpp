@@ -34,6 +34,7 @@ FuncSRealNoTerm0::FuncSRealNoTerm0(TH1* h, Int_t nParVal) : AbsComponentFunc(), 
 		TF1* termN = new TF1(termNName.Data(), funcTermN, &FuncTermN::func, xMin, xMax, nPar, "FuncTermN", "func");
 		// https://root-forum.cern.ch/t/why-is-my-integral-zero/21999/4
 		termN->SetNpx(nPx);
+		// termN->SetNormalized(kTRUE);
 		components->Add(termN);
 	}
 

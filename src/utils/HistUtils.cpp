@@ -96,6 +96,13 @@ void HistUtils::resetHistogram(TH1* hist){
 	}
 }
 
+void HistUtils::normalizeHistogram(TH1* hist){
+	Double_t integral = hist->Integral();
+	for (Int_t i = 1; i <= hist->GetNbinsX(); i++){
+		hist->SetBinContent(i, hist->GetBinContent(i)/integral);
+	}
+}
+
 void HistUtils::removeHistogramZeros(TH1* hist){
 	for (Int_t i = 1; i <= hist->GetNbinsX(); i++){
 		if (hist->GetBinContent(i)==0){

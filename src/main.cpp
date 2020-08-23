@@ -44,11 +44,11 @@ int run(const char* fileName) {
 
 	// Prepare histograms for the PMT projection spectra
 	TString pmt1HistTitle = TString::Format("PMT1 profile at tilel=%d", Constants::getInstance()->parameters.tileProfile);
-	TH1* pmt1Hist = new TH1F("pmt1Hist", pmt1HistTitle, Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
+	TH1* pmt1Hist = new TH1D("pmt1Hist", pmt1HistTitle, Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
 	pmt1Hist->GetXaxis()->SetTitle("Channel (ch_1)");
 	pmt1Hist->GetYaxis()->SetTitle("Counts");
 	TString pmt2HistTitle = TString::Format("PMT2 profile at tiler=%d", Constants::getInstance()->parameters.tileProfile);
-	TH1* pmt2Hist = new TH1F("pmt2Hist", pmt2HistTitle, Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
+	TH1* pmt2Hist = new TH1D("pmt2Hist", pmt2HistTitle, Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
 	pmt2Hist->GetXaxis()->SetTitle("Channel (ch_2)");
 	pmt2Hist->GetYaxis()->SetTitle("Counts");
 
@@ -79,6 +79,7 @@ int run(const char* fileName) {
 	// Trim PMT spectra to remove zero bin noise
 	// Select min channel value to skip the stretched noise bin
 	Int_t chMinVal = 1 * (Constants::CH_MAX_VAL - Constants::CH_MIN_VAL) / Constants::CH_BINS + 5;
+	chMinVal = 150;
 	TH1* pmt1HistFit = HistUtils::cutHistogram(pmt1Hist, chMinVal, Constants::CH_FIT_MAX_VAL);
 	TH1* pmt2HistFit = HistUtils::cutHistogram(pmt2Hist, chMinVal, Constants::CH_FIT_MAX_VAL);
 
@@ -107,9 +108,10 @@ int run(const char* fileName) {
 	Int_t fitMin = 0;
 
 	if (fitType == FitType::root){
+		// HistUtils::normalizeHistogram(pmt1HistFit);
 		AbsComponentFunc* funcObject1 = new FuncSRealNoTerm0(pmt1HistFit);
-		TVirtualPad* pad = pmtsFitCanvas->cd(1);
-		FitUtils::doFit(pmt1HistFit, params, funcObject1, fitMin, pad, kTRUE);
+		FitUtils::doFit(pmt1HistFit, params, funcObject1, fitMin, pmtsFitCanvas->cd(1), kTRUE);
+		// HistUtils::normalizeHistogram(pmt2HistFit);
 		AbsComponentFunc* funcObject2 = new FuncSRealNoTerm0(pmt2HistFit);
 		FitUtils::doFit(pmt2HistFit, params, funcObject2, fitMin, pmtsFitCanvas->cd(2), kTRUE);
 	} else if (fitType == FitType::rootConv){
@@ -128,7 +130,7 @@ int run(const char* fileName) {
 	else if (fitType == FitType::rootConv) fitSuffix = "rootconv";
 	else fitSuffix = "roofit";
 	TString pngFitFilePath = TString::Format("%s-fit-tile%d-terms%d-%s.png", fileName, Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber, fitSuffix);
-	// pmtsFitCanvas->SaveAs(pngFitFilePath.Data());
+	pmtsFitCanvas->SaveAs(pngFitFilePath.Data());
 
 	return 0;
 }
@@ -227,7 +229,7 @@ int main(int argc, char* argv[]) {
 
 	// Warning in <TF1::IntegralOneDim>: Error found in integrating function term11_1714168353 in [10.000000,2010.000000] using AdaptiveSingular. Result = 3818596.214063 +/- 453.771721  - status = 18
 	// Info in <TF1::IntegralOneDim>: 		Function Parameters = { p0 =  220.198026 , p1 =  0.044300 , p2 =  165.000000 , p3 =  63.506987 , p4 =  0.700397 , p5 =  0.027247 , p6 =  0.500000 }
-	ROOT::Math::IntegratorOneDimOptions::SetDefaultRelTolerance(1.E-4); // ~= 453/3818596
+	// ROOT::Math::IntegratorOneDimOptions::SetDefaultRelTolerance(1.E-4);
 
 	// Test fitting function on the digitized test histogram
 	// testDigitized();
@@ -237,8 +239,18 @@ int main(int argc, char* argv[]) {
 
 	// NOTE: ROOT default "kADAPTIVESINGULAR" integrator crashes when integrating FuncSRealNoTerm0...?
 	// Even when we are not fitting at all, just drawing the function and its components
-	// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("Gauss");
+	// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("GAUSSLEGENDRE");
 
+	// Abnormal termination of minimization
+	// ROOT::Math::MinimizerOptions::SetDefaultTolerance(1); // Default 1.E-2
+	// ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(1.E4);
+
+	// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Migrad"); // Default
+	ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Simplex");
+
+	// The probelm was that MIGRAD was unable to do a correct error estimates for 60 parameters although it was displaying a perfect fit. With Minosit takes more time but it does a good error estimate.
+
+	// ROOT::Math::IntegratorOneDimOptions:: ROOT::Math::Integrator GSLIntegrator(double absTol = 1.0000000000000001E-9, double relTol = 9.9999999999999995E-7, size_t size = 1000)
 	// Iterate through input files and run analysis
 	for (TObject* object : *(constants->parameters.inputFiles)) {
 		if (TObjString* objString = dynamic_cast<TObjString*>(object)){

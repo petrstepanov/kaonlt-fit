@@ -264,7 +264,7 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 	//	minimizer->SetTolerance(0.001);
 	//	minimizer->SetPrintLevel(1);
 
-	//	ROOT::Math::MinimizerOptions::SetDefaultStrategy(0);
+	//	ROOT::Math2::MinimizerOptions::SetDefaultStrategy(0);
 
 	if (!pad){
 		TString padName = TString::Format("canvas_%d", timestamp->Get());
@@ -277,23 +277,17 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 	// Perform fit
 	RootUtils::startTimer();
 	if (fitMin != 0){
-		hist->Fit(func, "V", "", fitMin); // Add range here
+		hist->Fit(func, "V", "", fitMin);
 	}
 	else {
-		hist->Fit(func, "V");
+		hist->Fit(func, "V"); // NOTE: "W" parameter - weird chi2 Value, fit Terminates.
 	}
 	RootUtils::stopAndPrintTimer();
 
 	// Display fit parameters and chi^2 in statistis box
 	// https://root.cern.ch/doc/master/classTPaveStats.html#PS02
-
 	GraphicsUtils::setStatsFitOption(hist, pad, 112);
 	hist->Draw();
-
-	// If not fitting
-	// Trouble here - setting parameters - something with the memory!
-	// Double_t* parsArray = pars->getArray();
-	// func->SetParameters(parsArray);
 
 	// Draw fit function
 	func->Draw("SAME");
@@ -304,14 +298,14 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 	func->GetParameters(fitParameters);
 
 	// Print obtained parameters
-	// std::cout << "Obtained parameters:" << std::endl;
-	// for (UInt_t i=0; i < nFitPar; i++){
-	// 	std::cout << "Parameter " << i << ": " << fitParameters[i] << std::endl;
-	// }
+	std::cout << "Obtained parameters:" << std::endl;
+	for (UInt_t i=0; i < nFitPar; i++){
+		std::cout << "Parameter " << i << ": " << fitParameters[i] << std::endl;
+	}
 
 	// Print histogram and fitting function integrals
-	Double_t histIntegral = hist->Integral(xMin, xMax);
-	Double_t funcIntegral = func->Integral(xMin, xMax);
+	Double_t histIntegral = hist->Integral();
+	Double_t funcIntegral = func->Integral(xMin, xMax, 1.e-3);
 	std::cout << "TH1 hist integral: " << histIntegral << std::endl;
 	std::cout << "TF1 func integral: " << funcIntegral << std::endl;
 
@@ -333,7 +327,7 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 				// If component is a regular function
 				component->SetParameters(fitParameters);
 			}
-			Double_t componentIntegral = component->Integral(xMin, xMax);
+			Double_t componentIntegral = component->Integral(xMin, xMax, 1.e-3);
 			componentIntegrals[n] = componentIntegral;
 			allComponentsIntegral += componentIntegral;
 			std::cout << "Component " << n << " integral: " << componentIntegrals[n] << std::endl;

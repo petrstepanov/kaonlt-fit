@@ -29,6 +29,8 @@ Double_t FuncTermN::func(Double_t* _x, Double_t* par) {
 	Double_t a  = par[5];		// coefficient of the exponential decrease of the type II background
 	Double_t mu = par[6];		// number of photo-electrons
 
+	Double_t y = _x[0];
+
 	// Calculate function value
 	Double_t value = // begin mathematica code from "/mathematica/termN.nb"
 // With coefficients:
@@ -43,14 +45,21 @@ Double_t FuncTermN::func(Double_t* _x, Double_t* par) {
 //			        (2.*Power(E,a*(-Q0 - n*Q1 - a*n*Power(s1,2) + x)))))/
 //			   (Power(E,mu)*Factorial(n))
 
-// Without coefficient
+// Without coefficient from Paper
 			(1 - w)/(Power(E,Power(-Q0 - n*Q1 + x,2)/(2.*n*Power(s1,2)))*Sqrt(n)*Sqrt(2*Pi)*s1) +
 			   (a*w*(Erf(Abs(-(n*Q1) - a*n*Power(s1,2))/(Sqrt(2)*Sqrt(n)*s1)) +
 			        Erf(Abs(-Q0 - n*Q1 - a*n*Power(s1,2) + x)/(Sqrt(2)*Sqrt(n)*s1))*Sign(-Q0 - n*Q1 - a*n*Power(s1,2) + x)))/
 			    (2.*Power(E,a*(-Q0 - n*Q1 - a*n*Power(s1,2) + x)))
+
+// With Coefficient from Mathematica convolution
+//			((1 - w)/(Power(E,Power(Q0 + n*Q1 - y,2)/(2.*(Power(s0,2) + n*Power(s1,2))))*s0*Sqrt(Power(s0,-2) + 1/(n*Power(s1,2)))) +
+//			     (a*Power(E,(a*(2*Q0 + 2*n*Q1 + a*n*Power(s1,2) - 2*y))/2.)*Sqrt(Pi/2.)*w*(1 - Erf((Sqrt(1/(n*Power(s1,2)))*(n*(Q1 + a*Power(s1,2)) - y))/Sqrt(2)) -
+//			          (Sqrt(Power(s1,-2))*(Q0 + n*(Q1 + a*Power(s1,2)) - y)*Erf(Sqrt(Power(Q0 + n*(Q1 + a*Power(s1,2)) - y,2)/(n*Power(s1,2)))/Sqrt(2)))/Sqrt(Power(Q0 + n*(Q1 + a*Power(s1,2)) - y,2)/Power(s1,2)) +
+//			          (Sqrt(Power(s1,-2))*(n*(Q1 + a*Power(s1,2)) - y)*Erf(Sqrt(Power(-(n*(Q1 + a*Power(s1,2))) + y,2)/(n*Power(s1,2)))/Sqrt(2)))/Sqrt(Power(-(n*(Q1 + a*Power(s1,2))) + y,2)/Power(s1,2))))/
+//			      Sqrt(1/(n*Power(s1,2))))/(Sqrt(n)*Sqrt(2*Pi)*s1)
 	; // end mathematica code
 
-	return value;
+	return value < 0 ? 0 : value;
 }
 
 Double_t FuncTermN::getIntegral(Double_t xMin, Double_t xMax, Double_t* par){

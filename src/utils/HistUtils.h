@@ -28,6 +28,7 @@ public:
 	static TH1* cutHistogram(TH1* hist, Double_t xMin, Double_t xMax);
 	static TH1* cloneHistogram(TH1*, const char*, const char* = 0);
 	static void resetHistogram(TH1*);
+	static void normalizeHistogram(TH1*);
 	static void removeHistogramZeros(TH1*);
 	static void increaseBinContent(TH1* hist, Int_t bin);
     static Chi2Struct getChi2(TH1*, RooCurve*, RooAbsPdf*);
