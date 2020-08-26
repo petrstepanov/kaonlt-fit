@@ -117,8 +117,10 @@ void Constants::parseParameters(int argc, char* argv[]){
 				parameters.fitType = FitType::root;
 			} else if (pair.second == "rootfft"){
 				parameters.fitType = FitType::rootConv;
-			} else {
+			} else if (pair.second == "roofit"){
 				parameters.fitType = FitType::rooFit;
+			} else {
+				parameters.fitType = FitType::test;
 			}
 		}
 		else if (pair.first == "params-filename"){

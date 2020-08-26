@@ -79,16 +79,9 @@ int run(const char* fileName) {
 	// Trim PMT spectra to remove zero bin noise
 	// Select min channel value to skip the stretched noise bin
 	Int_t chMinVal = 1 * (Constants::CH_MAX_VAL - Constants::CH_MIN_VAL) / Constants::CH_BINS + 5;
-	chMinVal = 150;
+	// chMinVal = 150;
 	TH1* pmt1HistFit = HistUtils::cutHistogram(pmt1Hist, chMinVal, Constants::CH_FIT_MAX_VAL);
 	TH1* pmt2HistFit = HistUtils::cutHistogram(pmt2Hist, chMinVal, Constants::CH_FIT_MAX_VAL);
-
-	// Remove histogram zero values for chi2 fit
-	// HistUtils::removeHistogramZeros(pmt1HistFit);
-	// HistUtils::removeHistogramZeros(pmt2HistFit);
-
-	// TCanvas* c = new TCanvas("c");
-	// pmt1HistFit->Draw();
 
 	// Fit and plot PMT spectra
 	FitType fitType = Constants::getInstance()->parameters.fitType;
@@ -108,10 +101,8 @@ int run(const char* fileName) {
 	Int_t fitMin = 0;
 
 	if (fitType == FitType::root){
-		// HistUtils::normalizeHistogram(pmt1HistFit);
 		AbsComponentFunc* funcObject1 = new FuncSRealNoTerm0(pmt1HistFit);
 		FitUtils::doFit(pmt1HistFit, params, funcObject1, fitMin, pmtsFitCanvas->cd(1), kTRUE);
-		// HistUtils::normalizeHistogram(pmt2HistFit);
 		AbsComponentFunc* funcObject2 = new FuncSRealNoTerm0(pmt2HistFit);
 		FitUtils::doFit(pmt2HistFit, params, funcObject2, fitMin, pmtsFitCanvas->cd(2), kTRUE);
 	} else if (fitType == FitType::rootConv){
@@ -158,16 +149,6 @@ int testFillRandom(){
 	// Instantiate histogram
 	// TH1* h = TestSpectrum::getHistogramPaperFix();
 	TH1* h = TestSpectrum::getHistogramGenerated(params);
-	// HistUtils::removeHistogramZeros(h);
-
-	// TF1 integral for FuncSReal not matches TH1 integral...
-	// ROOT::Math::IntegratorOneDimOptions::SetDefaultAbsTolerance(1E-3);
-	// ROOT::Math::IntegratorOneDimOptions::SetDefaultRelTolerance(1E-3);
-	// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("Gauss");
-	// ROOT::Math::IntegratorOneDimOptions::SetDefaultNPoints(n);
-
-	// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
-	// ROOT::Math::MinimizerOptions::SetDefaultTolerance(1.E-3);
 
 	// Fit histogram with ROOT Fit
 	TH1* hist1 = HistUtils::cloneHistogram(h, "hist");
@@ -180,8 +161,8 @@ int testFillRandom(){
 	FitUtils::doFit(hist2, params, funcObjectFFT);
 
 	// Fit histogram with RooFit with Convolution
-	// TH1* hist3 = HistUtils::cloneHistogram(h, "hist_conv_roofit");
-	// FitUtils::doRooFit(hist3, params, kTRUE);
+	TH1* hist3 = HistUtils::cloneHistogram(h, "hist_conv_roofit");
+	FitUtils::doRooFit(hist3, params, kTRUE);
 
 	return 0;
 }
@@ -204,8 +185,8 @@ int testNoTerm0(){
 	FitUtils::doFit(hist2, params, funcObjectFFT);
 
 	// Fit histogram with RooFit with Convolution
-	// TH1* hist3 = HistUtils::cloneHistogram(h, "hist_no_term0_conv_roofit");
-	// FitUtils::doRooFit(hist3, params, kFALSE);
+	TH1* hist3 = HistUtils::cloneHistogram(h, "hist_no_term0_conv_roofit");
+	FitUtils::doRooFit(hist3, params, kFALSE);
 
 	return 0;
 }
@@ -234,27 +215,40 @@ int main(int argc, char* argv[]) {
 	// Test fitting function on the digitized test histogram
 	// testDigitized();
 	// Test fitting function on the filled random test histogram
-	// testFillRandom();
-	// testNoTerm0();
+	if (Constants::getInstance()->parameters.fitType == FitType::test){
+		testFillRandom();
+		testNoTerm0();
+	}
+	else {
+		// NOTE: ROOT default "kADAPTIVESINGULAR" integrator crashes when integrating FuncSRealNoTerm0...?
+		// Even when we are not fitting at all, just drawing the function and its components
+		// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("GAUSSLEGENDRE");
 
-	// NOTE: ROOT default "kADAPTIVESINGULAR" integrator crashes when integrating FuncSRealNoTerm0...?
-	// Even when we are not fitting at all, just drawing the function and its components
-	// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("GAUSSLEGENDRE");
+		// TF1 integral for FuncSReal not matches TH1 integral...
+		// ROOT::Math::IntegratorOneDimOptions::SetDefaultAbsTolerance(1E-3);
+		// ROOT::Math::IntegratorOneDimOptions::SetDefaultRelTolerance(1E-3);
+		// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("Gauss");
+		// ROOT::Math::IntegratorOneDimOptions::SetDefaultNPoints(n);
 
-	// Abnormal termination of minimization
-	// ROOT::Math::MinimizerOptions::SetDefaultTolerance(1); // Default 1.E-2
-	// ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(1.E4);
+		// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
+		// ROOT::Math::MinimizerOptions::SetDefaultTolerance(1.E-3);
 
-	ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Migrad"); // Default
-	// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Simplex");
+		// Abnormal termination of minimization
+		// ROOT::Math::MinimizerOptions::SetDefaultTolerance(1); // Default 1.E-2
+		// ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(1.E4);
 
-	// The probelm was that MIGRAD was unable to do a correct error estimates for 60 parameters although it was displaying a perfect fit. With Minosit takes more time but it does a good error estimate.
+		// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Migrad"); // Default
+		// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Simplex");
 
-	// ROOT::Math::IntegratorOneDimOptions:: ROOT::Math::Integrator GSLIntegrator(double absTol = 1.0000000000000001E-9, double relTol = 9.9999999999999995E-7, size_t size = 1000)
-	// Iterate through input files and run analysis
-	for (TObject* object : *(constants->parameters.inputFiles)) {
-		if (TObjString* objString = dynamic_cast<TObjString*>(object)){
-			run(objString->GetString());
+		// The probelm was that MIGRAD was unable to do a correct error estimates for 60 parameters although it was displaying a perfect fit. With Minosit takes more time but it does a good error estimate.
+
+		// ROOT::Math::IntegratorOneDimOptions:: ROOT::Math::Integrator GSLIntegrator(double absTol = 1.0000000000000001E-9, double relTol = 9.9999999999999995E-7, size_t size = 1000)
+
+		// Iterate through input files and run analysis
+		for (TObject* object : *(constants->parameters.inputFiles)) {
+			if (TObjString* objString = dynamic_cast<TObjString*>(object)){
+				run(objString->GetString());
+			}
 		}
 	}
 

@@ -5,7 +5,15 @@ Double_t Sqrt(Double_t x){
 	return sqrt(x);
 }
 
+LongDouble_t SqrtLong(LongDouble_t x){
+	return sqrt(x);
+}
+
 Double_t Power(Double_t x, Double_t y){
+	return pow(x,y);
+}
+
+LongDouble_t PowerLong(LongDouble_t x, LongDouble_t y){
 	return pow(x,y);
 }
 
@@ -19,6 +27,10 @@ Int_t UnitStep(Double_t x){
 
 Double_t Erf(Double_t x){
 	return TMath::Erf(x);
+}
+
+LongDouble_t ErfLong(LongDouble_t x){
+	return erf(x);
 }
 
 Double_t Abs(Double_t x){

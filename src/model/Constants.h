@@ -24,6 +24,7 @@
 // Command-line parameters
 
 enum class FitType {
+	test,
 	root,
 	rootConv,
 	rooFit

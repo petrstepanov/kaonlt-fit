@@ -153,10 +153,10 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t f
 	UInt_t nFreeParameters = sRealPdf->getParameters(*data)->selectByAttrib("Constant", kFALSE)->getSize();
 	if (nFreeParameters > 0){
 		// Use fitTo for the KaonLT histagrams
-		RooFitResult* fitResult = sRealPdf->fitTo(*data, RooFit::Save(kTRUE),  RooFit::NumCPU(RootUtils::getNumCpu()), fitMin!=0 ? RooFit::Range(fitMin, xMax) : RooCmdArg::none());
+		// RooFitResult* fitResult = sRealPdf->fitTo(*data, RooFit::Save(kTRUE),  RooFit::NumCPU(RootUtils::getNumCpu()), fitMin!=0 ? RooFit::Range(fitMin, xMax) : RooCmdArg::none());
 
 		// Use chi2 fit for test Bellamy histogram
-		// RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE), RooFit::NumCPU(RootUtils::getNumCpu()), fitMin!=0 ? RooFit::Range(fitMin, xMax) : RooCmdArg::none());
+		RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE), RooFit::NumCPU(RootUtils::getNumCpu()), fitMin!=0 ? RooFit::Range(fitMin, xMax) : RooCmdArg::none());
 	}
 
 	// Chi2 fit - does not work because zero values
@@ -225,8 +225,8 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 
 	// Update: to save memory and easier access the fit components we introduce
 	// AbsComponentFunction; it stores function components
-	Double_t xMin = hist->GetXaxis()->GetXmin();
-	Double_t xMax = hist->GetXaxis()->GetXmax();
+	Double_t xMin = hist->GetXaxis()->GetXmin(); // funcObject->getXMin();
+	Double_t xMax = hist->GetXaxis()->GetXmax(); // funcObject->getXMax();
 	TString funcName = TString::Format("func_%d", timestamp->Get());
 	TF1* func = new TF1(funcName.Data(), funcObject, &AbsComponentFunc::func, xMin, xMax, parameters->getSize(), "AbsComponentFunc", "func");
 	func->SetNpx(Constants::N_PX);
@@ -273,17 +273,16 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 		TString padName = TString::Format("canvas_%d", timestamp->Get());
 		pad = new TCanvas(padName.Data());
 	}
-	// pad->SetLeftMargin(0.15);
-	// pad->SetRightMargin(0.05);
-
+	pad->SetLeftMargin(0.1);
+	pad->SetRightMargin(0.1);
 
 	// Perform fit
 	RootUtils::startTimer();
 	if (fitMin != 0){
-		hist->Fit(func, "V", "", fitMin);
+		hist->Fit(func, "RV", "", fitMin);
 	}
 	else {
-		hist->Fit(func, "V"); // NOTE: "W" parameter - weird chi2 Value, fit Terminates.
+		hist->Fit(func, "RV"); // NOTE: "W" parameter - weird chi2 Value, fit Terminates.
 	}
 	RootUtils::stopAndPrintTimer();
 
@@ -307,7 +306,7 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 	}
 
 	// Print histogram and fitting function integrals
-	Double_t histIntegral = hist->Integral();
+	Double_t histIntegral = hist->Integral()*(hist->GetXaxis()->GetBinWidth(1));
 	Double_t funcIntegral = func->Integral(xMin, xMax, 1.e-3);
 	std::cout << "TH1 hist integral: " << histIntegral << std::endl;
 	std::cout << "TF1 func integral: " << funcIntegral << std::endl;
