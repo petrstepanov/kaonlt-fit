@@ -153,10 +153,10 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t f
 	UInt_t nFreeParameters = sRealPdf->getParameters(*data)->selectByAttrib("Constant", kFALSE)->getSize();
 	if (nFreeParameters > 0){
 		// Use fitTo for the KaonLT histagrams
-		// RooFitResult* fitResult = sRealPdf->fitTo(*data, RooFit::Save(kTRUE),  RooFit::NumCPU(RootUtils::getNumCpu()), fitMin!=0 ? RooFit::Range(fitMin, xMax) : RooCmdArg::none());
+		RooFitResult* fitResult = sRealPdf->fitTo(*data, RooFit::Save(kTRUE),  RooFit::NumCPU(RootUtils::getNumCpu()), fitMin!=0 ? RooFit::Range(fitMin, xMax) : RooCmdArg::none());
 
 		// Use chi2 fit for test Bellamy histogram
-		RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE), RooFit::NumCPU(RootUtils::getNumCpu()), fitMin!=0 ? RooFit::Range(fitMin, xMax) : RooCmdArg::none());
+		// RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE), RooFit::NumCPU(RootUtils::getNumCpu()), fitMin!=0 ? RooFit::Range(fitMin, xMax) : RooCmdArg::none());
 	}
 
 	// Chi2 fit - does not work because zero values
