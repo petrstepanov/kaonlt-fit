@@ -44,11 +44,11 @@ int run(const char* fileName) {
 
 	// Prepare histograms for the PMT projection spectra
 	TString pmt1HistTitle = TString::Format("PMT1 profile at tilel=%d", Constants::getInstance()->parameters.tileProfile);
-	TH1* pmt1Hist = new TH1F("pmt1Hist", pmt1HistTitle, Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
+	TH1* pmt1Hist = new TH1D("pmt1Hist", pmt1HistTitle, Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
 	pmt1Hist->GetXaxis()->SetTitle("Channel (ch_1)");
 	pmt1Hist->GetYaxis()->SetTitle("Counts");
 	TString pmt2HistTitle = TString::Format("PMT2 profile at tiler=%d", Constants::getInstance()->parameters.tileProfile);
-	TH1* pmt2Hist = new TH1F("pmt2Hist", pmt2HistTitle, Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
+	TH1* pmt2Hist = new TH1D("pmt2Hist", pmt2HistTitle, Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
 	pmt2Hist->GetXaxis()->SetTitle("Channel (ch_2)");
 	pmt2Hist->GetYaxis()->SetTitle("Counts");
 
@@ -79,15 +79,9 @@ int run(const char* fileName) {
 	// Trim PMT spectra to remove zero bin noise
 	// Select min channel value to skip the stretched noise bin
 	Int_t chMinVal = 1 * (Constants::CH_MAX_VAL - Constants::CH_MIN_VAL) / Constants::CH_BINS + 5;
+	// chMinVal = 150;
 	TH1* pmt1HistFit = HistUtils::cutHistogram(pmt1Hist, chMinVal, Constants::CH_FIT_MAX_VAL);
 	TH1* pmt2HistFit = HistUtils::cutHistogram(pmt2Hist, chMinVal, Constants::CH_FIT_MAX_VAL);
-
-	// Remove histogram zero values for chi2 fit
-	// HistUtils::removeHistogramZeros(pmt1HistFit);
-	// HistUtils::removeHistogramZeros(pmt2HistFit);
-
-	// TCanvas* c = new TCanvas("c");
-	// pmt1HistFit->Draw();
 
 	// Fit and plot PMT spectra
 	FitType fitType = Constants::getInstance()->parameters.fitType;
@@ -155,16 +149,6 @@ int testFillRandom(){
 	// Instantiate histogram
 	// TH1* h = TestSpectrum::getHistogramPaperFix();
 	TH1* h = TestSpectrum::getHistogramGenerated(params);
-	// HistUtils::removeHistogramZeros(h);
-
-	// TF1 integral for FuncSReal not matches TH1 integral...
-	// ROOT::Math::IntegratorOneDimOptions::SetDefaultAbsTolerance(1E-3);
-	// ROOT::Math::IntegratorOneDimOptions::SetDefaultRelTolerance(1E-3);
-	// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("Gauss");
-	// ROOT::Math::IntegratorOneDimOptions::SetDefaultNPoints(n);
-
-	// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
-	// ROOT::Math::MinimizerOptions::SetDefaultTolerance(1.E-3);
 
 	// Fit histogram with ROOT Fit
 	TH1* hist1 = HistUtils::cloneHistogram(h, "hist");
@@ -183,29 +167,29 @@ int testFillRandom(){
 	return 0;
 }
 
-//int testNoTerm0(){
-//	// Get digitized histogram from paper
-//	TH1* h = TestSpectrum::getHistogramPaperNoTerm0();
-//
-//	// Retreive parameters for test Bellamy histogram
-//	FitParameters* params = new FitParameters(ParametersType::forBellamyHist);
-//
-//	// Fit histogram with ROOT Fit
-//	TH1* hist1 = HistUtils::cloneHistogram(h, "hist");
-//	AbsComponentFunc* funcObject = new FuncSRealNoTerm0(hist1);
-//	FitUtils::doFit(hist1, params, funcObject);
-//
-//	// Fit histogram with ROOT Fit with Convolution
-//	TH1* hist2 = HistUtils::cloneHistogram(h, "hist_conv");
-//	AbsComponentFunc* funcObjectFFT = new FuncSRealFFTNoTerm0(hist2);
-//	FitUtils::doFit(hist2, params, funcObjectFFT);
-//
-//	// Fit histogram with RooFit with Convolution
-//	// TH1* hist3 = HistUtils::cloneHistogram(h, "hist_conv_roofit");
-//	// FitUtils::doRooFit(hist3, params, kFALSE);
-//
-//	return 0;
-//}
+int testNoTerm0(){
+	// Retreive parameters for test Bellamy histogram
+	FitParameters* params = new FitParameters(ParametersType::forBellamyHist);
+
+	// Instantiate histogram
+	TH1* h = TestSpectrum::getHistogramGeneratedNoTerm0(params);
+
+	// Fit histogram with ROOT Fit
+	TH1* hist1 = HistUtils::cloneHistogram(h, "hist_no_term0");
+	AbsComponentFunc* funcObject = new FuncSRealNoTerm0(hist1);
+	FitUtils::doFit(hist1, params, funcObject);
+
+	// Fit histogram with ROOT Fit with Convolution
+	TH1* hist2 = HistUtils::cloneHistogram(h, "hist_no_term0_conv");
+	AbsComponentFunc* funcObjectFFT = new FuncSRealFFTNoTerm0(hist2);
+	FitUtils::doFit(hist2, params, funcObjectFFT);
+
+	// Fit histogram with RooFit with Convolution
+	TH1* hist3 = HistUtils::cloneHistogram(h, "hist_no_term0_conv_roofit");
+	FitUtils::doRooFit(hist3, params, kFALSE);
+
+	return 0;
+}
 
 int main(int argc, char* argv[]) {
 	// Create ROOT application
@@ -224,16 +208,47 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
+	// Warning in <TF1::IntegralOneDim>: Error found in integrating function term11_1714168353 in [10.000000,2010.000000] using AdaptiveSingular. Result = 3818596.214063 +/- 453.771721  - status = 18
+	// Info in <TF1::IntegralOneDim>: 		Function Parameters = { p0 =  220.198026 , p1 =  0.044300 , p2 =  165.000000 , p3 =  63.506987 , p4 =  0.700397 , p5 =  0.027247 , p6 =  0.500000 }
+	// ROOT::Math::IntegratorOneDimOptions::SetDefaultRelTolerance(1.E-4);
+
 	// Test fitting function on the digitized test histogram
 	// testDigitized();
 	// Test fitting function on the filled random test histogram
-	// testFillRandom();
-	// testNoTerm0();
+	if (Constants::getInstance()->parameters.fitType == FitType::test){
+		testFillRandom();
+		testNoTerm0();
+	}
+	else {
+		// NOTE: ROOT default "kADAPTIVESINGULAR" integrator crashes when integrating FuncSRealNoTerm0...?
+		// Even when we are not fitting at all, just drawing the function and its components
+		// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("GAUSSLEGENDRE");
 
-	// Iterate through input files and run analysis
-	for (TObject* object : *(constants->parameters.inputFiles)) {
-		if (TObjString* objString = dynamic_cast<TObjString*>(object)){
-			run(objString->GetString());
+		// TF1 integral for FuncSReal not matches TH1 integral...
+		// ROOT::Math::IntegratorOneDimOptions::SetDefaultAbsTolerance(1E-3);
+		// ROOT::Math::IntegratorOneDimOptions::SetDefaultRelTolerance(1E-3);
+		// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("Gauss");
+		// ROOT::Math::IntegratorOneDimOptions::SetDefaultNPoints(n);
+
+		// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
+		// ROOT::Math::MinimizerOptions::SetDefaultTolerance(1.E-3);
+
+		// Abnormal termination of minimization
+		// ROOT::Math::MinimizerOptions::SetDefaultTolerance(1); // Default 1.E-2
+		// ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(1.E4);
+
+		// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Migrad"); // Default
+		// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Simplex");
+
+		// The probelm was that MIGRAD was unable to do a correct error estimates for 60 parameters although it was displaying a perfect fit. With Minosit takes more time but it does a good error estimate.
+
+		// ROOT::Math::IntegratorOneDimOptions:: ROOT::Math::Integrator GSLIntegrator(double absTol = 1.0000000000000001E-9, double relTol = 9.9999999999999995E-7, size_t size = 1000)
+
+		// Iterate through input files and run analysis
+		for (TObject* object : *(constants->parameters.inputFiles)) {
+			if (TObjString* objString = dynamic_cast<TObjString*>(object)){
+				run(objString->GetString());
+			}
 		}
 	}
 

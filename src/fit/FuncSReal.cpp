@@ -24,12 +24,15 @@ FuncSReal::FuncSReal(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h), nPar(
 	// Since fitting functions are defined in the same class, we are passing this pointer
 	// TODO: is this ok that we are passing more variables than needed for bg and termN?
 	TDatime* timestamp = new TDatime();
+	Int_t nPx = Constants::N_PX;
 
 	// Instantiate terms of the real FuncSReal
 	// Zero term has an uncertainty. Its approximate value is taken from (10)
 	FuncTerm0* funcTerm0 = new FuncTerm0();
 	TString term0Name = TString::Format("term0_%d", timestamp->Get());
 	TF1* term0 = new TF1(term0Name.Data(), funcTerm0, &FuncTerm0::func, xMin, xMax, nPar, "FuncTerm0", "func");
+	// https://root-forum.cern.ch/t/why-is-my-integral-zero/21999/4
+	term0->SetNpx(nPx);
 	components->Add(term0);
 
 	// Terms 1..N are background function covoluted wit the Ideal FuncSReal function
@@ -38,6 +41,8 @@ FuncSReal::FuncSReal(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h), nPar(
 		FuncTermN* funcTermN = new FuncTermN(n);
 		TString termNName = TString::Format("term%d_%d", n, timestamp->Get());
 		TF1* termN = new TF1(termNName.Data(), funcTermN, &FuncTermN::func, xMin, xMax, nPar, "FuncTermN", "func");
+		// https://root-forum.cern.ch/t/why-is-my-integral-zero/21999/4
+		termN->SetNpx(nPx);
 		components->Add(termN);
 	}
 
@@ -64,8 +69,8 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 	// Loop over components
 	Double_t value = 0;
 	// Double_t integral = 0;
-	Int_t xMin = hist->GetXaxis()->GetXmin();
-	Int_t xMax = hist->GetXaxis()->GetXmax();
+	// Int_t xMin = hist->GetXaxis()->GetXmin();
+	// Int_t xMax = hist->GetXaxis()->GetXmax();
 
 	// Evaluate sum coeficients for the last term
 	Double_t sumCoefficients = 0;
@@ -77,11 +82,14 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 			// Set parameters
 		    component->SetParameters(par);
 
+		    // TODO: last component coeff (sum - 1)
+
 		    // Calculate term coefficient
 		    Double_t coeffParams[2] = {mu, (Double_t)n};
 		    Double_t coefficient = coefficientN->EvalPar(nullptr, coeffParams);
 
 		    // Add component contribution
+		    // component->SetNormalized(kTRUE);
 			value += coefficient*component->EvalPar(_x, par);
 
 			// Need to add normalization for some reason - don't understand why!
@@ -112,6 +120,6 @@ Double_t FuncSReal::func(Double_t* _x, Double_t* par) {
 	}
 
 	// Return function value
-	return value*(hist->Integral());
+	return value*(hist->Integral())*(hist->GetXaxis()->GetBinWidth(1));
 	// return value/integral*(hist->Integral());
 }

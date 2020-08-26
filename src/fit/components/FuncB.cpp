@@ -34,7 +34,7 @@ Double_t FuncB::func(Double_t* _x, Double_t* par) {
 			(1 - w)/(Power(E,Power(-Q0 + x,2)/(2.*Power(s0,2)))*Sqrt(2*Pi)*s0) + (a*w*UnitStep(-Q0 + x))/Power(E,a*(-Q0 + x))
 	; // end mathematica code
 
-	return value;
+	return value < 0 ? 0 : value;
 }
 
 Double_t FuncB::getIntegral(Double_t xMin, Double_t xMax, Double_t* par){

@@ -24,6 +24,7 @@
 // Command-line parameters
 
 enum class FitType {
+	test,
 	root,
 	rootConv,
 	rooFit
@@ -60,6 +61,10 @@ class Constants {
 
 	static const Int_t AMP_MIN;
 	static const Int_t AMP_MAX;
+
+	static const Int_t N_PX;
+
+	static const Double_t SIGMA_TO_FWHM;
 
 	Parameters parameters;
     void parseParameters(int argc, char* argv[]);

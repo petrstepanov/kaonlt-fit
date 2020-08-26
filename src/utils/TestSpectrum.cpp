@@ -11,7 +11,7 @@
 #include <TH1I.h>
 #include "../utils/FitUtils.h"
 #include "../fit/FuncSReal.h"
-#include "../fit/FuncSRealFFT.h"
+#include "../fit/FuncSRealNoTerm0.h"
 
 TestSpectrum::TestSpectrum(){};
 TestSpectrum::~TestSpectrum(){};
@@ -49,7 +49,7 @@ TH1* TestSpectrum::getHistogramPaper(){
 
 TH1* TestSpectrum::getHistogramPaperFix(){
 	std::vector<Int_t> vector (array2, array2 + sizeof(array2) / sizeof(array2[0]) );
-	TH1* hist = new TH1I("bellamyHistDigitized", "Bellamy histogram. Digitized from figure.", (Int_t)vector.size(), 0, (Int_t)vector.size());
+	TH1* hist = new TH1I("bellamyHistDigitizedFix", "Bellamy histogram. Digitized from figure.", (Int_t)vector.size(), 0, (Int_t)vector.size());
 	hist->GetXaxis()->SetTitle("ADC Channel");
 	hist->GetYaxis()->SetTitle("Events");
 
@@ -62,7 +62,7 @@ TH1* TestSpectrum::getHistogramPaperFix(){
 
 TH1* TestSpectrum::getHistogramPaperNoTerm0(){
 	std::vector<Int_t> vector (array3, array3 + sizeof(array3) / sizeof(array3[0]) );
-	TH1* hist = new TH1I("bellamyHistDigitized", "Bellamy histogram with cut Term0. Digitized from figure.", (Int_t)vector.size(), 0, (Int_t)vector.size());
+	TH1* hist = new TH1I("bellamyHistDigitizedNoTerm0", "Bellamy histogram with cut Term0. Digitized from figure.", (Int_t)vector.size(), 0, (Int_t)vector.size());
 	hist->GetXaxis()->SetTitle("ADC Channel");
 	hist->GetYaxis()->SetTitle("Events");
 
@@ -74,11 +74,21 @@ TH1* TestSpectrum::getHistogramPaperNoTerm0(){
 }
 
 TH1* TestSpectrum::getHistogramGenerated(FitParameters* parameters){
-	Int_t nBins = getHistogramPaper()->GetXaxis()->GetNbins();
+	Int_t nBins = sizeof(array) / sizeof(array[0]);
 	TH1F *hist = new TH1F("histBellamy", "Bellamy histogram. Random fill from fit function.", nBins, 0, nBins);
 	hist->GetXaxis()->SetTitle("ADC Channel");
 	hist->GetYaxis()->SetTitle("Events");
 	FuncSReal* funcObj = new FuncSReal(hist);
+	FitUtils::fillHistogramFromFuncObject(hist, parameters, funcObj);
+	return hist;
+}
+
+TH1* TestSpectrum::getHistogramGeneratedNoTerm0(FitParameters* parameters){
+	Int_t nBins = sizeof(array) / sizeof(array[0]);
+	TH1F *hist = new TH1F("histBellamyNoTerm0", "Bellamy histogram without Term0. Random fill from fit function.", nBins, 0, nBins);
+	hist->GetXaxis()->SetTitle("ADC Channel");
+	hist->GetYaxis()->SetTitle("Events");
+	FuncSRealNoTerm0* funcObj = new FuncSRealNoTerm0(hist);
 	FitUtils::fillHistogramFromFuncObject(hist, parameters, funcObj);
 	return hist;
 }
