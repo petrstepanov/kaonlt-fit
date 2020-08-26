@@ -30,6 +30,11 @@ enum class FitType {
 	rooFit
 };
 
+enum class Minimization {
+	chi2,
+	likelihood
+};
+
 struct Parameters {
 	TString treeName = "tree1;3";
 	Float_t plotTree = kTRUE;
@@ -38,6 +43,7 @@ struct Parameters {
 	Int_t termsNumber = 50;
 	Int_t convolutionBins = 1024;
 	FitType fitType = FitType::root;
+	Minimization minimize = Minimization::chi2;
 	TList* inputFiles = new TList();
 	TString fitParamsFileName = "fit-parameters.txt";
 };

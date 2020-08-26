@@ -55,7 +55,7 @@ const Int_t Constants::CH_MIN_VAL = -1000;
 const Int_t Constants::CH_MAX_VAL = 20000;
 
 const Int_t Constants::CH_FIT_MIN_VAL = 1;
-const Int_t Constants::CH_FIT_MAX_VAL = 2000;
+const Int_t Constants::CH_FIT_MAX_VAL = 3000;
 
 
 const Int_t Constants::AMP_MIN = 0;
@@ -121,6 +121,14 @@ void Constants::parseParameters(int argc, char* argv[]){
 				parameters.fitType = FitType::rooFit;
 			} else {
 				parameters.fitType = FitType::test;
+			}
+		}
+		else if (pair.first == "minimize"){
+			pair.second.ToLower();
+			if (pair.second == "chi2"){
+				parameters.minimize = Minimization::chi2;
+			} else {
+				parameters.minimize = Minimization::likelihood;
 			}
 		}
 		else if (pair.first == "params-filename"){

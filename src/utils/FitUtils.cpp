@@ -116,7 +116,7 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t f
 		RooFFTConvPdf* termNPdf = new RooFFTConvPdf(nameConv.Data(), titleConv.Data(), *observable, *sIdealNPdf, *bPdf);
 
 		// Set buffer fraction so tail not piles on the start
-		// termNPdf->setBufferFraction(2);
+		// termNPdf->setBufferFraction(1.5);
 
 		terms->add(*termNPdf);
 
@@ -152,11 +152,17 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t f
 
 	UInt_t nFreeParameters = sRealPdf->getParameters(*data)->selectByAttrib("Constant", kFALSE)->getSize();
 	if (nFreeParameters > 0){
-		// Use fitTo for the KaonLT histagrams
-		// RooFitResult* fitResult = sRealPdf->fitTo(*data, RooFit::Save(kTRUE),  RooFit::NumCPU(RootUtils::getNumCpu()), fitMin!=0 ? RooFit::Range(fitMin, xMax) : RooCmdArg::none());
-
-		// Use chi2 fit for test Bellamy histogram
-		RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE), RooFit::NumCPU(RootUtils::getNumCpu()), fitMin!=0 ? RooFit::Range(fitMin, xMax) : RooCmdArg::none());
+		Minimization minimization = Constants::getInstance()->parameters.minimize;
+		if (minimization == Minimization::likelihood){
+			// Use fitTo for the KaonLT histagrams
+			// RooFitResult* fitResult = sRealPdf->fitTo(*data, RooFit::Save(kTRUE),  RooFit::NumCPU(RootUtils::getNumCpu()), fitMin!=0 ? RooFit::Range(fitMin, xMax) : RooCmdArg::none());
+			RooFitResult* fitResult = sRealPdf->fitTo(*data, RooFit::Save(kTRUE));
+		}
+		else if (minimization == Minimization::chi2){
+			// Use chi2 fit for test Bellamy histogram
+			// RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE), RooFit::NumCPU(RootUtils::getNumCpu()), fitMin!=0 ? RooFit::Range(fitMin, xMax) : RooCmdArg::none());
+			RooFitResult* fitResult = sRealPdf->chi2FitTo(*data, RooFit::Save(kTRUE));
+		}
 	}
 
 	// Chi2 fit - does not work because zero values
@@ -282,7 +288,13 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 		hist->Fit(func, "RV", "", fitMin);
 	}
 	else {
-		hist->Fit(func, "RV"); // NOTE: "W" parameter - weird chi2 Value, fit Terminates.
+		Minimization minimization = Constants::getInstance()->parameters.minimize;
+		if (minimization == Minimization::likelihood){
+			hist->Fit(func, "LV");
+		}
+		else if (minimization == Minimization::chi2){
+			hist->Fit(func, "V");
+		}
 	}
 	RootUtils::stopAndPrintTimer();
 
