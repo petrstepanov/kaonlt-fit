@@ -34,6 +34,14 @@ FitParameters::FitParameters(ParametersType type) {
 	}
 }
 
+FitParameters::FitParameters(const char* fileName) {
+	// Check if filename is overrided in comand line parameters
+	if (Constants::getInstance()->parameters.fitParamsFileName.Length() > 0){
+		fileName = Constants::getInstance()->parameters.fitParamsFileName.Data();
+	}
+	parameters = readParametersFromFile(fileName);
+}
+
 FitParameters::~FitParameters() {
 }
 

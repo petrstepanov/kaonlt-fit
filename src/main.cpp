@@ -106,7 +106,9 @@ int run(const char* fileName) {
 	pmtsFitCanvas->Divide(2,1);
 
 	// Retreive parameters for KaonLT Prototype histogram
-	FitParameters* params = new FitParameters(ParametersType::forKaonHist);
+	TString parametersFileName = fileName;
+	parametersFileName.ReplaceAll(".root", "-params.txt");
+	FitParameters* params = new FitParameters(parametersFileName.Data());
 
 	Int_t fitMin = 0;
 

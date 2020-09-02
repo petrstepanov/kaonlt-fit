@@ -46,7 +46,7 @@ struct Parameters {
 	FitType fitType = FitType::root;
 	Minimization minimize = Minimization::chi2;
 	TList* inputFiles = new TList();
-	TString fitParamsFileName = "fit-parameters.txt";
+	TString fitParamsFileName = "";
 	// For ploting tree
 	Int_t tileMin = 1;
 	Int_t tileMax = 146;

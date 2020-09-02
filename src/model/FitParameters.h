@@ -20,6 +20,7 @@ enum class ParametersType {
 class FitParameters {
 public:
 	FitParameters(ParametersType parType);
+	FitParameters(const char* fileName);
 	virtual ~FitParameters();
 
 	RooArgList* getList();
