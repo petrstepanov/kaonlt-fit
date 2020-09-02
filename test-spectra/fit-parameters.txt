@@ -1,8 +1,0 @@
-Name	Value	Min	Max	Free/Fixed	Title
-Q_{0}	280	250	305	free	pedestal gauss meanposition
-#sigma_{0}	0.0443	0.1	5	free	pedestal gauss st. dev.
-Q_{1}	100	90	160	free	average charge at the PM output
-#sigma_{1}	70	20	90	free	ideal spectrum gauss st dev.
-w	0.35	0.1	0.5	free	exp/gauss background ratio background process
-#alpha	0.002	0.001	0.2	free	exp background decrease coefficient
-#mu	1.9	0	10	free	number of photo-electrons

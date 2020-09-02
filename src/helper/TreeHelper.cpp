@@ -20,7 +20,7 @@
 TreeHelper::TreeHelper() {
 	fileName = new TString();
 	myFile = new TFile();
-	myTree = new TTree();
+	myTree = NULL;
 }
 
 TreeHelper::~TreeHelper(){}
@@ -51,6 +51,9 @@ int TreeHelper::init(const char* fileName){
 
 	// Read Tree from ROOT file
 	myFile->GetObject(Constants::getInstance()->parameters.treeName, myTree); // or gDirectory->GetObject("T",MyTree);
+	if (myTree == NULL){
+		// If the tree with specified mane dows not exist - pick a first occurance of
+	}
 	myTree->Print();     // Print tree branches
 	// myTree->Scan("");    // Print tree columns
 
@@ -58,12 +61,15 @@ int TreeHelper::init(const char* fileName){
 }
 
 void TreeHelper::plotTreeProfiles(){
+	Int_t chMin = Constants::getInstance()->parameters.chMin;
+	Int_t chMax = Constants::getInstance()->parameters.chMax;
+	Int_t chBins = Constants::getInstance()->parameters.chBins;
 	// Construct histograms for the TTree profiles (ch_1 and ch_2)
-	TH1F* ch1Hist = new TH1F("ch1Hist", "Channel profile for PMT1", Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
+	TH1F* ch1Hist = new TH1F("ch1Hist", "Channel profile for PMT1", chBins, chMin, chMax);
 	ch1Hist->GetXaxis()->SetTitle("Events");
 	ch1Hist->SetStats(0);
 	ch1Hist->GetYaxis()->SetTitle("Channel (ch_1)");
-	TH1F* ch2Hist = new TH1F("ch2Hist", "Channel profile for PMT2", Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
+	TH1F* ch2Hist = new TH1F("ch2Hist", "Channel profile for PMT2", chBins, chMin, chMax);
 	ch2Hist->GetXaxis()->SetTitle("Events");
 	ch2Hist->SetStats(0);
 	ch2Hist->GetYaxis()->SetTitle("Channel (ch_2)");
@@ -98,28 +104,35 @@ void TreeHelper::plotTreeProfiles(){
 }
 
 void TreeHelper::plotTree(const char* fileName){
+	Int_t tileMin = Constants::getInstance()->parameters.tileMin;
+	Int_t tileMax = Constants::getInstance()->parameters.tileMax;
+	Int_t tileBins = tileMax - tileMin;
+	Int_t chMin = Constants::getInstance()->parameters.chMin;
+	Int_t chMax = Constants::getInstance()->parameters.chMax;
+	Int_t chBins = Constants::getInstance()->parameters.chBins;
+
 	// Construct histograms (ch_1:tilel) and (ch_2:tiler) from the TTree
 	TH2F* ch1TilelHist = new TH2F("ch1TilelHist", "Channel vs Tile for PMT1",
-								  Constants::TILE_BINS, Constants::TILE_MIN, Constants::TILE_MAX,
-								  Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
+								  tileBins, tileMin, tileMax,
+								  chBins, chMin, chMax);
 	ch1TilelHist->GetXaxis()->SetTitle("Tile (tilel)");
 	ch1TilelHist->GetYaxis()->SetTitle("Channel (ch_1)");
 	ch1TilelHist->SetStats(0);
 	TH2F* ch2TilerHist = new TH2F("ch2TilerHist", "Channel vs Tile for PMT2",
-			   	   	   	   	   	  Constants::TILE_BINS, Constants::TILE_MIN, Constants::TILE_MAX,
-								  Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
+								  tileBins, tileMin, tileMax,
+								  chBins, chMin, chMax);
 	ch2TilerHist->GetXaxis()->SetTitle("Tile (tiler)");
 	ch2TilerHist->GetYaxis()->SetTitle("Channel (ch_2)");
 	ch2TilerHist->SetStats(0);
 	// Construct histograms (amp_1:tilel) and (amp_2:tiler) from the TTree
 	TH2F* amp1TilelHist = new TH2F("amp1TilelHist", "Amplitude vs Tile for PMT1",
-			  	  	  	  	  	   Constants::TILE_BINS, Constants::TILE_MIN, Constants::TILE_MAX,
+								   tileBins, tileMin, tileMax,
 								   Constants::AMP_MAX-Constants::AMP_MIN, Constants::AMP_MIN, Constants::AMP_MAX);
 	amp1TilelHist->GetXaxis()->SetTitle("Tile (tilel)");
 	amp1TilelHist->GetYaxis()->SetTitle("Amplitude (amp_1)");
 	amp1TilelHist->SetStats(0);
 	TH2F* amp2TilerHist = new TH2F("amp2TilerHist", "Amplitude vs Tile for PMT2",
-								   Constants::TILE_BINS, Constants::TILE_MIN, Constants::TILE_MAX,
+								   tileBins, tileMin, tileMax,
 								   Constants::AMP_MAX-Constants::AMP_MIN, Constants::AMP_MIN, Constants::AMP_MAX);
 	amp2TilerHist->GetXaxis()->SetTitle("Tile (tiler)");
 	amp2TilerHist->GetYaxis()->SetTitle("Amplitude (amp_2)");

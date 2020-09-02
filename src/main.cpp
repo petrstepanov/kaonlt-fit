@@ -28,6 +28,10 @@
 #include "fit/FuncSRealFFTNoTerm0.h"
 
 int run(const char* fileName) {
+	// TODO: Determine if its a prototype spectrum or real Kaon spectrum
+
+
+
 	// Instantiate the Tree and read it from the input file
 	if (TreeHelper::getInstance()->init(fileName) == -1){
 		return -1;
@@ -43,12 +47,15 @@ int run(const char* fileName) {
 	// TreeHelper::getInstance()->plotTreeProfiles();
 
 	// Prepare histograms for the PMT projection spectra
+	Int_t chMin = Constants::getInstance()->parameters.chMin;
+	Int_t chMax = Constants::getInstance()->parameters.chMax;
+	Int_t chBins = Constants::getInstance()->parameters.chBins;
 	TString pmt1HistTitle = TString::Format("PMT1 profile at tilel=%d", Constants::getInstance()->parameters.tileProfile);
-	TH1* pmt1Hist = new TH1D("pmt1Hist", pmt1HistTitle, Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
+	TH1* pmt1Hist = new TH1D("pmt1Hist", pmt1HistTitle, chBins, chMin, chMax);
 	pmt1Hist->GetXaxis()->SetTitle("Channel (ch_1)");
 	pmt1Hist->GetYaxis()->SetTitle("Counts");
 	TString pmt2HistTitle = TString::Format("PMT2 profile at tiler=%d", Constants::getInstance()->parameters.tileProfile);
-	TH1* pmt2Hist = new TH1D("pmt2Hist", pmt2HistTitle, Constants::CH_BINS, Constants::CH_MIN_VAL, Constants::CH_MAX_VAL);
+	TH1* pmt2Hist = new TH1D("pmt2Hist", pmt2HistTitle, chBins, chMin, chMax);
 	pmt2Hist->GetXaxis()->SetTitle("Channel (ch_2)");
 	pmt2Hist->GetYaxis()->SetTitle("Counts");
 
@@ -76,15 +83,18 @@ int run(const char* fileName) {
 		pmtsCanvas->SaveAs(pngFilePath.Data());
 	}
 
-	// Trim PMT spectra to remove zero bin noise
-	// Select min channel value to skip the stretched noise bin
-	Int_t chMinVal = 1 * (Constants::CH_MAX_VAL - Constants::CH_MIN_VAL) / Constants::CH_BINS + 5;
-	// chMinVal = 150;
-	TH1* pmt1HistFit = HistUtils::cutHistogram(pmt1Hist, chMinVal, Constants::CH_FIT_MAX_VAL);
-	TH1* pmt2HistFit = HistUtils::cutHistogram(pmt2Hist, chMinVal, Constants::CH_FIT_MAX_VAL);
-
 	// Fit and plot PMT spectra
 	FitType fitType = Constants::getInstance()->parameters.fitType;
+	if (fitType == FitType::none) return 0;
+
+	// Trim PMT spectra to remove zero bin noise
+	// Select min channel value to skip the stretched noise bin
+	// Int_t chMinVal = 1 * (Constants::CH_MAX_VAL - Constants::CH_MIN_VAL) / Constants::CH_BINS + 5;
+	// chMinVal = 150;
+	Int_t chFitMin = Constants::getInstance()->parameters.chFitMin;
+	Int_t chFitMax = Constants::getInstance()->parameters.chFitMax;
+	TH1* pmt1HistFit = HistUtils::cutHistogram(pmt1Hist, chFitMin, chFitMax);
+	TH1* pmt2HistFit = HistUtils::cutHistogram(pmt2Hist, chFitMin, chFitMax);
 
 	const char* fitKind;
 	if (fitType == FitType::root) fitKind = "ROOT Fit";

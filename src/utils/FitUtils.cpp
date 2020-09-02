@@ -376,6 +376,7 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 				f->SetParameters(fitParameters);
 			}
 			f->SetLineStyle(ELineStyle::kDashed);
+			f->SetNpx(Constants::N_PX);
 			f->Draw("SAME");
 		} else {
 			std::cout << "Error getting the component " << n << std::endl;

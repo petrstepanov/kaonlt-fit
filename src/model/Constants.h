@@ -25,6 +25,7 @@
 
 enum class FitType {
 	test,
+	none,
 	root,
 	rootConv,
 	rooFit
@@ -36,7 +37,7 @@ enum class Minimization {
 };
 
 struct Parameters {
-	TString treeName = "tree1;3";
+	TString treeName = "tree1";
 	Float_t plotTree = kTRUE;
 	Float_t plotProfiles = kTRUE;
 	Int_t tileProfile = 55;
@@ -46,6 +47,14 @@ struct Parameters {
 	Minimization minimize = Minimization::chi2;
 	TList* inputFiles = new TList();
 	TString fitParamsFileName = "fit-parameters.txt";
+	// For ploting tree
+	Int_t tileMin = 1;
+	Int_t tileMax = 146;
+	Int_t chMin = -1000;
+	Int_t chMax = 20000;
+	Int_t chBins = 0;
+	Int_t chFitMin = 0;
+	Int_t chFitMax = 0;
 };
 
 class Constants {
@@ -53,17 +62,6 @@ class Constants {
 	static Constants* getInstance();
 
 	static const char* APPLICATION_NAME;
-
-	static const Int_t TILE_BINS;
-	static const Int_t TILE_MIN;
-	static const Int_t TILE_MAX;
-
-	static const Int_t CH_BINS;
-	static const Int_t CH_MIN_VAL;
-	static const Int_t CH_MAX_VAL;
-
-	static const Int_t CH_FIT_MIN_VAL;
-	static const Int_t CH_FIT_MAX_VAL;
 
 	static const Int_t AMP_MIN;
 	static const Int_t AMP_MAX;

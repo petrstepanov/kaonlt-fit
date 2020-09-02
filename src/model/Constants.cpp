@@ -46,18 +46,6 @@ const char* Constants::APPLICATION_NAME = "KaonLT Fit";
 // Amplitude |  4096 |                0 |           4096 |
 // ----------+-------+------------------+----------------+
 
-const Int_t Constants::TILE_BINS = 145;
-const Int_t Constants::TILE_MIN = 1;
-const Int_t Constants::TILE_MAX = 146;
-
-const Int_t Constants::CH_BINS = 2100;
-const Int_t Constants::CH_MIN_VAL = -1000;
-const Int_t Constants::CH_MAX_VAL = 20000;
-
-const Int_t Constants::CH_FIT_MIN_VAL = 1;
-const Int_t Constants::CH_FIT_MAX_VAL = 3000;
-
-
 const Int_t Constants::AMP_MIN = 0;
 const Int_t Constants::AMP_MAX = 4096;
 
@@ -135,6 +123,39 @@ void Constants::parseParameters(int argc, char* argv[]){
 			// Name of the file with parameters
 			parameters.fitParamsFileName = pair.second;
 		}
+		else if (pair.first ==  "tile-min"){
+			// Number of terms in the fitting function
+			parameters.tileMin = atoi(pair.second);
+		}
+		else if (pair.first ==  "tile-max"){
+			// Number of terms in the fitting function
+			parameters.tileMax = atoi(pair.second);
+		}
+		else if (pair.first ==  "ch-min"){
+			// Number of terms in the fitting function
+			parameters.chMin = atoi(pair.second);
+		}
+		else if (pair.first ==  "ch-max"){
+			// Number of terms in the fitting function
+			parameters.chMax = atoi(pair.second);
+		}
+		else if (pair.first ==  "ch-bins"){
+			// Number of terms in the fitting function
+			parameters.chBins = atoi(pair.second);
+		}
+		else if (pair.first ==  "ch-fit-min"){
+			// Number of terms in the fitting function
+			parameters.chFitMin = atoi(pair.second);
+		}
+		else if (pair.first ==  "ch-fit-max"){
+			// Number of terms in the fitting function
+			parameters.chFitMax = atoi(pair.second);
+		}
 		std::cout << "\t" << pair.first << ": " << pair.second << std::endl;
 	}
+
+	// Tweak default parameters values after parameters were processed
+	if (parameters.chBins == 0) parameters.chBins = parameters.chMax - parameters.chMin;
+	if (parameters.chFitMin == 0) parameters.chFitMin = parameters.chMin;
+	if (parameters.chFitMax == 0) parameters.chFitMax = parameters.chMax;
 }
