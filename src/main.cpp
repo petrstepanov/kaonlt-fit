@@ -187,16 +187,16 @@ int runBeam(const char* fileName){
 	}
 
 	// Fit and plot Negative histograms
-//	TString beamFitCanvasNegTitle = TString::Format("%s of the beam PMT Negative spectra (terms = %d)", fitKind, Constants::getInstance()->parameters.termsNumber);
-//	TCanvas* beamFitCanvasNeg = GraphicsUtils::getCanvasForNPads("beamFitCanvasPos", beamFitCanvasNegTitle.Data(), 1280, 640, histogramsNegTrimmed->LastIndex()+1, 3);
-//	for (UInt_t i = 0; i <= histogramsNegTrimmed->LastIndex(); i++){
-//		TH1* hist = (TH1*)histogramsNegTrimmed->At(i);
-//		if (hist){
-//			TVirtualPad* pad = beamFitCanvasPos->cd(i+1);
-//			pad->SetTitle(hist->GetName());
-//			FitUtils::fitHistogramOnPad(hist, pad, params, fitType);
-//		}
-//	}
+	TString beamFitCanvasNegTitle = TString::Format("%s of the beam PMT Negative spectra (terms = %d)", fitKind, Constants::getInstance()->parameters.termsNumber);
+	TCanvas* beamFitCanvasNeg = GraphicsUtils::getCanvasForNPads("beamFitCanvasPos", beamFitCanvasNegTitle.Data(), 1280, 640, histogramsNegTrimmed->LastIndex()+1, 3);
+	for (UInt_t i = 0; i <= histogramsNegTrimmed->LastIndex(); i++){
+		TH1* hist = (TH1*)histogramsNegTrimmed->At(i);
+		if (hist){
+			TVirtualPad* pad = beamFitCanvasPos->cd(i+1);
+			pad->SetTitle(hist->GetName());
+			FitUtils::fitHistogramOnPad(hist, pad, params, fitType);
+		}
+	}
 
 
 	return 0;
