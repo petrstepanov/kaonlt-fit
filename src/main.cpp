@@ -152,7 +152,7 @@ int runBeam(const char* fileName){
 			if (hist){
 				TVirtualPad* pad = beamCanvasPos->cd(i+1);
 				hist->SetTitle(hist->GetName());
-				hist->Draw();
+				hist->DrawClone();
 			}
 		}
 
@@ -162,7 +162,7 @@ int runBeam(const char* fileName){
 			if (hist){
 				TVirtualPad* pad = beamCanvasNeg->cd(i+1);
 				hist->SetTitle(hist->GetName());
-				hist->Draw();
+				hist->DrawClone();
 			}
 		}
 	}
