@@ -51,6 +51,8 @@ const Int_t Constants::AMP_MAX = 4096;
 
 const Int_t Constants::N_PX = 1024;
 
+const Int_t Constants::N_BEAM_COLS = 3;
+
 const Double_t Constants::SIGMA_TO_FWHM = TMath::Sqrt(8*TMath::Log(2));
 
 // Parse command line parameters
@@ -82,19 +84,19 @@ void Constants::parseParameters(int argc, char* argv[]){
 				parameters.plotProfiles = kFALSE;
 			}
 		}
-		else if (pair.first ==  "tile-profile"){
+		else if (pair.first == "tile-profile"){
 			// Tile value for the histogram projection
 			parameters.tileProfile = atoi(pair.second);
 		}
-		else if (pair.first ==  "terms-number"){
+		else if (pair.first == "terms-number"){
 			// Number of terms in the fitting function
 			parameters.termsNumber = atoi(pair.second);
 		}
-		else if (pair.first ==  "convolution-bins"){
+		else if (pair.first == "convolution-bins"){
 			// Number of terms in the fitting function
 			parameters.convolutionBins = atoi(pair.second);
 		}
-		else if (pair.first ==  "file-name"){
+		else if (pair.first == "file-name"){
 			// Add filename to the list of files
 			TObjString* fileName = new TObjString(pair.second);
 			parameters.inputFiles->Add(fileName);
@@ -107,6 +109,8 @@ void Constants::parseParameters(int argc, char* argv[]){
 				parameters.fitType = FitType::rootConv;
 			} else if (pair.second == "roofit"){
 				parameters.fitType = FitType::rooFit;
+			} else if (pair.second == "none"){
+				parameters.fitType = FitType::none;
 			} else {
 				parameters.fitType = FitType::test;
 			}
@@ -145,11 +149,11 @@ void Constants::parseParameters(int argc, char* argv[]){
 		}
 		else if (pair.first ==  "ch-fit-min"){
 			// Number of terms in the fitting function
-			parameters.chFitMin = atoi(pair.second);
+			parameters.chFitMin = atof(pair.second);
 		}
 		else if (pair.first ==  "ch-fit-max"){
 			// Number of terms in the fitting function
-			parameters.chFitMax = atoi(pair.second);
+			parameters.chFitMax = atof(pair.second);
 		}
 		std::cout << "\t" << pair.first << ": " << pair.second << std::endl;
 	}

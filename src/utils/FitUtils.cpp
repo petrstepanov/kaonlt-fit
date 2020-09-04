@@ -48,8 +48,9 @@
 #include <TCollection.h>
 #include <TFitResultPtr.h>
 #include <TDatime.h>
-#include <Math/IntegratorOptions.h>
 #include <TSystem.h>
+#include <Math/IntegratorOptions.h>
+
 
 FitUtils::FitUtils() {
 }
@@ -498,3 +499,31 @@ Double_t* FitUtils::getConvFitParameters(Double_t* parameters, Int_t nPar){
 	}
 	return convParameters;
 }
+
+const char* FitUtils::getFitDescription(FitType fitType){
+	if (fitType == FitType::root){
+		return "ROOT Fit with analytical convolution";
+	}
+	if (fitType == FitType::rootConv){
+		return "ROOT Fit with FFT convolution";
+	}
+	if (fitType == FitType::rooFit){
+		return "RooFit";
+	}
+	return "none";
+}
+
+void FitUtils::fitHistogramOnPad(TH1* hist, TVirtualPad* pad, FitParameters* params, FitType fitType, Int_t fitMin){
+	if (fitType == FitType::root){
+		AbsComponentFunc* funcObject1 = new FuncSRealNoTerm0(hist);
+		doFit(hist, params, funcObject1, fitMin, pad, kTRUE);
+	} else if (fitType == FitType::rootConv){
+		AbsComponentFunc* funcObject1 = new FuncSRealFFTNoTerm0(hist);
+		doFit(hist, params, funcObject1, fitMin, pad, kTRUE);
+	} else {
+		doRooFit(hist, params, kFALSE, fitMin, pad);
+	}
+}
+
+
+

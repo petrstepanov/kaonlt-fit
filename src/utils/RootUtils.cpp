@@ -22,6 +22,7 @@
 #include <TMatrixDUtils.h>
 #include <TString.h>
 #include <TList.h>
+#include <TFile.h>
 
 #include <RooHist.h>
 #include <RooPlot.h>
@@ -58,4 +59,28 @@ void RootUtils::stopAndPrintTimer(){
     watch->Stop();
     watch->Print();
 	printf("Real time = %7.3f s, Cpu Time = %7.3f s\n", watch->RealTime(), watch->CpuTime());
+}
+
+InputFileType RootUtils::getInputFileType(const char* fileName){
+	// Open ROOT file
+	TFile *myFile = new TFile(fileName);
+	if (myFile->IsZombie()) {
+		std::cout << "Error opening file \"" << fileName << "\""<< std::endl;
+		return InputFileType::Unknown;
+	}
+
+	// Get list of keys in ROOT file
+	TList *keysList = myFile->GetListOfKeys();
+
+	// Prototype spectra contain "tree1"
+	if (keysList->FindObject("tree1")){
+		return InputFileType::Prototype;
+	}
+
+	// Prototype spectra contain "tree1"
+	if (keysList->FindObject("Positive_PMT_0")){
+		return InputFileType::Beam;
+	}
+
+	return InputFileType::Unknown;
 }

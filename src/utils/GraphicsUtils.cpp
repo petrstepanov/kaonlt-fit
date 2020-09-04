@@ -7,6 +7,8 @@
 
 #include <TPaveStats.h>
 #include <TLatex.h>
+#include <TSystem.h>
+#include <TDatime.h>
 #include "../utils/GraphicsUtils.h"
 
 GraphicsUtils::GraphicsUtils() {
@@ -144,4 +146,19 @@ void GraphicsUtils::addLineToPave(TVirtualPad* pad, RooAbsPdf* pdf, const char* 
 	TPaveText* paveText = (TPaveText*)pad->GetListOfPrimitives()->FindObject(paveTextName.Data());
 	paveText->AddText(line);
 	paveText->SetTextSize(0.03);
+}
+
+TCanvas* GraphicsUtils::getCanvasForNPads(const char* title, Int_t width, Int_t height, Int_t nPads, Int_t nCols){
+	// Wait for the unique timestamp
+	gSystem->Sleep(1000);
+	TDatime* timestamp = new TDatime();
+	TString name = TString::Format("canvas_%d", timestamp->Get());
+	return getCanvasForNPads(name.Data(), title, width, height, nPads, nCols);
+}
+
+TCanvas* GraphicsUtils::getCanvasForNPads(const char* name, const char* title, Int_t width, Int_t height, Int_t nPads, Int_t nCols){
+	TCanvas* canvas = new TCanvas(name, title, width, height);
+	UInt_t nPadsTotal = nPads % nCols == 0 ?	nPads : nPads + nCols - nPads%nCols;
+	canvas->Divide(nCols, nPadsTotal/nCols);
+	return canvas;
 }

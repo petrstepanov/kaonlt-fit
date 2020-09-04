@@ -14,6 +14,7 @@
 
 #include "../fit/AbsComponentFunc.h"
 #include "../model/FitParameters.h"
+#include "../model/Constants.h"
 
 class FitUtils {
 public:
@@ -26,6 +27,8 @@ public:
 	static void fillHistogramFromFuncObject(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject);
 	static TH1* getfillHistogramFromFuncObject(TH1* hist, AbsComponentFunc* funcObject);
 	static Double_t* getConvFitParameters(Double_t*, Int_t nPar);
+	static const char* getFitDescription(FitType fitType);
+	static void fitHistogramOnPad(TH1* hist, TVirtualPad* pad, FitParameters* params, FitType fitType, Int_t fitMin = 0);
 
 private:
 	static TF1* getFuncSReal(TH1*, Int_t, Bool_t isConvolution = kFALSE);

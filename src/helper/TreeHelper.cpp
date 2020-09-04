@@ -47,12 +47,12 @@ int TreeHelper::init(const char* fileName){
 	}
 
 	// Print list of keys in ROOT file
-	myFile->GetListOfKeys()->Print(); // or file->ls()
+	// myFile->GetListOfKeys()->Print(); // or file->ls()
 
 	// Read Tree from ROOT file
 	myFile->GetObject(Constants::getInstance()->parameters.treeName, myTree); // or gDirectory->GetObject("T",MyTree);
 	if (myTree == NULL){
-		// If the tree with specified mane dows not exist - pick a first occurance of
+		return 1;
 	}
 	myTree->Print();     // Print tree branches
 	// myTree->Scan("");    // Print tree columns
@@ -201,5 +201,7 @@ void TreeHelper::fillPmtHists(TH1* pmt1Hist, TH1* pmt2Hist){
 		if (*tiler == tileProfile && *tilel > 0){
 			HistUtils::increaseCorrespondingBinContent(pmt2Hist, *ch_2);
 		}
+
+		// ch_1 + ch_2 ->
 	}
 }

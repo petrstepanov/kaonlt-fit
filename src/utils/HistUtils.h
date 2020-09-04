@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <TH1F.h>
+#include <TList.h>
 #include <RooCurve.h>
 #include <RooAbsPdf.h>
 
@@ -25,6 +26,7 @@ public:
 	virtual ~HistUtils();
 
 	static TH1* trimHistogram(TH1*);
+	static TList* trimHistogramList(TList*, Double_t xMin, Double_t xMax);
 	static TH1* cutHistogram(TH1* hist, Double_t xMin, Double_t xMax);
 	static TH1* cloneHistogram(TH1*, const char*, const char* = 0);
 	static void resetHistogram(TH1*);

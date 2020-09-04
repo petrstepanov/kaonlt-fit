@@ -24,8 +24,8 @@
 // Command-line parameters
 
 enum class FitType {
-	test,
 	none,
+	test,
 	root,
 	rootConv,
 	rooFit
@@ -53,8 +53,8 @@ struct Parameters {
 	Int_t chMin = -1000;
 	Int_t chMax = 20000;
 	Int_t chBins = 0;
-	Int_t chFitMin = 0;
-	Int_t chFitMax = 0;
+	Double_t chFitMin = 0;
+	Double_t chFitMax = 0;
 };
 
 class Constants {
@@ -67,6 +67,8 @@ class Constants {
 	static const Int_t AMP_MAX;
 
 	static const Int_t N_PX;
+
+	static const Int_t N_BEAM_COLS;
 
 	static const Double_t SIGMA_TO_FWHM;
 

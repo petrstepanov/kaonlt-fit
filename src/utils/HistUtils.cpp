@@ -6,6 +6,7 @@
  */
 
 #include "../utils/HistUtils.h"
+#include "../model/Constants.h"
 #include <TH1F.h>
 
 HistUtils::HistUtils() {
@@ -47,6 +48,21 @@ TH1* HistUtils::trimHistogram(TH1* hist){
 	return trimmedHist;
 }
 
+TList* HistUtils::trimHistogramList(TList* histograms, Double_t xMin, Double_t xMax){
+	TList* histogramsTrimmed = new TList();
+	for (TObject* object : *histograms){
+		TH1* hist = (TH1F*)object;
+		if (hist){
+			Double_t chFitMin = Constants::getInstance()->parameters.chFitMin;
+			Double_t chFitMax = Constants::getInstance()->parameters.chFitMax;
+			TH1* trimmedHist = HistUtils::cutHistogram(hist, chFitMin, chFitMax);
+			trimmedHist->Print();
+			histogramsTrimmed->Add(trimmedHist);
+		}
+	}
+	return histogramsTrimmed;
+}
+
 TH1* HistUtils::cutHistogram(TH1* hist, Double_t xMin, Double_t xMax){
 	Int_t minBin = hist->GetXaxis()->FindBin(xMin);
 	Int_t maxBin = hist->GetXaxis()->FindBin(xMax);
@@ -56,7 +72,7 @@ TH1* HistUtils::cutHistogram(TH1* hist, Double_t xMin, Double_t xMax){
 	TAxis* xAxis = hist->GetXaxis();
 	TString name = TString::Format("%s-trimmed", hist->GetName());
 	// TString title = TString::Format("%s (trimmed)", hist->GetTitle());
-	TH1F* trimmedHist = new TH1F(name, hist->GetTitle(), nBins, xAxis->GetBinLowEdge(minBin), xAxis->GetBinUpEdge(maxBin));
+	TH1D* trimmedHist = new TH1D(name, hist->GetTitle(), nBins, xAxis->GetBinLowEdge(minBin), xAxis->GetBinUpEdge(maxBin));
 
 	for (Int_t i = 1; i <= nBins; i++){
 		trimmedHist->SetBinContent(i, hist->GetBinContent(i+minBin-1));

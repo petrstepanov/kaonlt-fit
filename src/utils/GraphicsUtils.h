@@ -13,6 +13,7 @@
 #include <TFitResult.h>
 #include <TPaveText.h>
 #include <TFitResultPtr.h>
+#include <TCanvas.h>
 #include <RooAbsPdf.h>
 #include <vector>
 
@@ -55,6 +56,9 @@ public:
 //	static void showChi2InStats(TH1*, TFitResultPtr, TVirtualPad*);
 	static void styleAxis(TAxis* axis, const char* title, Double_t titleOffset, Double_t labelOffset, Bool_t isTopPad);
 	static void addLineToPave(TVirtualPad* canvas, RooAbsPdf* pdf, const char* line);
+
+	static TCanvas* getCanvasForNPads(const char* name, const char* title, Int_t width, Int_t height, Int_t nPads, Int_t nCols);
+	static TCanvas* getCanvasForNPads(const char* title, Int_t width, Int_t height, Int_t nPads, Int_t nCols);
 };
 
 #endif /* SRC_HELPER_GRAPHICSUTILS_H_ */

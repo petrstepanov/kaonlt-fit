@@ -22,6 +22,12 @@
 #include <RooRealVar.h>
 #include <RooAbsPdf.h>
 
+enum class InputFileType {
+	Prototype,
+	Beam,
+	Unknown
+};
+
 class RootUtils {
 public:
     static void deleteObject(const char* name);
@@ -29,6 +35,7 @@ public:
     static Int_t getNumCpu();
     static void startTimer(void);
     static void stopAndPrintTimer();
+    static InputFileType getInputFileType(const char* fileName);
 
 private:
     static TStopwatch* watch;

@@ -21,22 +21,17 @@
 #include "utils/HistUtils.h"
 #include "utils/TestSpectrum.h"
 #include "utils/FitUtils.h"
+#include "utils/RootUtils.h"
 #include "helper/TreeHelper.h"
+#include "helper/BeamHelper.h"
 #include "fit/FuncSReal.h"
 #include "fit/FuncSRealFFT.h"
 #include "fit/FuncSRealNoTerm0.h"
 #include "fit/FuncSRealFFTNoTerm0.h"
 
-int run(const char* fileName) {
-	// TODO: Determine if its a prototype spectrum or real Kaon spectrum
-
-
-
-	// Instantiate the Tree and read it from the input file
-	if (TreeHelper::getInstance()->init(fileName) == -1){
-		return -1;
-	}
-
+int runPrototype(const char* fileName){
+	TreeHelper::getInstance()->init(fileName);
+	// If input file contains the tree - prototype data
 	// Plot the Tree if --plot-tree=kTRUE command line argument was passed
 	if (Constants::getInstance()->parameters.plotTree == kTRUE){
 		TreeHelper::getInstance()->plotTree(fileName);
@@ -85,6 +80,7 @@ int run(const char* fileName) {
 
 	// Fit and plot PMT spectra
 	FitType fitType = Constants::getInstance()->parameters.fitType;
+	const char* fitKind = FitUtils::getFitDescription(fitType);
 	if (fitType == FitType::none) return 0;
 
 	// Trim PMT spectra to remove zero bin noise
@@ -95,11 +91,6 @@ int run(const char* fileName) {
 	Int_t chFitMax = Constants::getInstance()->parameters.chFitMax;
 	TH1* pmt1HistFit = HistUtils::cutHistogram(pmt1Hist, chFitMin, chFitMax);
 	TH1* pmt2HistFit = HistUtils::cutHistogram(pmt2Hist, chFitMin, chFitMax);
-
-	const char* fitKind;
-	if (fitType == FitType::root) fitKind = "ROOT Fit";
-	else if (fitType == FitType::rootConv) fitKind = "ROOT Fit with Convolution";
-	else fitKind = "RooFit";
 
 	TString pmtsFitCanvasTitle = TString::Format("%s of the PMT profile spectra (tile = %d, terms = %d)", fitKind, Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber);
 	TCanvas* pmtsFitCanvas = new TCanvas("pmtsFitCanvas", pmtsFitCanvasTitle.Data(), 1024, 512);
@@ -135,7 +126,92 @@ int run(const char* fileName) {
 	TString pngFitFilePath = TString::Format("%s-fit-tile%d-terms%d-%s.png", fileName, Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber, fitSuffix);
 	pmtsFitCanvas->SaveAs(pngFitFilePath.Data());
 
+	// Return success (0)
 	return 0;
+}
+
+int runBeam(const char* fileName){
+	// If input file contains the beam data
+	BeamHelper::getInstance()->init(fileName);
+
+	// Trim histograms
+	TList* histogramsPos = BeamHelper::getInstance()->getHistogramsPositive();
+	TList* histogramsPosTrimmed = HistUtils::trimHistogramList(histogramsPos, Constants::getInstance()->parameters.chFitMin, Constants::getInstance()->parameters.chFitMax);
+	TList* histogramsNeg = BeamHelper::getInstance()->getHistogramsNegative();
+	TList* histogramsNegTrimmed = HistUtils::trimHistogramList(histogramsNeg, Constants::getInstance()->parameters.chFitMin, Constants::getInstance()->parameters.chFitMax);
+
+	// Determine fit type
+	FitType fitType = Constants::getInstance()->parameters.fitType;
+	const char* fitKind = FitUtils::getFitDescription(fitType);
+
+	// Plot spectra for Positive and Negative PMTs
+	if (Constants::getInstance()->parameters.plotProfiles == kTRUE){
+		TCanvas* beamCanvasPos = GraphicsUtils::getCanvasForNPads("beamCanvasPos", "Beam PMT Positive spectra", 1280, 640, histogramsPosTrimmed->LastIndex()+1, 3);
+		for (UInt_t i = 0; i <= histogramsPosTrimmed->LastIndex(); i++){
+			TH1* hist = (TH1*)histogramsPosTrimmed->At(i);
+			if (hist){
+				TVirtualPad* pad = beamCanvasPos->cd(i+1);
+				hist->SetTitle(hist->GetName());
+				hist->Draw();
+			}
+		}
+
+		TCanvas* beamCanvasNeg= GraphicsUtils::getCanvasForNPads("beamCanvasNeg", "Beam PMT Negative spectra", 1280, 640, histogramsNegTrimmed->LastIndex()+1, 3);
+		for (UInt_t i = 0; i <= histogramsNegTrimmed->LastIndex(); i++){
+			TH1* hist = (TH1*)histogramsNegTrimmed->At(i);
+			if (hist){
+				TVirtualPad* pad = beamCanvasNeg->cd(i+1);
+				hist->SetTitle(hist->GetName());
+				hist->Draw();
+			}
+		}
+	}
+
+	if (fitType == FitType::none) return 0;
+
+	// Retreive parameters for KaonLT Prototype histogram
+	TString parametersFileName = fileName;
+	parametersFileName.ReplaceAll(".root", "-params.txt");
+	FitParameters* params = new FitParameters(parametersFileName.Data());
+
+	// Fit and plot Positive histograms
+	TString beamFitCanvasPosTitle = TString::Format("%s of the beam PMT Positive spectra (terms = %d)", fitKind, Constants::getInstance()->parameters.termsNumber);
+	TCanvas* beamFitCanvasPos = GraphicsUtils::getCanvasForNPads("beamFitCanvasPos", beamFitCanvasPosTitle.Data(), 1280, 640, histogramsPosTrimmed->LastIndex()+1, 3);
+	for (UInt_t i = 0; i <= histogramsPosTrimmed->LastIndex(); i++){
+		TH1* hist = (TH1*)histogramsPosTrimmed->At(i);
+		if (hist){
+			TVirtualPad* pad = beamFitCanvasPos->cd(i+1);
+			hist->SetTitle(hist->GetName());
+			FitUtils::fitHistogramOnPad(hist, pad, params, fitType);
+		}
+	}
+
+	// Fit and plot Negative histograms
+//	TString beamFitCanvasNegTitle = TString::Format("%s of the beam PMT Negative spectra (terms = %d)", fitKind, Constants::getInstance()->parameters.termsNumber);
+//	TCanvas* beamFitCanvasNeg = GraphicsUtils::getCanvasForNPads("beamFitCanvasPos", beamFitCanvasNegTitle.Data(), 1280, 640, histogramsNegTrimmed->LastIndex()+1, 3);
+//	for (UInt_t i = 0; i <= histogramsNegTrimmed->LastIndex(); i++){
+//		TH1* hist = (TH1*)histogramsNegTrimmed->At(i);
+//		if (hist){
+//			TVirtualPad* pad = beamFitCanvasPos->cd(i+1);
+//			pad->SetTitle(hist->GetName());
+//			FitUtils::fitHistogramOnPad(hist, pad, params, fitType);
+//		}
+//	}
+
+
+	return 0;
+}
+
+int run(const char* fileName) {
+	InputFileType fileType = RootUtils::getInputFileType(fileName);
+
+	if (fileType == InputFileType::Prototype){
+		return runPrototype(fileName);
+	}
+	if (fileType == InputFileType::Beam){
+		return runBeam(fileName);
+	}
+	return 1;
 }
 
 // Test fit histogram digitized from the paper
@@ -224,10 +300,10 @@ int main(int argc, char* argv[]) {
 	// Info in <TF1::IntegralOneDim>: 		Function Parameters = { p0 =  220.198026 , p1 =  0.044300 , p2 =  165.000000 , p3 =  63.506987 , p4 =  0.700397 , p5 =  0.027247 , p6 =  0.500000 }
 	// ROOT::Math::IntegratorOneDimOptions::SetDefaultRelTolerance(1.E-4);
 
-	// Test fitting function on the digitized test histogram
-	// testDigitized();
-	// Test fitting function on the filled random test histogram
 	if (Constants::getInstance()->parameters.fitType == FitType::test){
+		// Test fitting function on the digitized test histogram
+		// testDigitized();
+		// Test fitting function on the filled random test histogram
 		testFillRandom();
 		testNoTerm0();
 	}
@@ -242,12 +318,12 @@ int main(int argc, char* argv[]) {
 		// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("Gauss");
 		// ROOT::Math::IntegratorOneDimOptions::SetDefaultNPoints(n);
 
-		// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
-		// ROOT::Math::MinimizerOptions::SetDefaultTolerance(1.E-3);
+		// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("FUMILI");
+		// ROOT::Math::MinimizerOptions::SetDefaultTolerance(1.E-4);
 
 		// Abnormal termination of minimization
 		// ROOT::Math::MinimizerOptions::SetDefaultTolerance(1); // Default 1.E-2
-		// ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(1.E4);
+		// ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(2147483647);
 
 		// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Migrad"); // Default
 		// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Simplex");
@@ -258,8 +334,9 @@ int main(int argc, char* argv[]) {
 
 		// Iterate through input files and run analysis
 		for (TObject* object : *(constants->parameters.inputFiles)) {
-			if (TObjString* objString = dynamic_cast<TObjString*>(object)){
-				run(objString->GetString());
+			TObjString* objString = (TObjString*)object;
+			if (objString){
+				run(objString->GetString().Data());
 			}
 		}
 	}
