@@ -101,8 +101,7 @@ int runPrototype(const char* fileName){
 	parametersFileName.ReplaceAll(".root", "-params.txt");
 	FitParameters* params = new FitParameters(parametersFileName.Data());
 
-	Int_t fitMin = 0;
-
+	// Perform fit of both histograms on correspondent pads
 	FitUtils::fitHistogramOnPad(pmt1HistFit, pmtsFitCanvas->cd(1), params, fitType);
 	FitUtils::fitHistogramOnPad(pmt2HistFit, pmtsFitCanvas->cd(2), params, fitType);
 
