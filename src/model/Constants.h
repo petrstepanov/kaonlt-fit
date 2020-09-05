@@ -24,11 +24,11 @@
 // Command-line parameters
 
 enum class FitType {
-	none,
 	test,
 	root,
 	rootConv,
-	rooFit
+	rooFit,
+	none
 };
 
 enum class Minimization {

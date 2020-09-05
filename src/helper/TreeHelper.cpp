@@ -18,6 +18,7 @@
 #include "../utils/HistUtils.h"
 #include "../utils/GraphicsUtils.h"
 #include "../utils/RootUtils.h"
+#include "../utils/StringUtils.h"
 
 TreeHelper::TreeHelper() {
 	myFile = NULL;
@@ -169,7 +170,8 @@ void TreeHelper::plotTree(){
 	amp2TilerHist->Draw("COLZ0");
 
 	// Save canvas to file
-	TString pngFilePath = TString::Format("%s-%s.png", myFile->GetName(), myTree->GetName());
+	const char* filenameNoExt = StringUtils::extractFilenameNoExtension(myFile->GetName())->Data();
+	TString pngFilePath = TString::Format("%s-%s.png", filenameNoExt, myTree->GetName());
 	myCanvas->SaveAs(pngFilePath.Data());
 }
 

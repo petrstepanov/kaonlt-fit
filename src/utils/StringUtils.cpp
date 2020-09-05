@@ -55,10 +55,10 @@ std::pair<TString, TString> StringUtils::parseParameter(const char* parameter){
 //}
 
 TString* StringUtils::extractFilenameNoExtension(const char* fileNamePath){
-	TString s = TString(fileNamePath);
+	TString* s = new TString(fileNamePath);
 
 	// If file path has no slashes or backslashes
-	if (!s.Contains("\\") && !s.Contains("/")){
+	if (!s->Contains("\\") && !s->Contains("/")){
 		TObjArray *objArray = TPRegexp("(.*)\\.(?:.*)").MatchS(*s);
 		if (objArray->GetLast()+1 != 2){
 			return NULL;
@@ -68,7 +68,8 @@ TString* StringUtils::extractFilenameNoExtension(const char* fileNamePath){
 	}
 
 	// If file path contains slashes or back slashes
-	TObjArray *objArray = TPRegexp(".*(?:\\\\/|\\\\)(.*)\\.(?:.*)").MatchS(*s);
+	TObjArray *objArray = TPRegexp(".*(?:\\/|\\\\)(.*)\\.(?:.*)").MatchS(*s); // .*(?:\/|\\)(.*)\.(?:.*)
+	objArray->Print();
 	if (objArray->GetLast()+1 != 2){
 		return NULL;
 	}
@@ -83,10 +84,17 @@ TString* StringUtils::extractFilenameWithExtension(const char* fileNamePath){
 		return s;
 	}
 
-	// If file path contains slashes or back slashes
-	TObjArray *objArray = TPRegexp(".*(?:\\/|\\\\)(.*)").MatchS(*s);
+	// If file path contains slashes or back slashes https://regex101.com/r/7H6We8/1
+	TObjArray *objArray = TPRegexp(".*(?:\\/|\\\\)(.*)").MatchS(*s); // .*(?:\/|\\)(.*)
 	if (objArray->GetLast()+1 != 2){
 		return NULL;
 	}
 	return new TString(((TObjString *)objArray->At(1))->GetString().Data());
+}
+
+const char* StringUtils::toString(FitType fitType){
+	if (fitType == FitType::test) return "test";
+	if (fitType == FitType::root) return "root-analytical";
+	if (fitType == FitType::rooFit) return "roofit";
+	return "none";
 }
