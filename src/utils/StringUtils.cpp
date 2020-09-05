@@ -42,3 +42,51 @@ std::pair<TString, TString> StringUtils::parseParameter(const char* parameter){
 	// Otherwise return "unknown" in pair
 	return std::make_pair(TString("unknown-argument"), TString(parameter));
 }
+
+//std::pair<TString, TString> StringUtils::extractFilenameAndExtension(const char* fileNamePath){
+//	TString s = TString(fileNamePath);
+//	TObjArray *objArray = TPRegexp(".*(?:\/|\\)(.*)\.(.*)").MatchS(s);
+//	if (objArray->GetLast()+1 != 3){
+//		return NULL;
+//	}
+//	const TString filename = ((TObjString *)objArray->At(1))->GetString();
+//	const TString extension  = ((TObjString *)objArray->At(2))->GetString();
+//	return std::make_pair(filename, extension);
+//}
+
+TString* StringUtils::extractFilenameNoExtension(const char* fileNamePath){
+	TString s = TString(fileNamePath);
+
+	// If file path has no slashes or backslashes
+	if (!s.Contains("\\") && !s.Contains("/")){
+		TObjArray *objArray = TPRegexp("(.*)\\.(?:.*)").MatchS(*s);
+		if (objArray->GetLast()+1 != 2){
+			return NULL;
+		}
+		const TString str = ((TObjString *)objArray->At(1))->GetString();
+		return new TString(str.Data());
+	}
+
+	// If file path contains slashes or back slashes
+	TObjArray *objArray = TPRegexp(".*(?:\\\\/|\\\\)(.*)\\.(?:.*)").MatchS(*s);
+	if (objArray->GetLast()+1 != 2){
+		return NULL;
+	}
+	return new TString(((TObjString *)objArray->At(1))->GetString().Data());
+}
+
+TString* StringUtils::extractFilenameWithExtension(const char* fileNamePath){
+	TString* s = new TString(fileNamePath);
+
+	// If file path has no slashes or backslashes
+	if (!s->Contains("\\") && !s->Contains("/")){
+		return s;
+	}
+
+	// If file path contains slashes or back slashes
+	TObjArray *objArray = TPRegexp(".*(?:\\/|\\\\)(.*)").MatchS(*s);
+	if (objArray->GetLast()+1 != 2){
+		return NULL;
+	}
+	return new TString(((TObjString *)objArray->At(1))->GetString().Data());
+}

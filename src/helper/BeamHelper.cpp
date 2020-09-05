@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <TFile.h>
+#include <TChain.h>
 #include <TH2F.h>
 #include <TTreeReader.h>
 #include <TCanvas.h>
@@ -17,10 +18,10 @@
 #include "../model/Constants.h"
 #include "../utils/HistUtils.h"
 #include "../utils/GraphicsUtils.h"
+#include "../utils/RootUtils.h"
 
 BeamHelper::BeamHelper() {
-	fileName = new TString();
-	myFile = new TFile();
+	myFile = NULL;
 	histogramsPositive = new TList();
 	histogramsNegative = new TList();
 }
@@ -36,22 +37,17 @@ BeamHelper* BeamHelper::getInstance(){
     return instance;
 }
 
-int BeamHelper::init(const char* fileName){
-	// Open ROOT file
-	// When you create a TFile object, it becomes the current directory
-	// https://root.cern.ch/root/htmldoc/guides/users-guide/InputOutput.html#the-current-directory
-	this->fileName = new TString(fileName);
-	myFile->Close();
-	myFile = new TFile(fileName);
-	if (myFile->IsZombie()) {
-		std::cout << "Error opening file \"" << fileName << "\""<< std::endl;
-		return -1;
-	}
+int BeamHelper::init(TList* fileNamesList){
+	// Merge inout files into a single ROOT file
+	myFile = RootUtils::mergeFiles(fileNamesList);
+
+	if (!myFile) return 1;
 
 	// Print list of keys in ROOT file
 	TList *keys = myFile->GetListOfKeys();
 	keys->Print();
 
+	// Extract positive and negative hists
 	for (UInt_t i = 0; i <= keys->LastIndex(); i++){
 		TH1D *hist;
 		TString key = ((TObjString*)keys->At(i))->GetString();
@@ -79,4 +75,8 @@ TList* BeamHelper::getHistogramsPositive(){
 
 TList* BeamHelper::getHistogramsNegative(){
 	return histogramsNegative;
+}
+
+const char* BeamHelper::getFileName(){
+	return myFile->GetName();
 }

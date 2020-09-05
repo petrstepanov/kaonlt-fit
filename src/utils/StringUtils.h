@@ -18,6 +18,8 @@ public:
 	virtual ~StringUtils();
 
 	static std::pair<TString, TString> parseParameter(const char*);
+	static TString* extractFilenameNoExtension(const char* fileNamePath);
+	static TString* extractFilenameWithExtension(const char* fileNamePath);
 };
 
 #endif /* SRC_UTILS_STRINGUTILS_H_ */

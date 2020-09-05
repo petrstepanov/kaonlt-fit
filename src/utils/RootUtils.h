@@ -15,6 +15,7 @@
 #define RootUtils_H
 
 #include <TROOT.h>
+#include <TFile.h>
 #include <TStopwatch.h>
 #include <TGFrame.h>
 #include <TGNumberEntry.h>
@@ -36,6 +37,7 @@ public:
     static void startTimer(void);
     static void stopAndPrintTimer();
     static InputFileType getInputFileType(const char* fileName);
+    static TFile* mergeFiles(TList* fileNamesList);
 
 private:
     static TStopwatch* watch;

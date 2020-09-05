@@ -29,17 +29,17 @@
 #include "fit/FuncSRealNoTerm0.h"
 #include "fit/FuncSRealFFTNoTerm0.h"
 
-int runPrototype(const char* fileName){
-	TreeHelper::getInstance()->init(fileName);
-	// If input file contains the tree - prototype data
+int runPrototype(TList* fileNamesList){
+	// Initialize the tree from merged files
+	TreeHelper::getInstance()->init(fileNamesList);
+
 	// Plot the Tree if --plot-tree=kTRUE command line argument was passed
 	if (Constants::getInstance()->parameters.plotTree == kTRUE){
-		TreeHelper::getInstance()->plotTree(fileName);
+		for(TObject* object : *fileNamesList){
+			TObjString* fileName = (TObjString*) object;
+			TreeHelper::getInstance()->plotTree();
+		}
 	}
-
-	// Temporary plot tree profiles for ch_1 and ch_2
-	// Need to study the region between the pedestal and first peak
-	// TreeHelper::getInstance()->plotTreeProfiles();
 
 	// Prepare histograms for the PMT projection spectra
 	Int_t chMin = Constants::getInstance()->parameters.chMin;
@@ -57,7 +57,8 @@ int runPrototype(const char* fileName){
 	// Fill PMT histograms from the Tree data
 	TreeHelper::getInstance()->fillPmtHists(pmt1Hist, pmt2Hist);
 
-	// Plot PMT profile spectra
+	// Plot PMT profile spectra if needed
+	const char* fileName = TreeHelper::getInstance()->getFileName();
 	if (Constants::getInstance()->parameters.plotProfiles == kTRUE){
 		TString pmtsCanvasTitle = TString::Format("Profile of the PMT spectra (tile = %d)", Constants::getInstance()->parameters.tileProfile);
 		TCanvas* pmtsCanvas = new TCanvas("pmtsCanvas", pmtsCanvasTitle.Data(), 1024, 512);
@@ -117,9 +118,9 @@ int runPrototype(const char* fileName){
 	return 0;
 }
 
-int runBeam(const char* fileName){
+int runBeam(TList* fileNamesList){
 	// If input file contains the beam data
-	BeamHelper::getInstance()->init(fileName);
+	BeamHelper::getInstance()->init(fileNamesList);
 
 	// Trim histograms
 	TList* histogramsPos = BeamHelper::getInstance()->getHistogramsPositive();
@@ -157,7 +158,8 @@ int runBeam(const char* fileName){
 	if (fitType == FitType::none) return 0;
 
 	// Retreive parameters for KaonLT Prototype histogram
-	TString parametersFileName = fileName;
+	TString firstFileName = ((TObjString*)fileNamesList->At(0))->GetString();
+	TString parametersFileName = TString(firstFileName.Data());
 	parametersFileName.ReplaceAll(".root", "-params.txt");
 	FitParameters* params = new FitParameters(parametersFileName.Data());
 
@@ -188,14 +190,15 @@ int runBeam(const char* fileName){
 	return 0;
 }
 
-int run(const char* fileName) {
-	InputFileType fileType = RootUtils::getInputFileType(fileName);
+int run(TList* fileNamesList) {
+	const char* firstFileName = ((TObjString*)fileNamesList->At(0))->GetString().Data();
+	InputFileType fileType = RootUtils::getInputFileType(firstFileName);
 
 	if (fileType == InputFileType::Prototype){
-		return runPrototype(fileName);
+		return runPrototype(fileNamesList);
 	}
 	if (fileType == InputFileType::Beam){
-		return runBeam(fileName);
+		return runBeam(fileNamesList);
 	}
 	return 1;
 }
@@ -318,13 +321,11 @@ int main(int argc, char* argv[]) {
 
 		// ROOT::Math::IntegratorOneDimOptions:: ROOT::Math::Integrator GSLIntegrator(double absTol = 1.0000000000000001E-9, double relTol = 9.9999999999999995E-7, size_t size = 1000)
 
-		// Iterate through input files and run analysis
-		for (TObject* object : *(constants->parameters.inputFiles)) {
-			TObjString* objString = (TObjString*)object;
-			if (objString){
-				run(objString->GetString().Data());
-			}
-		}
+		// Exit if file names not provided
+		if (constants->parameters.inputFiles->LastIndex() < 0) return 1;
+
+		// Run analysis
+		run(constants->parameters.inputFiles);
 	}
 
 	app->Run();
