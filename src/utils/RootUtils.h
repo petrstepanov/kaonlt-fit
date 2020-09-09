@@ -38,6 +38,7 @@ public:
     static void stopAndPrintTimer();
     static InputFileType getInputFileType(const char* fileName);
     static TFile* mergeFiles(TList* fileNamesList);
+    static void setRooRealVarValueLimits(RooRealVar* var, Double_t value, Double_t min, Double_t max);
 
 private:
     static TStopwatch* watch;

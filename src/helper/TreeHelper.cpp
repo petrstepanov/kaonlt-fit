@@ -37,12 +37,13 @@ TreeHelper* TreeHelper::getInstance(){
 }
 
 int TreeHelper::init(TList* fileNamesList){
-	// Merge inout files into a single ROOT file
+	// Merge input files into a single ROOT file
+
 	myFile = RootUtils::mergeFiles(fileNamesList);
 	if (!myFile) return 1;
 
 	// Print list of keys in ROOT file
-	 myFile->GetListOfKeys()->Print(); // or file->ls()
+	myFile->GetListOfKeys()->Print(); // or file->ls()
 
 	// Read Tree from ROOT file
 	myFile->GetObject(Constants::getInstance()->parameters.treeName, myTree); // or gDirectory->GetObject("T",MyTree);

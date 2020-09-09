@@ -55,6 +55,7 @@ struct Parameters {
 	Int_t chBins = 0;
 	Double_t chFitMin = 0;
 	Double_t chFitMax = 0;
+	Double_t paramDeviation = 1;
 };
 
 class Constants {

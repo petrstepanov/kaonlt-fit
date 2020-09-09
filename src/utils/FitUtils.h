@@ -29,6 +29,7 @@ public:
 	static Double_t* getConvFitParameters(Double_t*, Int_t nPar);
 	static const char* getFitDescription(FitType fitType);
 	static void fitHistogramOnPad(TH1* hist, TVirtualPad* pad, FitParameters* params, FitType fitType, Int_t fitMin = 0);
+	static void estimateFitParameters(TH1* histogram, FitParameters* params);
 
 private:
 	static TF1* getFuncSReal(TH1*, Int_t, Bool_t isConvolution = kFALSE);

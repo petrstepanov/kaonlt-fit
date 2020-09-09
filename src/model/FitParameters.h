@@ -27,9 +27,11 @@ public:
 	Double_t* getArray();
 	Int_t getSize();
 
+	Int_t readParametersFromFile();
+
 private:
+	const char* filename;
 	RooArgList* parameters;
-	RooArgList* readParametersFromFile(const char* fileName);
 };
 
 #endif /* SRC_MODEL_FITPARAMETERS_H_ */

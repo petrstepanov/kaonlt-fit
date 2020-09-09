@@ -104,9 +104,10 @@ TFile* RootUtils::mergeFiles(TList* fileNamesList){
 	}
 
 	// If multiple filenames provided - import file names into the chain
-	TString* firstFileNameNoExt = StringUtils::extractFilenameNoExtension(firstFileName);
-	TString chainName = TString::Format("chain-%s", firstFileNameNoExt->Data());
-	TChain* chain = new TChain(chainName.Data());
+	// TString* firstFileNameNoExt = StringUtils::extractFilenameNoExtension(firstFileName);
+	const char* treeName = Constants::getInstance()->parameters.treeName.Data();
+	// TString chainName = TString::Format("chain-%s", firstFileNameNoExt->Data());
+	TChain* chain = new TChain(treeName);
 	for (TObject* object : *fileNamesList) {
 		TObjString* objString = (TObjString*)object;
 		if (objString){
@@ -116,7 +117,7 @@ TFile* RootUtils::mergeFiles(TList* fileNamesList){
 	}
 
 	// Construct new TFile name and merge TChain into it
-	TString* firstFileNameWithExt = StringUtils::extractFilenameNoExtension(firstFileName);
+	TString* firstFileNameWithExt = StringUtils::extractFilenameWithExtension(firstFileName);
 	TString newFileName = firstFileNameWithExt->ReplaceAll(".root", "-all.root");
 	const char* absFilePath = gSystem->PrependPathName(gSystem->WorkingDirectory(), newFileName);
 	Int_t result = chain->Merge(absFilePath);
@@ -132,4 +133,14 @@ TFile* RootUtils::mergeFiles(TList* fileNamesList){
 		return NULL;
 	}
 	return file;
+}
+
+
+void RootUtils::setRooRealVarValueLimits(RooRealVar* var, Double_t value, Double_t min, Double_t max){
+	// Tip: roofit can't set min larger than current max and vice versa
+	var->setMin(std::numeric_limits<double>::min());
+	var->setMax(std::numeric_limits<double>::max());
+	var->setMin(min);
+	var->setMax(max);
+	var->setVal(value);
 }

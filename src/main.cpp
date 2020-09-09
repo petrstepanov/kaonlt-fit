@@ -101,12 +101,21 @@ int runPrototype(TList* fileNamesList){
 	pmtsFitCanvas->Divide(2,1);
 
 	// Retreive parameters for KaonLT Prototype histogram
-	TString parametersFileName = fileURL;
-	parametersFileName.ReplaceAll(".root", "-params.txt");
-	FitParameters* params = new FitParameters(parametersFileName.Data());
+	TString* parametersFileName = StringUtils::extractFilenameWithExtension(fileURL);
+	parametersFileName->ReplaceAll(".root", "-params.txt");
+	FitParameters* params = new FitParameters(parametersFileName->Data());
+	if (params->getList()->getSize() != 7){
+		std::cout << "Missing or incomplete fit parameters file \"" << parametersFileName->Data() << "\"" << std::endl;
+		return 1;
+	}
 
-	// Perform fit of both histograms on correspondent pads
+	// Perform fit of the first PMT histogram
+	FitUtils::estimateFitParameters(pmt1HistFit, params);
 	FitUtils::fitHistogramOnPad(pmt1HistFit, pmtsFitCanvas->cd(1), params, fitType);
+
+	// Reset parameters and fit second PMT histogram
+	params->readParametersFromFile();
+	FitUtils::estimateFitParameters(pmt2HistFit, params);
 	FitUtils::fitHistogramOnPad(pmt2HistFit, pmtsFitCanvas->cd(2), params, fitType);
 
 	// Save canvas with PMT profiles to file
@@ -132,7 +141,7 @@ int runBeam(TList* fileNamesList){
 	const char* fitKind = FitUtils::getFitDescription(fitType);
 
 	// Plot spectra for Positive and Negative PMTs
-	const char* fileURL = TreeHelper::getInstance()->getFileName();
+	const char* fileURL = BeamHelper::getInstance()->getFileName();
 	const char* fileNameNoExt = StringUtils::extractFilenameNoExtension(fileURL)->Data();
 
 	if (Constants::getInstance()->parameters.plotProfiles == kTRUE){
@@ -164,9 +173,13 @@ int runBeam(TList* fileNamesList){
 	if (fitType == FitType::none) return 0;
 
 	// Retreive parameters for KaonLT Prototype histogram
-	TString parametersFileName = TString(fileURL);
-	parametersFileName.ReplaceAll(".root", "-params.txt");
-	FitParameters* params = new FitParameters(parametersFileName.Data());
+	TString* parametersFileName = StringUtils::extractFilenameWithExtension(fileURL);
+	parametersFileName->ReplaceAll(".root", "-params.txt");
+	FitParameters* params = new FitParameters(parametersFileName->Data());
+	if (params->getList()->getSize() != 7){
+		std::cout << "Missing or incomplete fit parameters file \"" << parametersFileName->Data() << "\"" << std::endl;
+		return 1;
+	}
 
 	// Fit and plot Positive histograms
 	TString beamFitCanvasPosTitle = TString::Format("%s of the beam PMT Positive spectra (terms = %d)", fitKind, Constants::getInstance()->parameters.termsNumber);
@@ -176,6 +189,8 @@ int runBeam(TList* fileNamesList){
 		if (hist){
 			TVirtualPad* pad = beamFitCanvasPos->cd(i+1);
 			hist->SetTitle(hist->GetName());
+			// params->readParametersFromFile();
+			// FitUtils::estimateFitParameters(hist, params);
 			FitUtils::fitHistogramOnPad(hist, pad, params, fitType);
 		}
 	}
@@ -183,18 +198,18 @@ int runBeam(TList* fileNamesList){
 	beamFitCanvasPos->SaveAs(beamFitCanvasPosPath.Data());
 
 	// Fit and plot Negative histograms
-	TString beamFitCanvasNegTitle = TString::Format("%s of the beam PMT Negative spectra (terms = %d)", fitKind, Constants::getInstance()->parameters.termsNumber);
-	TCanvas* beamFitCanvasNeg = GraphicsUtils::getCanvasForNPads("beamFitCanvasPos", beamFitCanvasNegTitle.Data(), 1280, 640, histogramsNegTrimmed->LastIndex()+1, 3);
-	for (UInt_t i = 0; i <= histogramsNegTrimmed->LastIndex(); i++){
-		TH1* hist = (TH1*)histogramsNegTrimmed->At(i);
-		if (hist){
-			TVirtualPad* pad = beamFitCanvasPos->cd(i+1);
-			pad->SetTitle(hist->GetName());
-			FitUtils::fitHistogramOnPad(hist, pad, params, fitType);
-		}
-	}
-	TString beamFitCanvasNegPath = TString::Format("%s-neg-fit-tile%d-terms%d-%s.png", fileNameNoExt, Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber, StringUtils::toString(fitType));
-	beamFitCanvasNeg->SaveAs(beamFitCanvasNegPath.Data());
+//	TString beamFitCanvasNegTitle = TString::Format("%s of the beam PMT Negative spectra (terms = %d)", fitKind, Constants::getInstance()->parameters.termsNumber);
+//	TCanvas* beamFitCanvasNeg = GraphicsUtils::getCanvasForNPads("beamFitCanvasPos", beamFitCanvasNegTitle.Data(), 1280, 640, histogramsNegTrimmed->LastIndex()+1, 3);
+//	for (UInt_t i = 0; i <= histogramsNegTrimmed->LastIndex(); i++){
+//		TH1* hist = (TH1*)histogramsNegTrimmed->At(i);
+//		if (hist){
+//			TVirtualPad* pad = beamFitCanvasPos->cd(i+1);
+//			pad->SetTitle(hist->GetName());
+//			FitUtils::fitHistogramOnPad(hist, pad, params, fitType);
+//		}
+//	}
+//	TString beamFitCanvasNegPath = TString::Format("%s-neg-fit-tile%d-terms%d-%s.png", fileNameNoExt, Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber, StringUtils::toString(fitType));
+//	beamFitCanvasNeg->SaveAs(beamFitCanvasNegPath.Data());
 
 	return 0;
 }
