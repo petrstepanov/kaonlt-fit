@@ -136,6 +136,27 @@ int runBeam(TList* fileNamesList){
 	TList* histogramsNeg = BeamHelper::getInstance()->getHistogramsNegative();
 	TList* histogramsNegTrimmed = HistUtils::trimHistogramList(histogramsNeg, Constants::getInstance()->parameters.chFitMin, Constants::getInstance()->parameters.chFitMax);
 
+	// Update histogram number of bins
+	Int_t chBins = Constants::getInstance()->parameters.chBins;
+	if (chBins!=0){
+		for (TObject* object : *histogramsPosTrimmed){
+			TH1* hist = (TH1F*)object;
+			if (hist){
+				Double_t min = hist->GetXaxis()->GetXmin();
+				Double_t max = hist->GetXaxis()->GetXmax();
+				hist->Rebin(2);
+			}
+		}
+		for (TObject* object : *histogramsNegTrimmed){
+			TH1* hist = (TH1F*)object;
+			if (hist){
+				Double_t min = hist->GetXaxis()->GetXmin();
+				Double_t max = hist->GetXaxis()->GetXmax();
+				hist->Rebin(2);
+			}
+		}
+	}
+
 	// Determine fit type
 	FitType fitType = Constants::getInstance()->parameters.fitType;
 	const char* fitKind = FitUtils::getFitDescription(fitType);
@@ -187,10 +208,10 @@ int runBeam(TList* fileNamesList){
 	for (UInt_t i = 0; i <= histogramsPosTrimmed->LastIndex(); i++){
 		TH1* hist = (TH1*)histogramsPosTrimmed->At(i);
 		if (hist){
-			TVirtualPad* pad = beamFitCanvasPos->cd(i+1);
 			hist->SetTitle(hist->GetName());
-			// params->readParametersFromFile();
-			// FitUtils::estimateFitParameters(hist, params);
+			params->readParametersFromFile();
+			FitUtils::estimateFitParameters(hist, params);
+			TVirtualPad* pad = beamFitCanvasPos->cd(i+1);
 			FitUtils::fitHistogramOnPad(hist, pad, params, fitType);
 		}
 	}
