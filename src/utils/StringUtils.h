@@ -21,6 +21,7 @@ public:
 	static std::pair<TString, TString> parseParameter(const char*);
 	static TString* extractFilenameNoExtension(const char* fileNamePath);
 	static TString* extractFilenameWithExtension(const char* fileNamePath);
+	static void extractChiNPars(const char* string, Double_t &chi2, Double_t &nPars);
 	static const char* toString(FitType fitType);
 };
 

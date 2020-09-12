@@ -155,6 +155,10 @@ void Constants::parseParameters(int argc, char* argv[]){
 			// Number of terms in the fitting function
 			parameters.chFitMax = atof(pair.second);
 		}
+		else if (pair.first ==  "ch-fit-range-min"){
+			// Number of terms in the fitting function
+			parameters.chFitRangeMin = atof(pair.second);
+		}
 		else if (pair.first ==  "param-deviation"){
 			// Number of terms in the fitting function
 			parameters.paramDeviation = atof(pair.second);

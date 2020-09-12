@@ -62,6 +62,7 @@ public:
 	static TCanvas* getCanvasForNPads(const char* title, Int_t width, Int_t height, Int_t nPads, Int_t nCols);
 
 	static void hilightLimitParameters(TF1* func, TVirtualPad* pad);
+	static void addChi2Value(TVirtualPad* pad);
 
 	static TPaveStats* getPaveStats(TVirtualPad* pad);
 };

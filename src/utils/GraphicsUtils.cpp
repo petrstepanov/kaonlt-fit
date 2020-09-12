@@ -11,6 +11,7 @@
 #include <TDatime.h>
 #include <TH1.h>
 #include "../utils/GraphicsUtils.h"
+#include "../utils/StringUtils.h"
 
 GraphicsUtils::GraphicsUtils() {
 }
@@ -163,7 +164,7 @@ void GraphicsUtils::hilightLimitParameters(TF1* func, TVirtualPad* pad){
 			Double_t min=0;
 			Double_t max=0;
 			func->GetParLimits(i, min, max);
-			if (value-error < min || value-error > max){
+			if (value-error < min || value+error > max){
 				TText *text = paveStats->GetLineWith(func->GetParName(i));
 				if (text) text->SetTextColor(kRed);
 				TString newTitle = TString::Format("%s (at %s)", text->GetTitle(), value-error <= min ? "min" : "max");
@@ -185,6 +186,26 @@ void GraphicsUtils::hilightLimitParameters(TF1* func, TVirtualPad* pad){
 
 //		   pad->GetListOfPrimitives()->Remove(ps);
 //		   pad->GetListOfPrimitives()->Add(myPave);
+	}
+
+	pad->Modified();
+	pad->Update();
+}
+
+void GraphicsUtils::addChi2Value(TVirtualPad* pad){
+	// Retrieve the stat box
+	TPaveStats *paveStats = getPaveStats(pad);
+
+	if (paveStats){
+		 TText *tText = paveStats->GetLineWith("chi");
+		 const char* text = tText->GetTitle();
+		 Double_t chi2;
+		 Double_t nPars;
+		 StringUtils::extractChiNPars(text, chi2, nPars);
+		 Double_t chi2Value = chi2/nPars;
+		 TString newText = TString::Format("%s #approx %.2f", text, chi2Value);
+		 const char* newTextString = newText.Data();
+		 tText->SetTitle(newTextString);
 	}
 
 	pad->Modified();

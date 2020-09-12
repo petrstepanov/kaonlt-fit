@@ -60,7 +60,7 @@ FitUtils::~FitUtils() {
 }
 
 // Fit not goes, weird function raise to the right
-void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t fitMin, TVirtualPad* pad){
+void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, TVirtualPad* pad){
 	// Wait for the unique timestamp
 	gSystem->Sleep(1000);
 	TDatime* timestamp = new TDatime();
@@ -220,7 +220,7 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t f
 	GraphicsUtils::addLineToPave(pad, sRealPdf, line.Data());
 }
 
-void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject, Int_t fitMin, TVirtualPad* pad, Bool_t noTerm0){
+void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject, TVirtualPad* pad, Bool_t noTerm0){
 	// Wait for the unique timestamp
 	gSystem->Sleep(1000);
 	TDatime* timestamp = new TDatime();
@@ -287,17 +287,18 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 
 	// Perform fit
 	RootUtils::startTimer();
-	if (fitMin != 0){
-		hist->Fit(func, "RV", "", fitMin);
+	Double_t fitMin = Constants::getInstance()->parameters.chFitRangeMin;
+	Minimization minimization = Constants::getInstance()->parameters.minimize;
+	Double_t fitXMin = fitMin != 0 ? fitMin : 0;
+	Double_t fitXMax = fitMin != 0 ? hist->GetXaxis()->GetXmax() : 0;
+//	func->SetRange(fitXMin, fitXMax);
+	if (minimization == Minimization::likelihood){
+		hist->Fit(func, "LV", "", fitXMin, fitXMax);
+//		hist->Fit(func, "SLV");
 	}
-	else {
-		Minimization minimization = Constants::getInstance()->parameters.minimize;
-		if (minimization == Minimization::likelihood){
-			hist->Fit(func, "LV");
-		}
-		else if (minimization == Minimization::chi2){
-			hist->Fit(func, "V");
-		}
+	else if (minimization == Minimization::chi2){
+		hist->Fit(func, "V", "", fitXMin, fitXMax);
+//		hist->Fit(func, "SV");
 	}
 	RootUtils::stopAndPrintTimer();
 
@@ -308,7 +309,7 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 	hist->Draw();
 
 	// Draw fit function
-	func->Draw("SAME");
+	// func->Draw("SAME");
 
 	// Obtain function fit parameters
 	Int_t nFitPar = func->GetNpar();
@@ -392,6 +393,9 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 
 	// Align and scale statistics box
 	GraphicsUtils::alignStats(hist, pad);
+
+	// Evaluate chi^2
+	GraphicsUtils::addChi2Value(pad);
 
 	gSystem->ProcessEvents();
 	pad->Modified();
@@ -524,15 +528,15 @@ const char* FitUtils::getFitDescription(FitType fitType){
 	return "none";
 }
 
-void FitUtils::fitHistogramOnPad(TH1* hist, TVirtualPad* pad, FitParameters* params, FitType fitType, Int_t fitMin){
+void FitUtils::fitHistogramOnPad(TH1* hist, TVirtualPad* pad, FitParameters* params, FitType fitType){
 	if (fitType == FitType::root){
 		AbsComponentFunc* funcObject1 = new FuncSRealNoTerm0(hist);
-		doFit(hist, params, funcObject1, fitMin, pad, kTRUE);
+		doFit(hist, params, funcObject1, pad, kTRUE);
 	} else if (fitType == FitType::rootConv){
 		AbsComponentFunc* funcObject1 = new FuncSRealFFTNoTerm0(hist);
-		doFit(hist, params, funcObject1, fitMin, pad, kTRUE);
+		doFit(hist, params, funcObject1, pad, kTRUE);
 	} else {
-		doRooFit(hist, params, kFALSE, fitMin, pad);
+		doRooFit(hist, params, kFALSE, pad);
 	}
 }
 

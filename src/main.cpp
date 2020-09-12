@@ -133,29 +133,10 @@ int runBeam(TList* fileNamesList){
 	// Trim histograms
 	TList* histogramsPos = BeamHelper::getInstance()->getHistogramsPositive();
 	TList* histogramsPosTrimmed = HistUtils::trimHistogramList(histogramsPos, Constants::getInstance()->parameters.chFitMin, Constants::getInstance()->parameters.chFitMax);
+	HistUtils::rebinHistogramList(histogramsPosTrimmed, 2);
 	TList* histogramsNeg = BeamHelper::getInstance()->getHistogramsNegative();
 	TList* histogramsNegTrimmed = HistUtils::trimHistogramList(histogramsNeg, Constants::getInstance()->parameters.chFitMin, Constants::getInstance()->parameters.chFitMax);
-
-	// Update histogram number of bins
-	Int_t chBins = Constants::getInstance()->parameters.chBins;
-	if (chBins!=0){
-		for (TObject* object : *histogramsPosTrimmed){
-			TH1* hist = (TH1F*)object;
-			if (hist){
-				Double_t min = hist->GetXaxis()->GetXmin();
-				Double_t max = hist->GetXaxis()->GetXmax();
-				hist->Rebin(2);
-			}
-		}
-		for (TObject* object : *histogramsNegTrimmed){
-			TH1* hist = (TH1F*)object;
-			if (hist){
-				Double_t min = hist->GetXaxis()->GetXmin();
-				Double_t max = hist->GetXaxis()->GetXmax();
-				hist->Rebin(2);
-			}
-		}
-	}
+	HistUtils::rebinHistogramList(histogramsNegTrimmed, 2);
 
 	// Determine fit type
 	FitType fitType = Constants::getInstance()->parameters.fitType;
@@ -209,8 +190,11 @@ int runBeam(TList* fileNamesList){
 		TH1* hist = (TH1*)histogramsPosTrimmed->At(i);
 		if (hist){
 			hist->SetTitle(hist->GetName());
-			params->readParametersFromFile();
-			FitUtils::estimateFitParameters(hist, params);
+			// Estimate fitting parameters if requested
+			if (Constants::getInstance()->parameters.paramDeviation != 0){
+				params->readParametersFromFile();
+				FitUtils::estimateFitParameters(hist, params);
+			}
 			TVirtualPad* pad = beamFitCanvasPos->cd(i+1);
 			FitUtils::fitHistogramOnPad(hist, pad, params, fitType);
 		}
@@ -219,18 +203,23 @@ int runBeam(TList* fileNamesList){
 	beamFitCanvasPos->SaveAs(beamFitCanvasPosPath.Data());
 
 	// Fit and plot Negative histograms
-//	TString beamFitCanvasNegTitle = TString::Format("%s of the beam PMT Negative spectra (terms = %d)", fitKind, Constants::getInstance()->parameters.termsNumber);
-//	TCanvas* beamFitCanvasNeg = GraphicsUtils::getCanvasForNPads("beamFitCanvasPos", beamFitCanvasNegTitle.Data(), 1280, 640, histogramsNegTrimmed->LastIndex()+1, 3);
-//	for (UInt_t i = 0; i <= histogramsNegTrimmed->LastIndex(); i++){
-//		TH1* hist = (TH1*)histogramsNegTrimmed->At(i);
-//		if (hist){
-//			TVirtualPad* pad = beamFitCanvasPos->cd(i+1);
-//			pad->SetTitle(hist->GetName());
-//			FitUtils::fitHistogramOnPad(hist, pad, params, fitType);
-//		}
-//	}
-//	TString beamFitCanvasNegPath = TString::Format("%s-neg-fit-tile%d-terms%d-%s.png", fileNameNoExt, Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber, StringUtils::toString(fitType));
-//	beamFitCanvasNeg->SaveAs(beamFitCanvasNegPath.Data());
+	TString beamFitCanvasNegTitle = TString::Format("%s of the beam PMT Negative spectra (terms = %d)", fitKind, Constants::getInstance()->parameters.termsNumber);
+	TCanvas* beamFitCanvasNeg = GraphicsUtils::getCanvasForNPads("beamFitCanvasNeg", beamFitCanvasNegTitle.Data(), 1280, 640, histogramsNegTrimmed->LastIndex()+1, 3);
+	for (UInt_t i = 0; i <= histogramsNegTrimmed->LastIndex(); i++){
+		TH1* hist = (TH1*)histogramsNegTrimmed->At(i);
+		if (hist){
+			hist->SetTitle(hist->GetName());
+			// Estimate fitting parameters if requested
+			if (Constants::getInstance()->parameters.paramDeviation != 0){
+				params->readParametersFromFile();
+				FitUtils::estimateFitParameters(hist, params);
+			}
+			TVirtualPad* pad = beamFitCanvasNeg->cd(i+1);
+			FitUtils::fitHistogramOnPad(hist, pad, params, fitType);
+		}
+	}
+	TString beamFitCanvasNegPath = TString::Format("%s-neg-fit-tile%d-terms%d-%s.png", fileNameNoExt, Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber, StringUtils::toString(fitType));
+	beamFitCanvasNeg->SaveAs(beamFitCanvasNegPath.Data());
 
 	return 0;
 }

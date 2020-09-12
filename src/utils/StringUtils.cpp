@@ -98,3 +98,12 @@ const char* StringUtils::toString(FitType fitType){
 	if (fitType == FitType::rooFit) return "roofit";
 	return "none";
 }
+
+void StringUtils::extractChiNPars(const char* string, Double_t &chi2, Double_t &nPars){
+	TString* s = new TString(string);
+	TObjArray *objArray = TPRegexp("=(.+)\\/(.+)").MatchS(*s); // =(.+)\/(.+)
+	const char* chi2Str = ((TObjString *)objArray->At(1))->GetString().Data();
+	chi2 = atof(chi2Str);
+	const char* nParsStr = ((TObjString *)objArray->At(2))->GetString().Data();
+	nPars = atoi(nParsStr);
+}
