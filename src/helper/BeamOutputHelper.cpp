@@ -50,6 +50,10 @@ void BeamOutputHelper::createAsciiHeader(){
 	fprintf(asciiFile, "\n");
 }
 
+void BeamOutputHelper::writeToAsciiNoIndent(const char* string){
+	fprintf(asciiFile, "%s", string);
+}
+
 void BeamOutputHelper::writeToAscii(const char* string){
 	fprintf(asciiFile, "%s\t", string);
 }

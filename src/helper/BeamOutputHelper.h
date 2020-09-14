@@ -22,6 +22,7 @@ public:
 	void setRunName(const char* name);
 	void addRunValue(Double_t value);
 	void writeToAscii(const char* string);
+	void writeToAsciiNoIndent(const char* string);
 	void writeToAscii(Double_t *pars, Double_t* parsErr);
 	void writeToAscii(FitParameters* parameters);
 	void writeToAscii(Double_t value);

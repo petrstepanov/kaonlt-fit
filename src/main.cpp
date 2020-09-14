@@ -239,12 +239,12 @@ int runBeamSingle(const char* fileNamePath){
 	}
 
 	// Save canvas to RootFile and to png
-	BeamOutputHelper::getInstance()->writeObjectToRootFile(beamFitCanvasPos);
+	BeamOutputHelper::getInstance()->writeObjectToRootFile(beamFitCanvasNeg);
 	TString beamFitCanvasNegPath = TString::Format("%s-neg-fit-tile%d-terms%d-%s.png", fileNameNoExt, Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber, StringUtils::toString(fitType));
 	beamFitCanvasNeg->SaveAs(beamFitCanvasNegPath.Data());
 
 	// Write new line to output file
-	BeamOutputHelper::getInstance()->writeToAscii("\n");
+	BeamOutputHelper::getInstance()->writeToAsciiNoIndent("\n");
 
 	return 0;
 }
