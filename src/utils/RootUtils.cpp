@@ -77,14 +77,17 @@ InputFileType RootUtils::getInputFileType(const char* fileName){
 
 	// Prototype spectra contain "tree1"
 	if (keysList->FindObject("tree1")){
+		std::cout << "File type is Prototype" << std::endl;
 		return InputFileType::Prototype;
 	}
 
 	// Prototype spectra contain "tree1"
 	if (keysList->FindObject("Positive_PMT_0")){
+		std::cout << "File type is Beam" << std::endl;
 		return InputFileType::Beam;
 	}
 
+	std::cout << "File type is Unknown" << std::endl;
 	return InputFileType::Unknown;
 }
 
