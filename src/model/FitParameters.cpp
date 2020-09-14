@@ -8,6 +8,9 @@
 #include "FitParameters.h"
 #include "../model/Constants.h"
 
+const char* FitParameters::parameterNames[] = {"Q_{0}", "#sigma_{0}", "Q_{1}", "#sigma_{1}", "w", "#alpha", "#mu"};
+const int FitParameters::parametersNumber = 7;
+
 FitParameters::FitParameters(ParametersType type) {
 	// Instantiate initial fit parameter vaues
 	parameters = new RooArgList();
@@ -58,6 +61,14 @@ Double_t* FitParameters::getArray(){
 
 RooArgList* FitParameters::getList(){
 	return parameters;
+}
+
+void FitParameters::updateFromArrays(const Double_t* params, const Double_t* errors){
+	for (UInt_t i = 0; i < FitParameters::parametersNumber; i++){
+		RooRealVar* parameter = (RooRealVar*)(parameters->find(FitParameters::parameterNames[i]));
+		parameter->setVal(params[i]);
+		parameter->setError(errors[i]);
+	}
 }
 
 Int_t FitParameters::readParametersFromFile(){

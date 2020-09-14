@@ -12,6 +12,7 @@
 #include <TTreeReader.h>
 #include <TCanvas.h>
 #include <TString.h>
+#include <TSystem.h>
 #include <TObjString.h>
 
 #include "BeamHelper.h"
@@ -20,32 +21,18 @@
 #include "../utils/GraphicsUtils.h"
 #include "../utils/RootUtils.h"
 
-BeamHelper::BeamHelper() {
-	myFile = NULL;
-	histogramsPositive = new TList();
-	histogramsNegative = new TList();
-}
-
-BeamHelper::~BeamHelper(){}
-
-BeamHelper* BeamHelper::instance = NULL;
-
-BeamHelper* BeamHelper::getInstance(){
-    if (!instance){
-        instance = new BeamHelper;
-    }
-    return instance;
-}
-
-int BeamHelper::init(TList* fileNamesList){
-	// Merge inout files into a single ROOT file
-	myFile = RootUtils::mergeFiles(fileNamesList);
-
-	if (!myFile) return 1;
+BeamHelper::BeamHelper(const char* fileNamePath) {
+	myFile = new TFile(fileNamePath);
+	if (myFile->IsZombie()) {
+		std::cout << "Error opening file \"" << fileNamePath << "\""<< std::endl;
+	}
 
 	// Print list of keys in ROOT file
 	TList *keys = myFile->GetListOfKeys();
 	keys->Print();
+
+	histogramsPositive = new TList();
+	histogramsNegative = new TList();
 
 	// Extract positive and negative hists
 	for (UInt_t i = 0; i <= keys->LastIndex(); i++){
@@ -65,9 +52,9 @@ int BeamHelper::init(TList* fileNamesList){
 	// test print histograms
 	// histogramsPositive->Print();
 	// histogramsNegative->Print();
-
-	return 0;
 }
+
+BeamHelper::~BeamHelper(){}
 
 TList* BeamHelper::getHistogramsPositive(){
 	return histogramsPositive;

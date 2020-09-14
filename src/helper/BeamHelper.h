@@ -14,20 +14,15 @@
 
 class BeamHelper {
 public:
-	static BeamHelper* getInstance();
+	BeamHelper(const char* fileNamePath);
 	virtual ~BeamHelper();
 
-	int init(TList*);
 	TList* getHistogramsPositive();
 	TList* getHistogramsNegative();
 	const char* getFileName();
 
 private:
-	BeamHelper();
-	static BeamHelper* instance;
-
 	TFile* myFile;
-
 	TList* histogramsPositive;
 	TList* histogramsNegative;
 };

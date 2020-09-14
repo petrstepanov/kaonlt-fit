@@ -27,7 +27,12 @@ public:
 	Double_t* getArray();
 	Int_t getSize();
 
+	void updateFromArrays(const Double_t* params, const Double_t* errors);
+
 	Int_t readParametersFromFile();
+
+	static const char* parameterNames[];
+	static const int parametersNumber;
 
 private:
 	const char* filename;

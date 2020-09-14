@@ -22,6 +22,7 @@
 #include "../utils/RootUtils.h"
 #include "../utils/GraphicsUtils.h"
 #include "../utils/HistUtils.h"
+#include "../helper/BeamOutputHelper.h"
 #include "../fit/TF1Normalize.h"
 #include <RooRealVar.h>
 #include <RooConstVar.h>
@@ -60,7 +61,7 @@ FitUtils::~FitUtils() {
 }
 
 // Fit not goes, weird function raise to the right
-void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, TVirtualPad* pad){
+Double_t FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, TVirtualPad* pad){
 	// Wait for the unique timestamp
 	gSystem->Sleep(1000);
 	TDatime* timestamp = new TDatime();
@@ -218,9 +219,11 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, TVirtua
 	Chi2Struct chi2Struct = HistUtils::getChi2(hist, curveFit, sRealPdf);
 	TString line = TString::Format("#chi^{2} =  %d / %d = %.2f", (Int_t)(chi2Struct.chiSum), chi2Struct.degreesOfFreedom, chi2Struct.chi2);
 	GraphicsUtils::addLineToPave(pad, sRealPdf, line.Data());
+
+	return chi2Struct.chi2;
 }
 
-void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject, TVirtualPad* pad, Bool_t noTerm0){
+Double_t FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject, TVirtualPad* pad, Bool_t noTerm0){
 	// Wait for the unique timestamp
 	gSystem->Sleep(1000);
 	TDatime* timestamp = new TDatime();
@@ -291,14 +294,14 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 	Minimization minimization = Constants::getInstance()->parameters.minimize;
 	Double_t fitXMin = fitMin != 0 ? fitMin : 0;
 	Double_t fitXMax = fitMin != 0 ? hist->GetXaxis()->GetXmax() : 0;
-//	func->SetRange(fitXMin, fitXMax);
+	// func->SetRange(fitXMin, fitXMax);
+
+	TFitResultPtr fitResultPrt;
 	if (minimization == Minimization::likelihood){
-		hist->Fit(func, "LV", "", fitXMin, fitXMax);
-//		hist->Fit(func, "SLV");
+		fitResultPrt = hist->Fit(func, "SLV", "", fitXMin, fitXMax);
 	}
 	else if (minimization == Minimization::chi2){
-		hist->Fit(func, "V", "", fitXMin, fitXMax);
-//		hist->Fit(func, "SV");
+		fitResultPrt = hist->Fit(func, "SV", "", fitXMin, fitXMax);
 	}
 	RootUtils::stopAndPrintTimer();
 
@@ -316,11 +319,14 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 	Double_t* fitParameters = new Double_t[nFitPar];
 	func->GetParameters(fitParameters);
 
+	// Update parameter values in the FitParameters object
+	pars->updateFromArrays(func->GetParameters(), func->GetParErrors());
+
 	// Print obtained parameters
-	std::cout << "Obtained parameters:" << std::endl;
-	for (UInt_t i=0; i < nFitPar; i++){
-		std::cout << "Parameter " << i << ": " << fitParameters[i] << std::endl;
-	}
+	// std::cout << "Obtained parameters:" << std::endl;
+	// for (UInt_t i=0; i < nFitPar; i++){
+	// 	std::cout << "Parameter " << i << ": " << fitParameters[i] << std::endl;
+	// }
 
 	// Print histogram and fitting function integrals
 	Double_t histIntegral = hist->Integral()*(hist->GetXaxis()->GetBinWidth(1));
@@ -401,6 +407,7 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 	pad->Modified();
 	pad->Update();
 
+	return fitResultPrt->Chi2();
 }
 
 void FitUtils::fillHistogramFromFuncObject(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject){
@@ -528,16 +535,16 @@ const char* FitUtils::getFitDescription(FitType fitType){
 	return "none";
 }
 
-void FitUtils::fitHistogramOnPad(TH1* hist, TVirtualPad* pad, FitParameters* params, FitType fitType){
+Double_t FitUtils::fitHistogramOnPad(TH1* hist, TVirtualPad* pad, FitParameters* params, FitType fitType){
 	if (fitType == FitType::root){
 		AbsComponentFunc* funcObject1 = new FuncSRealNoTerm0(hist);
-		doFit(hist, params, funcObject1, pad, kTRUE);
-	} else if (fitType == FitType::rootConv){
-		AbsComponentFunc* funcObject1 = new FuncSRealFFTNoTerm0(hist);
-		doFit(hist, params, funcObject1, pad, kTRUE);
-	} else {
-		doRooFit(hist, params, kFALSE, pad);
+		return doFit(hist, params, funcObject1, pad, kTRUE);
 	}
+	if (fitType == FitType::rootConv){
+		AbsComponentFunc* funcObject1 = new FuncSRealFFTNoTerm0(hist);
+		return doFit(hist, params, funcObject1, pad, kTRUE);
+	}
+	return doRooFit(hist, params, kFALSE, pad);
 }
 
 void FitUtils::estimateFitParameters(TH1* histogram, FitParameters* params){
