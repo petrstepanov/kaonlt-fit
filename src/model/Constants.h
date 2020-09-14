@@ -24,11 +24,11 @@
 // Command-line parameters
 
 enum class FitType {
-	none,
 	test,
 	root,
 	rootConv,
-	rooFit
+	rooFit,
+	none
 };
 
 enum class Minimization {
@@ -55,6 +55,8 @@ struct Parameters {
 	Int_t chBins = 0;
 	Double_t chFitMin = 0;
 	Double_t chFitMax = 0;
+	Double_t chFitRangeMin = 0;
+	Double_t paramDeviation = 0;
 };
 
 class Constants {

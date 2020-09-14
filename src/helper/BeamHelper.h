@@ -8,26 +8,21 @@
 #ifndef SRC_HELPER_BeamHelper_H_
 #define SRC_HELPER_BeamHelper_H_
 
+#include <TList.h>
 #include <TString.h>
 #include <TTree.h>
-#include <TFile.h>
 
 class BeamHelper {
 public:
-	static BeamHelper* getInstance();
+	BeamHelper(const char* fileNamePath);
 	virtual ~BeamHelper();
 
-	int init(const char*);
 	TList* getHistogramsPositive();
 	TList* getHistogramsNegative();
+	const char* getFileName();
 
 private:
-	BeamHelper();
-	static BeamHelper* instance;
-
-	TString* fileName;
 	TFile* myFile;
-
 	TList* histogramsPositive;
 	TList* histogramsNegative;
 };

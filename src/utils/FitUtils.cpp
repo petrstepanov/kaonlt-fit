@@ -22,7 +22,8 @@
 #include "../utils/RootUtils.h"
 #include "../utils/GraphicsUtils.h"
 #include "../utils/HistUtils.h"
-#include "../helper/TF1Normalize.h"
+#include "../helper/BeamOutputHelper.h"
+#include "../fit/TF1Normalize.h"
 #include <RooRealVar.h>
 #include <RooConstVar.h>
 #include <RooAbsCollection.h>
@@ -48,6 +49,7 @@
 #include <TCollection.h>
 #include <TFitResultPtr.h>
 #include <TDatime.h>
+#include <THStack.h>
 #include <TSystem.h>
 #include <Math/IntegratorOptions.h>
 
@@ -59,7 +61,7 @@ FitUtils::~FitUtils() {
 }
 
 // Fit not goes, weird function raise to the right
-void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t fitMin, TVirtualPad* pad){
+Double_t FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, TVirtualPad* pad){
 	// Wait for the unique timestamp
 	gSystem->Sleep(1000);
 	TDatime* timestamp = new TDatime();
@@ -217,9 +219,11 @@ void FitUtils::doRooFit(TH1* hist, FitParameters* pars, Bool_t useTerm0, Int_t f
 	Chi2Struct chi2Struct = HistUtils::getChi2(hist, curveFit, sRealPdf);
 	TString line = TString::Format("#chi^{2} =  %d / %d = %.2f", (Int_t)(chi2Struct.chiSum), chi2Struct.degreesOfFreedom, chi2Struct.chi2);
 	GraphicsUtils::addLineToPave(pad, sRealPdf, line.Data());
+
+	return chi2Struct.chi2;
 }
 
-void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject, Int_t fitMin, TVirtualPad* pad, Bool_t noTerm0){
+Double_t FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject, TVirtualPad* pad, Bool_t noTerm0){
 	// Wait for the unique timestamp
 	gSystem->Sleep(1000);
 	TDatime* timestamp = new TDatime();
@@ -280,43 +284,49 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 		TString padName = TString::Format("canvas_%d", timestamp->Get());
 		pad = new TCanvas(padName.Data());
 	}
-	pad->SetLeftMargin(0.1);
-	pad->SetRightMargin(0.1);
+	// pad->SetLeftMargin(0.1);
+	// pad->SetRightMargin(0.1);
+	pad->SetGrid();
 
 	// Perform fit
 	RootUtils::startTimer();
-	if (fitMin != 0){
-		hist->Fit(func, "RV", "", fitMin);
+	Double_t fitMin = Constants::getInstance()->parameters.chFitRangeMin;
+	Minimization minimization = Constants::getInstance()->parameters.minimize;
+	Double_t fitXMin = fitMin != 0 ? fitMin : 0;
+	Double_t fitXMax = fitMin != 0 ? hist->GetXaxis()->GetXmax() : 0;
+	// func->SetRange(fitXMin, fitXMax);
+
+	TFitResultPtr fitResultPrt;
+	if (minimization == Minimization::likelihood){
+		fitResultPrt = hist->Fit(func, "SLV", "", fitXMin, fitXMax);
 	}
-	else {
-		Minimization minimization = Constants::getInstance()->parameters.minimize;
-		if (minimization == Minimization::likelihood){
-			hist->Fit(func, "LV");
-		}
-		else if (minimization == Minimization::chi2){
-			hist->Fit(func, "V");
-		}
+	else if (minimization == Minimization::chi2){
+		fitResultPrt = hist->Fit(func, "SV", "", fitXMin, fitXMax);
 	}
 	RootUtils::stopAndPrintTimer();
 
-	// Display fit parameters and chi^2 in statistis box
+	// Display fit parameters and chi^2 in statistis box and draw histogram
 	// https://root.cern.ch/doc/master/classTPaveStats.html#PS02
 	GraphicsUtils::setStatsFitOption(hist, pad, 112);
+	hist->SetFillColor(EColor::kCyan-10);
 	hist->Draw();
 
 	// Draw fit function
-	func->Draw("SAME");
+	// func->Draw("SAME");
 
 	// Obtain function fit parameters
 	Int_t nFitPar = func->GetNpar();
 	Double_t* fitParameters = new Double_t[nFitPar];
 	func->GetParameters(fitParameters);
 
+	// Update parameter values in the FitParameters object
+	pars->updateFromArrays(func->GetParameters(), func->GetParErrors());
+
 	// Print obtained parameters
-	std::cout << "Obtained parameters:" << std::endl;
-	for (UInt_t i=0; i < nFitPar; i++){
-		std::cout << "Parameter " << i << ": " << fitParameters[i] << std::endl;
-	}
+	// std::cout << "Obtained parameters:" << std::endl;
+	// for (UInt_t i=0; i < nFitPar; i++){
+	// 	std::cout << "Parameter " << i << ": " << fitParameters[i] << std::endl;
+	// }
 
 	// Print histogram and fitting function integrals
 	Double_t histIntegral = hist->Integral()*(hist->GetXaxis()->GetBinWidth(1));
@@ -384,8 +394,20 @@ void FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObjec
 		}
 	}
 
+	// Highlight parameters in red that are at the limit
+	GraphicsUtils::hilightLimitParameters(func, pad);
+
 	// Align and scale statistics box
 	GraphicsUtils::alignStats(hist, pad);
+
+	// Evaluate chi^2
+	GraphicsUtils::addChi2Value(pad);
+
+	gSystem->ProcessEvents();
+	pad->Modified();
+	pad->Update();
+
+	return fitResultPrt->Chi2();
 }
 
 void FitUtils::fillHistogramFromFuncObject(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject){
@@ -513,17 +535,84 @@ const char* FitUtils::getFitDescription(FitType fitType){
 	return "none";
 }
 
-void FitUtils::fitHistogramOnPad(TH1* hist, TVirtualPad* pad, FitParameters* params, FitType fitType, Int_t fitMin){
+Double_t FitUtils::fitHistogramOnPad(TH1* hist, TVirtualPad* pad, FitParameters* params, FitType fitType){
 	if (fitType == FitType::root){
 		AbsComponentFunc* funcObject1 = new FuncSRealNoTerm0(hist);
-		doFit(hist, params, funcObject1, fitMin, pad, kTRUE);
-	} else if (fitType == FitType::rootConv){
-		AbsComponentFunc* funcObject1 = new FuncSRealFFTNoTerm0(hist);
-		doFit(hist, params, funcObject1, fitMin, pad, kTRUE);
-	} else {
-		doRooFit(hist, params, kFALSE, fitMin, pad);
+		return doFit(hist, params, funcObject1, pad, kTRUE);
 	}
+	if (fitType == FitType::rootConv){
+		AbsComponentFunc* funcObject1 = new FuncSRealFFTNoTerm0(hist);
+		return doFit(hist, params, funcObject1, pad, kTRUE);
+	}
+	return doRooFit(hist, params, kFALSE, pad);
 }
 
+void FitUtils::estimateFitParameters(TH1* histogram, FitParameters* params){
+	TString canvasName = TString::Format("%s_pre_fit", histogram->GetName());
+	TString canvasTitle = TString::Format("Estimation of s1 and Q1 parameters for %s", histogram->GetName());
+	TCanvas* c = new TCanvas(canvasName.Data(), canvasTitle.Data(), 512, 512);
 
+	// Find the initial gauss mean
+	Double_t histMaxX = histogram->GetXaxis()->GetBinCenter(histogram->GetMaximumBin());
+
+	// Fitting range is: [mean-(Q1-Q0) ; mean+(Q1-Q0)]
+	RooRealVar* Q0 = (RooRealVar*) params->getList()->find("Q_{0}");
+	RooRealVar* Q1 = (RooRealVar*) params->getList()->find("Q_{1}");
+	Double_t epsilon = Q1->getVal() - Q0->getVal();
+
+	TString funcName = TString::Format("func_%s", histogram->GetName());
+	TF1 *func = new TF1(funcName.Data(), "gaus", histMaxX-epsilon, histMaxX+epsilon);
+	// func->SetLineStyle(ELineStyle::kDashed);
+
+	TString histCloneName = TString::Format("%s_clone", histogram->GetName());
+	TH1* histClone = (TH1*)(histogram->Clone(histCloneName.Data()));
+	histClone->SetFillColor(EColor::kCyan-10);
+	histClone->Fit(func, "R"); // R = use function range;
+	// histClone->Fit(func, "RN"); // R = use function range; N - not draw
+
+	// Fix obtained sigma value
+	Double_t par[3];
+	func->GetParameters(par);
+	RooRealVar* s1 = (RooRealVar*) params->getList()->find("#sigma_{1}");
+	Double_t paramDeviation = Constants::getInstance()->parameters.paramDeviation;
+	RootUtils::setRooRealVarValueLimits(s1, par[2], par[2]*(1.-paramDeviation), par[2]*(1.+paramDeviation/2));
+	s1->Print();
+
+	// Subtract first hump
+	TString histCloneName2 = TString::Format("%s_clone2", histogram->GetName());
+	TH1* histClone2 = (TH1*)(histogram->Clone(histCloneName2.Data()));
+	TString funcSubtractName = TString::Format("%s-subtract", func->GetName());
+	TF1 *funcSubtract = (TF1*)func->Clone(funcSubtractName.Data());
+	funcSubtract->SetParameters(par);
+	funcSubtract->SetRange(histogram->GetXaxis()->GetXmin(), histogram->GetXaxis()->GetXmax());
+	histClone2->Add(funcSubtract, -1);
+	histClone2->SetFillColor(EColor::kCyan-8);
+	histClone2->SetMinimum(0);
+
+	// Find the second gauss mean
+	Double_t histMaxX2 = histClone2->GetXaxis()->GetBinCenter(histClone2->GetMaximumBin());
+
+	// Fit second hump
+	TString funcName2 = TString::Format("func2_%s", histogram->GetName());
+	TF1 *func2 = new TF1(funcName2.Data(), "gaus", histMaxX2-epsilon, histMaxX2+epsilon);
+	// func2->SetLineColor(EColor::kGreen + 2);
+	histClone2->Fit(func2, "R"); // R = use function range;
+	Double_t par2[3];
+	func2->GetParameters(par2);
+
+	// Draw stacked histograms
+	TString stackName = TString::Format("stack_%s", histogram->GetName());
+	TString stackTitle = TString::Format("Estimation of fit parameters for %s", histogram->GetName());
+	THStack *stack = new THStack(stackName.Data(), stackTitle.Data());
+	stack->Add(histClone);
+	stack->Add(histClone2);
+	c->SetGrid();
+	stack->Draw("nostack");
+	gSystem->ProcessEvents();
+
+	// Fix obtained distance between 1st and 2nd term
+	Double_t peaksDistance = par2[1]-par[1];
+	// RootUtils::setRooRealVarValueLimits(Q1, peaksDistance, peaksDistance*(1.-paramDeviation), peaksDistance);
+	// Q1->Print();
+}
 

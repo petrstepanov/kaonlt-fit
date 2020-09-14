@@ -11,6 +11,7 @@
 #include <iostream>
 #include <utility>
 #include <TString.h>
+#include "../model/Constants.h"
 
 class StringUtils {
 public:
@@ -18,6 +19,10 @@ public:
 	virtual ~StringUtils();
 
 	static std::pair<TString, TString> parseParameter(const char*);
+	static TString* extractFilenameNoExtension(const char* fileNamePath);
+	static TString* extractFilenameWithExtension(const char* fileNamePath);
+	static void extractChiNPars(const char* string, Double_t &chi2, Double_t &nPars);
+	static const char* toString(FitType fitType);
 };
 
 #endif /* SRC_UTILS_STRINGUTILS_H_ */

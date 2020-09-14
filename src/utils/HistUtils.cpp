@@ -63,6 +63,13 @@ TList* HistUtils::trimHistogramList(TList* histograms, Double_t xMin, Double_t x
 	return histogramsTrimmed;
 }
 
+void HistUtils::rebinHistogramList(TList* histograms, Int_t nGroup){
+	for (TObject* object : *histograms){
+		TH1* hist = (TH1F*)object;
+		if (hist) hist->Rebin(nGroup);
+	}
+}
+
 TH1* HistUtils::cutHistogram(TH1* hist, Double_t xMin, Double_t xMax){
 	Int_t minBin = hist->GetXaxis()->FindBin(xMin);
 	Int_t maxBin = hist->GetXaxis()->FindBin(xMax);

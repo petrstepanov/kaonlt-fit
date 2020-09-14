@@ -11,15 +11,17 @@
 #include <TTreeReader.h>
 #include <TCanvas.h>
 #include <TString.h>
+#include <TObjString.h>
 
 #include "TreeHelper.h"
 #include "../model/Constants.h"
 #include "../utils/HistUtils.h"
 #include "../utils/GraphicsUtils.h"
+#include "../utils/RootUtils.h"
+#include "../utils/StringUtils.h"
 
 TreeHelper::TreeHelper() {
-	fileName = new TString();
-	myFile = new TFile();
+	myFile = NULL;
 	myTree = NULL;
 }
 
@@ -34,20 +36,14 @@ TreeHelper* TreeHelper::getInstance(){
     return instance;
 }
 
-int TreeHelper::init(const char* fileName){
-	// Open ROOT file
-	// When you create a TFile object, it becomes the current directory
-	// https://root.cern.ch/root/htmldoc/guides/users-guide/InputOutput.html#the-current-directory
-	this->fileName = new TString(fileName);
-	myFile->Close();
-	myFile = new TFile(fileName);
-	if (myFile->IsZombie()) {
-		std::cout << "Error opening file \"" << fileName << "\""<< std::endl;
-		return -1;
-	}
+int TreeHelper::init(TList* fileNamesList){
+	// Merge input files into a single ROOT file
+
+	myFile = RootUtils::mergeFiles(fileNamesList);
+	if (!myFile) return 1;
 
 	// Print list of keys in ROOT file
-	// myFile->GetListOfKeys()->Print(); // or file->ls()
+	myFile->GetListOfKeys()->Print(); // or file->ls()
 
 	// Read Tree from ROOT file
 	myFile->GetObject(Constants::getInstance()->parameters.treeName, myTree); // or gDirectory->GetObject("T",MyTree);
@@ -74,9 +70,8 @@ void TreeHelper::plotTreeProfiles(){
 	ch2Hist->SetStats(0);
 	ch2Hist->GetYaxis()->SetTitle("Channel (ch_2)");
 
-	const char* treeName = myTree->GetName(); //Constants::getInstance()->parameters.treeName.Data();
-	TString myCanvasName = TString::Format("%s-ch_1-ch_2", treeName);
-	TString myCanvasTitle = TString::Format("TTree \"%s\" channel profiles. File \"%s\"", treeName, fileName);
+	TString myCanvasName = TString::Format("%s-ch_1-ch_2", myTree->GetName());
+	TString myCanvasTitle = TString::Format("TTree \"%s\" channel profiles. File \"%s\"", myTree->GetName(), myFile->GetName());
 	TCanvas* myCanvas = new TCanvas(myCanvasName, myCanvasTitle, 1024, 512);
 	myCanvas->Divide(2,1);
 
@@ -103,7 +98,7 @@ void TreeHelper::plotTreeProfiles(){
 	// myCanvas->SaveAs(pngFilePath);
 }
 
-void TreeHelper::plotTree(const char* fileName){
+void TreeHelper::plotTree(){
 	Int_t tileMin = Constants::getInstance()->parameters.tileMin;
 	Int_t tileMax = Constants::getInstance()->parameters.tileMax;
 	Int_t tileBins = tileMax - tileMin;
@@ -138,9 +133,8 @@ void TreeHelper::plotTree(const char* fileName){
 	amp2TilerHist->GetYaxis()->SetTitle("Amplitude (amp_2)");
 	amp2TilerHist->SetStats(0);
 
-	const char* treeName = myTree->GetName();
-	TString myCanvasName = TString::Format("%s-ch:tile-amp:tile", treeName);
-	TString myCanvasTitle = TString::Format("TTree \"%s\". File \"%s\"", treeName, fileName);
+	TString myCanvasName = TString::Format("%s-ch:tile-amp:tile", myTree->GetName());
+	TString myCanvasTitle = TString::Format("TTree \"%s\". File \"%s\"", myTree->GetName(), myFile->GetName());
 	TCanvas* myCanvas = new TCanvas(myCanvasName, myCanvasTitle, 1024, 1024);
 	myCanvas->Divide(2,2);
 
@@ -177,7 +171,8 @@ void TreeHelper::plotTree(const char* fileName){
 	amp2TilerHist->Draw("COLZ0");
 
 	// Save canvas to file
-	TString pngFilePath = TString::Format("%s-%s.png",fileName, treeName);
+	const char* filenameNoExt = StringUtils::extractFilenameNoExtension(myFile->GetName())->Data();
+	TString pngFilePath = TString::Format("%s-%s.png", filenameNoExt, myTree->GetName());
 	myCanvas->SaveAs(pngFilePath.Data());
 }
 
@@ -204,4 +199,8 @@ void TreeHelper::fillPmtHists(TH1* pmt1Hist, TH1* pmt2Hist){
 
 		// ch_1 + ch_2 ->
 	}
+}
+
+const char* TreeHelper::getFileName(){
+	return myFile->GetName();
 }

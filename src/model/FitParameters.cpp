@@ -8,6 +8,9 @@
 #include "FitParameters.h"
 #include "../model/Constants.h"
 
+const char* FitParameters::parameterNames[] = {"Q_{0}", "#sigma_{0}", "Q_{1}", "#sigma_{1}", "w", "#alpha", "#mu"};
+const int FitParameters::parametersNumber = 7;
+
 FitParameters::FitParameters(ParametersType type) {
 	// Instantiate initial fit parameter vaues
 	parameters = new RooArgList();
@@ -29,17 +32,19 @@ FitParameters::FitParameters(ParametersType type) {
 		parameters->add(*mu);
 	} else {
 		// for KaonLT Prototype spectra fit - read parameters from file
-		const char* fileName = Constants::getInstance()->parameters.fitParamsFileName.Data();
-		parameters = readParametersFromFile(fileName);
+		filename = Constants::getInstance()->parameters.fitParamsFileName.Data();
+		readParametersFromFile();
 	}
 }
 
 FitParameters::FitParameters(const char* fileName) {
+	parameters = new RooArgList();
+	filename = fileName;
 	// Check if filename is overrided in comand line parameters
 	if (Constants::getInstance()->parameters.fitParamsFileName.Length() > 0){
-		fileName = Constants::getInstance()->parameters.fitParamsFileName.Data();
+		filename = Constants::getInstance()->parameters.fitParamsFileName.Data();
 	}
-	parameters = readParametersFromFile(fileName);
+	readParametersFromFile();
 }
 
 FitParameters::~FitParameters() {
@@ -58,13 +63,24 @@ RooArgList* FitParameters::getList(){
 	return parameters;
 }
 
-RooArgList* FitParameters::readParametersFromFile(const char* filename){
-	RooArgList* params = new RooArgList();
+void FitParameters::updateFromArrays(const Double_t* params, const Double_t* errors){
+	for (UInt_t i = 0; i < FitParameters::parametersNumber; i++){
+		RooRealVar* parameter = (RooRealVar*)(parameters->find(FitParameters::parameterNames[i]));
+		parameter->setVal(params[i]);
+		parameter->setError(errors[i]);
+	}
+}
+
+Int_t FitParameters::readParametersFromFile(){
+	// Clear parameters list
+	parameters->removeAll();
+
+	// Open input file
 	FILE * pFile;
 	pFile = fopen(filename, "r");
 	if (pFile == NULL) {
 		std::cout << "\"" << filename << "\" file not found." << std::endl;
-		return params;
+		return 1;
 	}
 	char* name = new char[128];
 	char* description = new char[128];
@@ -73,7 +89,7 @@ RooArgList* FitParameters::readParametersFromFile(const char* filename){
 
 	// Skip header
 	char buffer[256];
-	if (fgets(buffer, 256, pFile) == NULL) return params;
+	if (fgets(buffer, 256, pFile) == NULL) return 1;
 
 	// Read parameters
 	// Scanf with spaces. https://stackoverflow.com/questions/2854488/reading-a-string-with-spaces-with-sscanf
@@ -82,18 +98,18 @@ RooArgList* FitParameters::readParametersFromFile(const char* filename){
 		if (strcmp(type, "fixed") == 0) {
 			parameter->setConstant(kTRUE);
 		}
-		params->add(*parameter);
+		parameters->add(*parameter);
 	}
 	fclose(pFile);
 
 	// Print imported parameters
-	std::cout << "\nImported " << params->getSize() << " parameters from \"" << filename << "\":" << std::endl;
+	std::cout << "\nImported " << parameters->getSize() << " parameters from \"" << filename << "\":" << std::endl;
 	// params->Print("V");
-	 for (UInt_t i = 0; i < params->getSize(); i++){
-		RooRealVar* par = (RooRealVar*) params->at(i);
+	 for (UInt_t i = 0; i < parameters->getSize(); i++){
+		RooRealVar* par = (RooRealVar*) parameters->at(i);
 		if (par){
 			par->Print();
 		}
 	 }
-	return params;
+	 return 0;
 }

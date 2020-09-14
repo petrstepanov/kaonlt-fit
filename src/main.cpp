@@ -8,6 +8,7 @@
 #include <TH1.h>
 #include <TObjString.h>
 #include <TStopwatch.h>
+#include <TSystem.h>
 
 #include <Math/Factory.h>
 #include <Math/Minimizer.h>
@@ -21,25 +22,27 @@
 #include "utils/HistUtils.h"
 #include "utils/TestSpectrum.h"
 #include "utils/FitUtils.h"
+#include "utils/StringUtils.h"
 #include "utils/RootUtils.h"
 #include "helper/TreeHelper.h"
 #include "helper/BeamHelper.h"
+#include "helper/BeamOutputHelper.h"
 #include "fit/FuncSReal.h"
 #include "fit/FuncSRealFFT.h"
 #include "fit/FuncSRealNoTerm0.h"
 #include "fit/FuncSRealFFTNoTerm0.h"
 
-int runPrototype(const char* fileName){
-	TreeHelper::getInstance()->init(fileName);
-	// If input file contains the tree - prototype data
+int runPrototype(TList* fileNamesList){
+	// Initialize the tree from merged files
+	TreeHelper::getInstance()->init(fileNamesList);
+
 	// Plot the Tree if --plot-tree=kTRUE command line argument was passed
 	if (Constants::getInstance()->parameters.plotTree == kTRUE){
-		TreeHelper::getInstance()->plotTree(fileName);
+		for(TObject* object : *fileNamesList){
+			TObjString* fileName = (TObjString*) object;
+			TreeHelper::getInstance()->plotTree();
+		}
 	}
-
-	// Temporary plot tree profiles for ch_1 and ch_2
-	// Need to study the region between the pedestal and first peak
-	// TreeHelper::getInstance()->plotTreeProfiles();
 
 	// Prepare histograms for the PMT projection spectra
 	Int_t chMin = Constants::getInstance()->parameters.chMin;
@@ -57,7 +60,9 @@ int runPrototype(const char* fileName){
 	// Fill PMT histograms from the Tree data
 	TreeHelper::getInstance()->fillPmtHists(pmt1Hist, pmt2Hist);
 
-	// Plot PMT profile spectra
+	// Plot PMT profile spectra if needed
+	const char* fileURL = TreeHelper::getInstance()->getFileName();
+	const char* fileNameNoExt = StringUtils::extractFilenameNoExtension(fileURL)->Data();
 	if (Constants::getInstance()->parameters.plotProfiles == kTRUE){
 		TString pmtsCanvasTitle = TString::Format("Profile of the PMT spectra (tile = %d)", Constants::getInstance()->parameters.tileProfile);
 		TCanvas* pmtsCanvas = new TCanvas("pmtsCanvas", pmtsCanvasTitle.Data(), 1024, 512);
@@ -74,7 +79,8 @@ int runPrototype(const char* fileName){
 		// GraphicsUtils::alignStats(pmt2HistClone, pmtsCanvasPad2);
 
 		// Save canvas with PMT profiles to file
-		TString pngFilePath = TString::Format("%s-profiles-tile%d.png",fileName, Constants::getInstance()->parameters.tileProfile);
+
+		TString pngFilePath = TString::Format("%s-profiles-tile%d.png",fileNameNoExt, Constants::getInstance()->parameters.tileProfile);
 		pmtsCanvas->SaveAs(pngFilePath.Data());
 	}
 
@@ -97,41 +103,50 @@ int runPrototype(const char* fileName){
 	pmtsFitCanvas->Divide(2,1);
 
 	// Retreive parameters for KaonLT Prototype histogram
-	TString parametersFileName = fileName;
-	parametersFileName.ReplaceAll(".root", "-params.txt");
-	FitParameters* params = new FitParameters(parametersFileName.Data());
+	TString* parametersFileName = StringUtils::extractFilenameWithExtension(fileURL);
+	parametersFileName->ReplaceAll(".root", "-params.txt");
+	FitParameters* params = new FitParameters(parametersFileName->Data());
+	if (params->getList()->getSize() != 7){
+		std::cout << "Missing or incomplete fit parameters file \"" << parametersFileName->Data() << "\"" << std::endl;
+		return 1;
+	}
 
-	// Perform fit of both histograms on correspondent pads
+	// Perform fit of the first PMT histogram
+	FitUtils::estimateFitParameters(pmt1HistFit, params);
 	FitUtils::fitHistogramOnPad(pmt1HistFit, pmtsFitCanvas->cd(1), params, fitType);
+
+	// Reset parameters and fit second PMT histogram
+	params->readParametersFromFile();
+	FitUtils::estimateFitParameters(pmt2HistFit, params);
 	FitUtils::fitHistogramOnPad(pmt2HistFit, pmtsFitCanvas->cd(2), params, fitType);
 
 	// Save canvas with PMT profiles to file
-	const char* fitSuffix;
-	if (fitType == FitType::root) fitSuffix = "root";
-	else if (fitType == FitType::rootConv) fitSuffix = "rootconv";
-	else fitSuffix = "roofit";
-	TString pngFitFilePath = TString::Format("%s-fit-tile%d-terms%d-%s.png", fileName, Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber, fitSuffix);
+	TString pngFitFilePath = TString::Format("%s-fit-tile%d-terms%d-%s.png", fileNameNoExt, Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber, StringUtils::toString(fitType));
 	pmtsFitCanvas->SaveAs(pngFitFilePath.Data());
 
 	// Return success (0)
 	return 0;
 }
 
-int runBeam(const char* fileName){
+int runBeamSingle(const char* fileNamePath){
 	// If input file contains the beam data
-	BeamHelper::getInstance()->init(fileName);
+	BeamHelper* beamHelper = new BeamHelper(fileNamePath);
 
 	// Trim histograms
-	TList* histogramsPos = BeamHelper::getInstance()->getHistogramsPositive();
+	TList* histogramsPos = beamHelper->getHistogramsPositive();
 	TList* histogramsPosTrimmed = HistUtils::trimHistogramList(histogramsPos, Constants::getInstance()->parameters.chFitMin, Constants::getInstance()->parameters.chFitMax);
-	TList* histogramsNeg = BeamHelper::getInstance()->getHistogramsNegative();
+	HistUtils::rebinHistogramList(histogramsPosTrimmed, 2);
+	TList* histogramsNeg = beamHelper->getHistogramsNegative();
 	TList* histogramsNegTrimmed = HistUtils::trimHistogramList(histogramsNeg, Constants::getInstance()->parameters.chFitMin, Constants::getInstance()->parameters.chFitMax);
+	HistUtils::rebinHistogramList(histogramsNegTrimmed, 2);
 
 	// Determine fit type
 	FitType fitType = Constants::getInstance()->parameters.fitType;
 	const char* fitKind = FitUtils::getFitDescription(fitType);
 
 	// Plot spectra for Positive and Negative PMTs
+	const char* fileURL = beamHelper->getFileName();
+	const char* fileNameNoExt = StringUtils::extractFilenameNoExtension(fileURL)->Data();
 	if (Constants::getInstance()->parameters.plotProfiles == kTRUE){
 		TCanvas* beamCanvasPos = GraphicsUtils::getCanvasForNPads("beamCanvasPos", "Beam PMT Positive spectra", 1280, 640, histogramsPosTrimmed->LastIndex()+1, 3);
 		for (UInt_t i = 0; i <= histogramsPosTrimmed->LastIndex(); i++){
@@ -142,6 +157,8 @@ int runBeam(const char* fileName){
 				hist->DrawClone();
 			}
 		}
+		TString beamCanvasPosPath = TString::Format("%s-pos-profiles-tile%d.png", fileNameNoExt, Constants::getInstance()->parameters.tileProfile);
+		beamCanvasPos->SaveAs(beamCanvasPosPath.Data());
 
 		TCanvas* beamCanvasNeg= GraphicsUtils::getCanvasForNPads("beamCanvasNeg", "Beam PMT Negative spectra", 1280, 640, histogramsNegTrimmed->LastIndex()+1, 3);
 		for (UInt_t i = 0; i <= histogramsNegTrimmed->LastIndex(); i++){
@@ -152,50 +169,113 @@ int runBeam(const char* fileName){
 				hist->DrawClone();
 			}
 		}
+		TString beamCanvasNegPath = TString::Format("%s-neg-profiles-tile%d.png", fileNameNoExt, Constants::getInstance()->parameters.tileProfile);
+		beamCanvasNeg->SaveAs(beamCanvasNegPath.Data());
 	}
 
 	if (fitType == FitType::none) return 0;
 
 	// Retreive parameters for KaonLT Prototype histogram
-	TString parametersFileName = fileName;
-	parametersFileName.ReplaceAll(".root", "-params.txt");
-	FitParameters* params = new FitParameters(parametersFileName.Data());
+	TString* parametersFileName = StringUtils::extractFilenameWithExtension(fileURL);
+	parametersFileName->ReplaceAll(".root", "-params.txt");
+	FitParameters* params = new FitParameters(parametersFileName->Data());
+	if (params->getList()->getSize() != 7){
+		std::cout << "Missing or incomplete fit parameters file \"" << parametersFileName->Data() << "\"" << std::endl;
+		return 1;
+	}
+
+	// Write output file name
+	const char* fileName = StringUtils::extractFilenameWithExtension(fileNamePath)->Data();
+	BeamOutputHelper::getInstance()->writeToAscii(fileName);
 
 	// Fit and plot Positive histograms
-	TString beamFitCanvasPosTitle = TString::Format("%s of the beam PMT Positive spectra (terms = %d)", fitKind, Constants::getInstance()->parameters.termsNumber);
-	TCanvas* beamFitCanvasPos = GraphicsUtils::getCanvasForNPads("beamFitCanvasPos", beamFitCanvasPosTitle.Data(), 1280, 640, histogramsPosTrimmed->LastIndex()+1, 3);
+	TString beamFitCanvasPosName = TString::Format("%s-fitCanvasPos", fileName);
+	TString beamFitCanvasPosTitle = TString::Format("\"%s\" %s of the beam PMT Positive spectra (terms = %d)", fileName, fitKind, Constants::getInstance()->parameters.termsNumber);
+	TCanvas* beamFitCanvasPos = GraphicsUtils::getCanvasForNPads(beamFitCanvasPosName.Data(), beamFitCanvasPosTitle.Data(), 1280, 640, histogramsPosTrimmed->LastIndex()+1, 3);
 	for (UInt_t i = 0; i <= histogramsPosTrimmed->LastIndex(); i++){
 		TH1* hist = (TH1*)histogramsPosTrimmed->At(i);
 		if (hist){
-			TVirtualPad* pad = beamFitCanvasPos->cd(i+1);
 			hist->SetTitle(hist->GetName());
-			FitUtils::fitHistogramOnPad(hist, pad, params, fitType);
+			// Instantiate fresh parameter values
+			params->readParametersFromFile();
+			// Estimate fitting parameters if requested
+			if (Constants::getInstance()->parameters.paramDeviation != 0){
+				FitUtils::estimateFitParameters(hist, params);
+			}
+			TVirtualPad* pad = beamFitCanvasPos->cd(i+1);
+			Double_t chi2 = FitUtils::fitHistogramOnPad(hist, pad, params, fitType);
+			// Write fitted parameter values and errors to output file
+			BeamOutputHelper::getInstance()->writeToAscii(params);
+			// Write chi2 to output file
+			BeamOutputHelper::getInstance()->writeToAscii(chi2);
 		}
 	}
+	// Save canvas to RootFile and to png
+	BeamOutputHelper::getInstance()->writeObjectToRootFile(beamFitCanvasPos);
+	TString beamFitCanvasPosPath = TString::Format("%s-pos-fit-tile%d-terms%d-%s.png", fileNameNoExt, Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber, StringUtils::toString(fitType));
+	beamFitCanvasPos->SaveAs(beamFitCanvasPosPath.Data());
 
 	// Fit and plot Negative histograms
-	TString beamFitCanvasNegTitle = TString::Format("%s of the beam PMT Negative spectra (terms = %d)", fitKind, Constants::getInstance()->parameters.termsNumber);
-	TCanvas* beamFitCanvasNeg = GraphicsUtils::getCanvasForNPads("beamFitCanvasPos", beamFitCanvasNegTitle.Data(), 1280, 640, histogramsNegTrimmed->LastIndex()+1, 3);
+	TString beamFitCanvasNegName = TString::Format("%s-fitCanvasNeg", fileName);
+	TString beamFitCanvasNegTitle = TString::Format("\"%s\" %s of the beam PMT Negative spectra (terms = %d)", fileName, fitKind, Constants::getInstance()->parameters.termsNumber);
+	TCanvas* beamFitCanvasNeg = GraphicsUtils::getCanvasForNPads(beamFitCanvasNegName.Data(), beamFitCanvasNegTitle.Data(), 1280, 640, histogramsNegTrimmed->LastIndex()+1, 3);
 	for (UInt_t i = 0; i <= histogramsNegTrimmed->LastIndex(); i++){
 		TH1* hist = (TH1*)histogramsNegTrimmed->At(i);
 		if (hist){
-			TVirtualPad* pad = beamFitCanvasPos->cd(i+1);
-			pad->SetTitle(hist->GetName());
-			FitUtils::fitHistogramOnPad(hist, pad, params, fitType);
+			hist->SetTitle(hist->GetName());
+			// Instantiate fresh parameter values
+			params->readParametersFromFile();
+			// Estimate fitting parameters if requested
+			if (Constants::getInstance()->parameters.paramDeviation != 0){
+				FitUtils::estimateFitParameters(hist, params);
+			}
+			TVirtualPad* pad = beamFitCanvasNeg->cd(i+1);
+			Double_t chi2 = FitUtils::fitHistogramOnPad(hist, pad, params, fitType);
+			// Write fitted parameter values and errors to output file
+			BeamOutputHelper::getInstance()->writeToAscii(params);
+			// Write chi2 to output file
+			BeamOutputHelper::getInstance()->writeToAscii(chi2);
 		}
 	}
+
+	// Save canvas to RootFile and to png
+	BeamOutputHelper::getInstance()->writeObjectToRootFile(beamFitCanvasNeg);
+	TString beamFitCanvasNegPath = TString::Format("%s-neg-fit-tile%d-terms%d-%s.png", fileNameNoExt, Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber, StringUtils::toString(fitType));
+	beamFitCanvasNeg->SaveAs(beamFitCanvasNegPath.Data());
+
+	// Write new line to output file
+	BeamOutputHelper::getInstance()->writeToAsciiNoIndent("\n");
 
 	return 0;
 }
 
-int run(const char* fileName) {
-	InputFileType fileType = RootUtils::getInputFileType(fileName);
+int runBeam(TList* fileNamesList){
+	// Open ASCII and ROOT files for output
+	BeamOutputHelper::getInstance()->init();
+
+	// Run analysis for every file
+	for (TObject* object : *fileNamesList){
+		TObjString* fileName = (TObjString*) object;
+		if (fileName){
+			runBeamSingle(fileName->GetString().Data());
+		}
+	}
+
+	// Close output files
+	BeamOutputHelper::getInstance()->finalize();
+
+	return 0;
+}
+
+int run(TList* fileNamesList) {
+	const char* firstFileName = ((TObjString*)fileNamesList->At(0))->GetString().Data();
+	InputFileType fileType = RootUtils::getInputFileType(firstFileName);
 
 	if (fileType == InputFileType::Prototype){
-		return runPrototype(fileName);
+		return runPrototype(fileNamesList);
 	}
 	if (fileType == InputFileType::Beam){
-		return runBeam(fileName);
+		return runBeam(fileNamesList);
 	}
 	return 1;
 }
@@ -318,13 +398,11 @@ int main(int argc, char* argv[]) {
 
 		// ROOT::Math::IntegratorOneDimOptions:: ROOT::Math::Integrator GSLIntegrator(double absTol = 1.0000000000000001E-9, double relTol = 9.9999999999999995E-7, size_t size = 1000)
 
-		// Iterate through input files and run analysis
-		for (TObject* object : *(constants->parameters.inputFiles)) {
-			TObjString* objString = (TObjString*)object;
-			if (objString){
-				run(objString->GetString().Data());
-			}
-		}
+		// Exit if file names not provided
+		if (constants->parameters.inputFiles->LastIndex() < 0) return 1;
+
+		// Run analysis
+		run(constants->parameters.inputFiles);
 	}
 
 	app->Run();

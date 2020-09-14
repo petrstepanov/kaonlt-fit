@@ -9,12 +9,14 @@
 #define SRC_HELPER_GraphicsUtils_H_
 
 #include <TH1.h>
+#include <TF1.h>
 #include <TVirtualPad.h>
 #include <TFitResult.h>
 #include <TPaveText.h>
 #include <TFitResultPtr.h>
 #include <TCanvas.h>
 #include <RooAbsPdf.h>
+#include <TPaveStats.h>
 #include <vector>
 
 struct Margin {
@@ -48,10 +50,9 @@ public:
 	static Style_t getFontCode(Int_t fontSize);
 	static Double_t getFontSizeScale(Bool_t isTopPad);
 
-	static void setMyStatsDisplay(TH1*, TVirtualPad*);
+	static void setStatsFitOption(TH1*, TVirtualPad*, Int_t);
 	static void alignStats(TH1*, TVirtualPad*);
 	static void stylePaveText(TPaveText* paveText, TVirtualPad* pad);
-	static void setStatsFitOption(TH1*, TVirtualPad*, Int_t);
 //	static void addLineToStats(TH1*, const char*, TVirtualPad*);
 //	static void showChi2InStats(TH1*, TFitResultPtr, TVirtualPad*);
 	static void styleAxis(TAxis* axis, const char* title, Double_t titleOffset, Double_t labelOffset, Bool_t isTopPad);
@@ -59,6 +60,11 @@ public:
 
 	static TCanvas* getCanvasForNPads(const char* name, const char* title, Int_t width, Int_t height, Int_t nPads, Int_t nCols);
 	static TCanvas* getCanvasForNPads(const char* title, Int_t width, Int_t height, Int_t nPads, Int_t nCols);
+
+	static void hilightLimitParameters(TF1* func, TVirtualPad* pad);
+	static void addChi2Value(TVirtualPad* pad);
+
+	static TPaveStats* getPaveStats(TVirtualPad* pad);
 };
 
 #endif /* SRC_HELPER_GRAPHICSUTILS_H_ */

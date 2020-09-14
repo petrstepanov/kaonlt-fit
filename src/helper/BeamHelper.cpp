@@ -7,51 +7,34 @@
 
 #include <iostream>
 #include <TFile.h>
+#include <TChain.h>
 #include <TH2F.h>
 #include <TTreeReader.h>
 #include <TCanvas.h>
 #include <TString.h>
+#include <TSystem.h>
 #include <TObjString.h>
 
 #include "BeamHelper.h"
 #include "../model/Constants.h"
 #include "../utils/HistUtils.h"
 #include "../utils/GraphicsUtils.h"
+#include "../utils/RootUtils.h"
 
-BeamHelper::BeamHelper() {
-	fileName = new TString();
-	myFile = new TFile();
-	histogramsPositive = new TList();
-	histogramsNegative = new TList();
-}
-
-BeamHelper::~BeamHelper(){}
-
-BeamHelper* BeamHelper::instance = NULL;
-
-BeamHelper* BeamHelper::getInstance(){
-    if (!instance){
-        instance = new BeamHelper;
-    }
-    return instance;
-}
-
-int BeamHelper::init(const char* fileName){
-	// Open ROOT file
-	// When you create a TFile object, it becomes the current directory
-	// https://root.cern.ch/root/htmldoc/guides/users-guide/InputOutput.html#the-current-directory
-	this->fileName = new TString(fileName);
-	myFile->Close();
-	myFile = new TFile(fileName);
+BeamHelper::BeamHelper(const char* fileNamePath) {
+	myFile = new TFile(fileNamePath);
 	if (myFile->IsZombie()) {
-		std::cout << "Error opening file \"" << fileName << "\""<< std::endl;
-		return -1;
+		std::cout << "Error opening file \"" << fileNamePath << "\""<< std::endl;
 	}
 
 	// Print list of keys in ROOT file
 	TList *keys = myFile->GetListOfKeys();
 	keys->Print();
 
+	histogramsPositive = new TList();
+	histogramsNegative = new TList();
+
+	// Extract positive and negative hists
 	for (UInt_t i = 0; i <= keys->LastIndex(); i++){
 		TH1D *hist;
 		TString key = ((TObjString*)keys->At(i))->GetString();
@@ -69,9 +52,9 @@ int BeamHelper::init(const char* fileName){
 	// test print histograms
 	// histogramsPositive->Print();
 	// histogramsNegative->Print();
-
-	return 0;
 }
+
+BeamHelper::~BeamHelper(){}
 
 TList* BeamHelper::getHistogramsPositive(){
 	return histogramsPositive;
@@ -79,4 +62,8 @@ TList* BeamHelper::getHistogramsPositive(){
 
 TList* BeamHelper::getHistogramsNegative(){
 	return histogramsNegative;
+}
+
+const char* BeamHelper::getFileName(){
+	return myFile->GetName();
 }
