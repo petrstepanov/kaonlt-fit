@@ -401,6 +401,9 @@ int main(int argc, char* argv[]) {
 		// Exit if file names not provided
 		if (constants->parameters.inputFiles->LastIndex() < 0) return 1;
 
+		// Parse wildcards in the input files
+		RootUtils::parseWildcardFileNames(constants->parameters.inputFiles);
+
 		// Run analysis
 		run(constants->parameters.inputFiles);
 	}

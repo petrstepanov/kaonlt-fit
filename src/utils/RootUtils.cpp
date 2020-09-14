@@ -26,6 +26,7 @@
 #include <TFile.h>
 #include <TChain.h>
 #include <TSystem.h>
+#include <TObjArray.h>
 
 #include <RooHist.h>
 #include <RooPlot.h>
@@ -146,4 +147,50 @@ void RootUtils::setRooRealVarValueLimits(RooRealVar* var, Double_t value, Double
 	var->setMin(min);
 	var->setMax(max);
 	var->setVal(value);
+}
+
+void RootUtils::parseWildcardFileNames(TList* fileNamesList){
+	std::cout << "Original files list:" << std::endl;
+	fileNamesList->Print();
+
+	// Find wildcard filenames from the input files
+	TList* wildcardFileNames = new TList();
+	for (TObject* object : *fileNamesList){
+		TObjString* objString = (TObjString*)object;
+		if (objString){
+			TString fileName = objString->GetString();
+			if (fileName.Contains("*")){
+				wildcardFileNames->Add(objString);
+			}
+		}
+	}
+
+	// Remove all wildcard filenames from input files
+	fileNamesList->RemoveAll(wildcardFileNames);
+
+	// Parse all wildcard filenames with TChain
+	TList* wildcardFileNamesParsed = new TList();
+	for (TObject* object : *wildcardFileNames){
+		TObjString* objString = (TObjString*)object;
+		if (objString){
+			TChain* chain = new TChain();
+			chain->Add(objString->GetString().Data());
+			// Warning, GetListOfFiles returns the list of TChainElements (not the list of files)
+			// see TChain::AddFile to see how to get the corresponding TFile objects
+			TObjArray* chainFilesList = chain->GetListOfFiles();
+
+			// Add all
+			for (TObject* object : *chainFilesList){
+				std::cout << object->GetTitle() << std::endl;
+				TObjString* fileName = new TObjString(object->GetTitle());
+				wildcardFileNamesParsed->Add(fileName);
+			}
+		}
+	}
+
+	// Add all passed FileNames to the original list
+	fileNamesList->AddAll(wildcardFileNamesParsed);
+
+	std::cout << "Expanded wildcards files list:" << std::endl;
+	fileNamesList->Print();
 }

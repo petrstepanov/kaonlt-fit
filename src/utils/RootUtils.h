@@ -39,6 +39,7 @@ public:
     static InputFileType getInputFileType(const char* fileName);
     static TFile* mergeFiles(TList* fileNamesList);
     static void setRooRealVarValueLimits(RooRealVar* var, Double_t value, Double_t min, Double_t max);
+    static void parseWildcardFileNames(TList* fileNamesList);
 
 private:
     static TStopwatch* watch;
