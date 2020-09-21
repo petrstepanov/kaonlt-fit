@@ -28,6 +28,7 @@ BeamOutputHelper* BeamOutputHelper::getInstance(){
 
 void BeamOutputHelper::createAsciiHeader(){
 	fprintf(asciiFile, "\"Filename\"\t");
+	fprintf(asciiFile, "\"Run Number\"\t");
 
 	// Iterate Positive PMT (7 items)
 	for (UInt_t j = 0; j < 7; j++){
@@ -75,6 +76,10 @@ void BeamOutputHelper::writeToAscii(FitParameters* parameters){
 
 void BeamOutputHelper::writeToAscii(Double_t value){
 	fprintf(asciiFile, "%f\t", value);
+}
+
+void BeamOutputHelper::writeToAscii(Int_t value){
+	fprintf(asciiFile, "%d\t", value);
 }
 
 int BeamOutputHelper::init(){

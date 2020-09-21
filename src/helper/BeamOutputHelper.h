@@ -26,6 +26,7 @@ public:
 	void writeToAscii(Double_t *pars, Double_t* parsErr);
 	void writeToAscii(FitParameters* parameters);
 	void writeToAscii(Double_t value);
+	void writeToAscii(Int_t value);
 	void writeObjectToRootFile(TObject* object);
 
 private:

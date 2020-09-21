@@ -92,6 +92,17 @@ TString* StringUtils::extractFilenameWithExtension(const char* fileNamePath){
 	return new TString(((TObjString *)objArray->At(1))->GetString().Data());
 }
 
+Int_t StringUtils::extractFileIndex(const char* fileNamePath){
+	TString* s = new TString(fileNamePath);
+
+	// If file path contains slashes or back slashes https://regex101.com/r/7H6We8/1
+	TObjArray *objArray = TPRegexp("_(\\d*)_").MatchS(*s); // .*(?:\/|\\)(.*)
+	if (objArray->GetLast()+1 != 2){
+		return 0;
+	}
+	const char* index = ((TObjString *)objArray->At(1))->GetString().Data();
+	return atoi(index);
+}
 const char* StringUtils::toString(FitType fitType){
 	if (fitType == FitType::test) return "test";
 	if (fitType == FitType::root) return "root-analytical";

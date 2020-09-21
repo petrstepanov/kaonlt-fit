@@ -112,6 +112,14 @@ TH1* HistUtils::cloneHistogram(TH1* hist, const char* newName, const char* title
 	return histClone;
 }
 
+Int_t HistUtils::getNNonZeroBins(TH1* hist){
+	Int_t nonZeroBins = 0;
+	for (Int_t i = 1; i <= hist->GetNbinsX(); i++){
+		if (hist->GetBinContent(i) != 0) nonZeroBins++;
+	}
+	return nonZeroBins;
+}
+
 void HistUtils::resetHistogram(TH1* hist){
 	for (Int_t i = 1; i <= hist->GetNbinsX(); i++){
 		hist->SetBinContent(i, 0);

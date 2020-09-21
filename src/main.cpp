@@ -13,13 +13,13 @@
 #include <Math/Factory.h>
 #include <Math/Minimizer.h>
 #include <Math/MinimizerOptions.h>
-#include <Math/IntegratorOptions.h>
-
 #include "model/Constants.h"
 #include "model/FitParameters.h"
 #include "utils/GraphicsUtils.h"
 #include "utils/TreeUtils.h"
 #include "utils/HistUtils.h"
+#include <Math/IntegratorOptions.h>
+
 #include "utils/TestSpectrum.h"
 #include "utils/FitUtils.h"
 #include "utils/StringUtils.h"
@@ -188,11 +188,15 @@ int runBeamSingle(const char* fileNamePath){
 
 	// Check if histogram is empty (some beam data is empty, this crashes the program)
 	TH1* hist = (TH1F*)(histogramsPosTrimmed->At(0));
-	if (hist->Integral() == 0) return 1;
+	if (hist->Integral() == 0){
+		return 1;
+	}
 
-	// Write output file name
+	// Write output file name and file run index
 	const char* fileName = StringUtils::extractFilenameWithExtension(fileNamePath)->Data();
 	BeamOutputHelper::getInstance()->writeToAscii(fileName);
+	Int_t fileIndex = StringUtils::extractFileIndex(fileNamePath);
+	BeamOutputHelper::getInstance()->writeToAscii(fileIndex);
 
 	// Fit and plot Positive histograms
 	TString beamFitCanvasPosName = TString::Format("%s-pos-fit", fileNameNoExt);
@@ -394,7 +398,8 @@ int main(int argc, char* argv[]) {
 		// ROOT::Math::MinimizerOptions::SetDefaultTolerance(1.E-4);
 
 		// Abnormal termination of minimization
-		// ROOT::Math::MinimizerOptions::SetDefaultTolerance(1); // Default 1.E-2
+		ROOT::Math::MinimizerOptions::SetDefaultTolerance(1); // Default: 1.E-2
+		ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(10000);
 		// ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(2147483647);
 
 		// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Migrad"); // Default

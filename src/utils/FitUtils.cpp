@@ -407,7 +407,9 @@ Double_t FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcO
 	pad->Modified();
 	pad->Update();
 
-	return fitResultPrt->Chi2();
+	Double_t chi2 = fitResultPrt->Chi2();
+	UInt_t nDegreesOfFreedom = func->GetNDF();
+	return chi2/nDegreesOfFreedom;
 }
 
 void FitUtils::fillHistogramFromFuncObject(TH1* hist, FitParameters* pars, AbsComponentFunc* funcObject){
