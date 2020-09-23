@@ -31,6 +31,10 @@ const Int_t GraphicsUtils::FONT_BOLD = 6;
 
 const Double_t GraphicsUtils::TOP_TO_BOTTOM_PAD_HEIGHT_RATIO = 2.5;
 
+const Int_t GraphicsUtils::BEAM_CANVAS_WIDTH = 1440;
+const Int_t GraphicsUtils::BEAM_CANVAS_HEIGHT = 900;
+
+
 const Margin GraphicsUtils::padMargins = { 0.10, 0.02, 0.15, 0.05 }; // left, right, bottom, top
 
 const std::vector<Int_t> GraphicsUtils::colorSet = { kViolet + 6, kSpring - 5, kAzure + 8,

@@ -201,7 +201,7 @@ int runBeamSingle(const char* fileNamePath){
 	// Fit and plot Positive histograms
 	TString beamFitCanvasPosName = TString::Format("%s-pos-fit", fileNameNoExt);
 	TString beamFitCanvasPosTitle = TString::Format("\"%s\" %s of the beam PMT Positive spectra (terms = %d)", fileName, fitKind, Constants::getInstance()->parameters.termsNumber);
-	TCanvas* beamFitCanvasPos = GraphicsUtils::getCanvasForNPads(beamFitCanvasPosName.Data(), beamFitCanvasPosTitle.Data(), 1440, 900, histogramsPosTrimmed->LastIndex()+1, 3);
+	TCanvas* beamFitCanvasPos = GraphicsUtils::getCanvasForNPads(beamFitCanvasPosName.Data(), beamFitCanvasPosTitle.Data(), GraphicsUtils::BEAM_CANVAS_WIDTH, GraphicsUtils::BEAM_CANVAS_HEIGHT, histogramsPosTrimmed->LastIndex()+1, 3);
 	for (UInt_t i = 0; i <= histogramsPosTrimmed->LastIndex(); i++){
 		TH1* hist = (TH1*)histogramsPosTrimmed->At(i);
 		if (hist){
@@ -228,7 +228,7 @@ int runBeamSingle(const char* fileNamePath){
 	// Fit and plot Negative histograms
 	TString beamFitCanvasNegName = TString::Format("%s-neg-fit", fileNameNoExt);
 	TString beamFitCanvasNegTitle = TString::Format("\"%s\" %s of the beam PMT Negative spectra (terms = %d)", fileName, fitKind, Constants::getInstance()->parameters.termsNumber);
-	TCanvas* beamFitCanvasNeg = GraphicsUtils::getCanvasForNPads(beamFitCanvasNegName.Data(), beamFitCanvasNegTitle.Data(), 1280, 640, histogramsNegTrimmed->LastIndex()+1, 3);
+	TCanvas* beamFitCanvasNeg = GraphicsUtils::getCanvasForNPads(beamFitCanvasNegName.Data(), beamFitCanvasNegTitle.Data(), GraphicsUtils::BEAM_CANVAS_WIDTH, GraphicsUtils::BEAM_CANVAS_HEIGHT, histogramsNegTrimmed->LastIndex()+1, 3);
 	for (UInt_t i = 0; i <= histogramsNegTrimmed->LastIndex(); i++){
 		TH1* hist = (TH1*)histogramsNegTrimmed->At(i);
 		if (hist){

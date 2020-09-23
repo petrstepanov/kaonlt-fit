@@ -45,6 +45,9 @@ public:
 
 	static const Margin padMargins;
 
+	static const Int_t BEAM_CANVAS_WIDTH;
+	static const Int_t BEAM_CANVAS_HEIGHT;
+
     static const std::vector<Int_t> colorSet;
 
 	static Style_t getFontCode(Int_t fontSize);
