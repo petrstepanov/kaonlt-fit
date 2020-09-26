@@ -17,7 +17,7 @@ FitParameters::FitParameters(ParametersType type) {
 	if (type == ParametersType::forBellamyHist){
 		// For Bellamy spectrum fit
 		RooRealVar* Q0 = new RooRealVar("Q_{0}", "pedestal", 23.26, 10., 40., "");
-		RooRealVar* s0 = new RooRealVar("#sigma_{0}", "standard deviation of the type I background process", 0.192, 0., 0.3, ""); // ->10
+		RooRealVar* s0 = new RooRealVar("#sigma_{0}", "standard deviation of the type I background process", 0.192, 0., 0.5, ""); // ->10
 		RooRealVar* Q1 = new RooRealVar("Q_{1}", "average charge at the PM output", 35.04, 15., 50., "");
 		RooRealVar* s1 = new RooRealVar("#sigma_{1}", "corresponding standard deviation of the charge distribution", 11.73, 0., 20., ""); // ->100
 		RooRealVar* w  = new RooRealVar("w", "probability that signal is accompanied by type II background process", 0.383, 0., 1., "");

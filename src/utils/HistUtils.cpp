@@ -87,7 +87,7 @@ TH1* HistUtils::cutHistogram(TH1* hist, Double_t xMin, Double_t xMax){
 		// std::cout << "bin: " << i << " content: " << trimmedHist->GetBinContent(i) << " error: " << trimmedHist->GetBinError(i) << std::endl;
 	}
 
-	// trimmedHist->SetEntries(trimmedHist->Integral());
+	trimmedHist->SetEntries(trimmedHist->Integral());
 
 	return trimmedHist;
 }

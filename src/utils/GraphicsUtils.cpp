@@ -54,7 +54,7 @@ void GraphicsUtils::alignStats(TH1* hist, TVirtualPad* pad){
 	TPaveStats *stats = getPaveStats(pad);
 
 	if (stats){
-		Double_t statsWidth = 0.5; //stats->GetX2NDC() - stats->GetX1NDC();
+		Double_t statsWidth = 0.4; //stats->GetX2NDC() - stats->GetX1NDC();
 		Double_t statsHeight = 0.05*stats->GetListOfLines()->GetSize(); // stats->GetY2NDC() - stats->GetY1NDC();
 		// Move stats horizontally
 		stats->SetX2NDC(1 - pad->GetRightMargin());

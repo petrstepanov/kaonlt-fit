@@ -335,6 +335,11 @@ int testNoTerm0(){
 	// Retreive parameters for test Bellamy histogram
 	FitParameters* params = new FitParameters(ParametersType::forBellamyHist);
 
+	// Fix sigma_0
+	RooRealVar* s0 = (RooRealVar*) params->getList()->find("#sigma_{0}");
+	s0->setVal(0.32);
+	s0->setConstant();
+
 	// Instantiate histogram
 	TH1* h = TestSpectrum::getHistogramGeneratedNoTerm0(params);
 
@@ -366,12 +371,6 @@ int main(int argc, char* argv[]) {
 	Constants* constants = Constants::getInstance();
 	constants->parseParameters(gApplication->Argc(), gApplication->Argv());
 
-	// Check if input files are provided
-	if (constants->parameters.inputFiles->GetSize() < 1){
-		std::cout << "No spectra files specified." << std::endl;
-		return 1;
-	}
-
 	// Warning in <TF1::IntegralOneDim>: Error found in integrating function term11_1714168353 in [10.000000,2010.000000] using AdaptiveSingular. Result = 3818596.214063 +/- 453.771721  - status = 18
 	// Info in <TF1::IntegralOneDim>: 		Function Parameters = { p0 =  220.198026 , p1 =  0.044300 , p2 =  165.000000 , p3 =  63.506987 , p4 =  0.700397 , p5 =  0.027247 , p6 =  0.500000 }
 	// ROOT::Math::IntegratorOneDimOptions::SetDefaultRelTolerance(1.E-4);
@@ -384,6 +383,12 @@ int main(int argc, char* argv[]) {
 		testNoTerm0();
 	}
 	else {
+		// Check if input files are provided
+		if (constants->parameters.inputFiles->GetSize() < 1){
+			std::cout << "No spectra files specified." << std::endl;
+			return 1;
+		}
+
 		// NOTE: ROOT default "kADAPTIVESINGULAR" integrator crashes when integrating FuncSRealNoTerm0...?
 		// Even when we are not fitting at all, just drawing the function and its components
 		// ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("GAUSSLEGENDRE");
@@ -399,7 +404,7 @@ int main(int argc, char* argv[]) {
 
 		// Abnormal termination of minimization
 		ROOT::Math::MinimizerOptions::SetDefaultTolerance(1); // Default: 1.E-2
-		ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(10000);
+		ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(100000);
 		// ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(2147483647);
 
 		// ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit", "Migrad"); // Default
