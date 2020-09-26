@@ -96,7 +96,7 @@ Int_t StringUtils::extractFileIndex(const char* fileNamePath){
 	TString* s = new TString(fileNamePath);
 
 	// If file path contains slashes or back slashes https://regex101.com/r/7H6We8/1
-	TObjArray *objArray = TPRegexp("_(\\d*)").MatchS(*s); // .*(?:\/|\\)(.*)
+	TObjArray *objArray = TPRegexp("_(\\d+)").MatchS(*s); // _(\d*)
 	if (objArray->GetLast()+1 != 2){
 		return 0;
 	}
