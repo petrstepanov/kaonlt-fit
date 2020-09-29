@@ -298,10 +298,10 @@ Double_t FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcO
 
 	TFitResultPtr fitResultPrt;
 	if (minimization == Minimization::likelihood){
-		fitResultPrt = hist->Fit(func, "SLV", "", fitXMin, fitXMax);
+		fitResultPrt = hist->Fit(func, "SLV", "", fitXMin, fitXMax); // MESLV
 	}
 	else if (minimization == Minimization::chi2){
-		fitResultPrt = hist->Fit(func, "SV", "", fitXMin, fitXMax);
+		fitResultPrt = hist->Fit(func, "SV", "", fitXMin, fitXMax);  // MESV
 	}
 	RootUtils::stopAndPrintTimer();
 
