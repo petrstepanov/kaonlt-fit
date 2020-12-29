@@ -1,9 +1,0 @@
-test-beam-fits/result_5018.root 
---params-filename=beam-params.txt 
---plot-profiles=kFALSE 
---terms-number=20 
---tile-profile=55 
---fit=root 
---ch-fit-min=0.1 
---ch-fit-max=8 
---ch-fit-range-min=0.5
