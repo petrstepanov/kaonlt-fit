@@ -24,7 +24,9 @@
 #include <TObjString.h>
 #include <TList.h>
 #include <TFile.h>
+#include <TFileInfo.h>
 #include <TChain.h>
+#include <TFileCollection.h>
 #include <TSystem.h>
 #include <TObjArray.h>
 
@@ -90,6 +92,17 @@ InputFileType RootUtils::getInputFileType(const char* fileName){
 
 	std::cout << "File type is Unknown" << std::endl;
 	return InputFileType::Unknown;
+}
+
+TChain* RootUtils::buildChain(TList* fileNamesList, const char* treeName){
+  TChain* chain = new TChain(treeName);
+  for (TObject* object : *fileNamesList) {
+    TObjString* objString = (TObjString*)object;
+    if (objString){
+      chain->Add(objString->GetString().Data());
+    }
+  }
+  return chain;
 }
 
 TFile* RootUtils::mergeFiles(TList* fileNamesList){
@@ -164,6 +177,7 @@ void RootUtils::parseWildcardFileNames(TList* fileNamesList){
 			}
 		}
 	}
+	wildcardFileNames->Print("V");
 
 	// Remove all wildcard filenames from input files
 	fileNamesList->RemoveAll(wildcardFileNames);
@@ -173,17 +187,21 @@ void RootUtils::parseWildcardFileNames(TList* fileNamesList){
 	for (TObject* object : *wildcardFileNames){
 		TObjString* objString = (TObjString*)object;
 		if (objString){
-			TChain* chain = new TChain();
-			chain->Add(objString->GetString().Data());
-			// Warning, GetListOfFiles returns the list of TChainElements (not the list of files)
-			// see TChain::AddFile to see how to get the corresponding TFile objects
-			TObjArray* chainFilesList = chain->GetListOfFiles();
+		  TFileCollection* fileCollection = new TFileCollection("fileCollection"); // The name is irrelevant
+		  fileCollection->Add(objString->GetString().Data());
+		  std::cout << "Expanded file collection wildcard:" << std::endl;
+      fileCollection->GetList()->Print("V");
 
 			// Add all
-			for (TObject* object : *chainFilesList){
-				std::cout << object->GetTitle() << std::endl;
-				TObjString* fileName = new TObjString(object->GetTitle());
-				wildcardFileNamesParsed->Add(fileName);
+			for (TObject* object : *(fileCollection->GetList())){
+			  object->Print("V");
+			  TFileInfo* fileInfo = (TFileInfo*)object;
+			  if (fileInfo){
+			    const char* url = fileInfo->GetCurrentUrl()->GetUrl();
+			    std::cout << url << std::endl;
+          TObjString* fileName = new TObjString(url);
+          wildcardFileNamesParsed->Add(fileName);
+			  }
 			}
 		}
 	}
@@ -192,5 +210,5 @@ void RootUtils::parseWildcardFileNames(TList* fileNamesList){
 	fileNamesList->AddAll(wildcardFileNamesParsed);
 
 	std::cout << "Expanded wildcards files list:" << std::endl;
-	fileNamesList->Print();
+	fileNamesList->Print("V");
 }

@@ -17,6 +17,7 @@ public:
 	TestSpectrum();
 	virtual ~TestSpectrum();
 
+	static TH1* getHistogramDigitized();
 	static TH1* getHistogramPaper();
 	static TH1* getHistogramPaperFix();
 	static TH1* getHistogramPaperNoTerm0();

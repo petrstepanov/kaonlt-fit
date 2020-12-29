@@ -1,0 +1,2 @@
+test-beam-fits/result_7015.root
+--params-filename=result_7015-params-narrow.txt --plot-profiles=kFALSE --terms-number=20 --tile-profile=55 --fit=root --ch-fit-min=0.1 --ch-fit-max=10

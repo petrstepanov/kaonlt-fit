@@ -33,14 +33,14 @@ std::pair<TString, TString> StringUtils::parseParameter(const char* parameter){
 	}
 
 	// Check if parameter is a ROOT file
-	TObjArray *subStr2 = TPRegexp("^(.+)\\.root$").MatchS(s4);
-	const Int_t nrSubStr2 = subStr2->GetLast()+1;
-	if (nrSubStr2 == 2) {
-		return std::make_pair(TString("file-name"), TString(parameter));
-	}
+	// TObjArray *subStr2 = TPRegexp("^(.+)\\.root$").MatchS(s4);
+	// const Int_t nrSubStr2 = subStr2->GetLast()+1;
+	// if (nrSubStr2 == 2) {
+	// 	return std::make_pair(TString("file-name"), TString(parameter));
+	// }
 
 	// Otherwise return "unknown" in pair
-	return std::make_pair(TString("unknown-argument"), TString(parameter));
+	return std::make_pair(TString("file-name"), TString(parameter));
 }
 
 //std::pair<TString, TString> StringUtils::extractFilenameAndExtension(const char* fileNamePath){

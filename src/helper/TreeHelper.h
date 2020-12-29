@@ -10,6 +10,7 @@
 
 #include <TString.h>
 #include <TFile.h>
+#include <TChain.h>
 #include <TTree.h>
 
 class TreeHelper {
@@ -27,7 +28,8 @@ private:
 	TreeHelper();
 	static TreeHelper* instance;
 
-	TFile* myFile;
+	TString* fileName;
+//	TFile* myFile;
 	TTree* myTree;
 };
 

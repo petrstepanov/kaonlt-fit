@@ -40,6 +40,39 @@ const Margin GraphicsUtils::padMargins = { 0.10, 0.02, 0.15, 0.05 }; // left, ri
 const std::vector<Int_t> GraphicsUtils::colorSet = { kViolet + 6, kSpring - 5, kAzure + 8,
 		kPink + 1, kGray + 1, kViolet - 4, kRed - 7, kOrange};
 
+TPaveStats* GraphicsUtils::getPaveStats(TVirtualPad* pad){
+  // Update Pad - in case the histogram was just drawn - need to update
+  pad->Update();
+
+  // pad->GetListOfPrimitives()->Print();
+  // If previously renamed PaveStats and added to the pad primitives - return it
+  TPaveStats *pave = (TPaveStats*)pad->GetPrimitive("mystats");
+  if (pave) return pave;
+
+  // Else remove PaveText from histogram primitives, rename it and add to the list of Pad primitives
+  // pad0->getPrimitive() searches across primitives of primitives
+  pave = (TPaveStats*)pad->GetPrimitive("stats");
+
+  if (pave){
+    pave->SetName("mystats");
+    TH1* parentHist = (TH1*)(pave->GetParent());
+    parentHist->SetStats(0);
+    pad->GetListOfPrimitives()->Add(pave);
+    // pad->GetListOfPrimitives()->Print();
+    return pave;
+  }
+
+  // If not found search object by file type
+  // for (TObject* object : *(pad->GetListOfPrimitives())){
+  //  std::cout << object->GetName() << std::endl;
+  //  if (object->InheritsFrom(TPaveStats::Class())){
+  //    return (TPaveStats*) object;
+  //  }
+  // }
+
+  return NULL;
+}
+
 void GraphicsUtils::setStatsFitOption(TH1* hist, TVirtualPad* pad, Int_t num){
 	pad->Update();
 	TPaveStats *stats = (TPaveStats*) hist->FindObject("stats");
@@ -49,24 +82,26 @@ void GraphicsUtils::setStatsFitOption(TH1* hist, TVirtualPad* pad, Int_t num){
 	}
 }
 
-void GraphicsUtils::alignStats(TH1* hist, TVirtualPad* pad){
-	// Retrieve the stat box
-	TPaveStats *stats = getPaveStats(pad);
+Double_t GraphicsUtils::statsLineHeight = 0.05;
 
-	if (stats){
-		Double_t statsWidth = 0.4; //stats->GetX2NDC() - stats->GetX1NDC();
-		Double_t statsHeight = 0.05*stats->GetListOfLines()->GetSize(); // stats->GetY2NDC() - stats->GetY1NDC();
-		// Move stats horizontally
-		stats->SetX2NDC(1 - pad->GetRightMargin());
-		stats->SetX1NDC(stats->GetX2NDC() - statsWidth);
-		// Move stats vertically
-		stats->SetY2NDC(1 - pad->GetTopMargin());
-		stats->SetY1NDC(stats->GetY2NDC() - statsHeight);
+void GraphicsUtils::alignStats(TVirtualPad* pad, Double_t statsWidth){
+  // Retrieve the stat box
+  TPaveStats *stats = getPaveStats(pad);
+  if (!stats) return;
 
-		pad->Modified();
-		pad->Update();
-	}
+  //stats->GetX2NDC() - stats->GetX1NDC();
+  Double_t statsHeight = statsLineHeight*stats->GetListOfLines()->GetSize(); // stats->GetY2NDC() - stats->GetY1NDC();
+  // Move stats horizontally
+  stats->SetX2NDC(1 - pad->GetRightMargin());
+  stats->SetX1NDC(stats->GetX2NDC() - statsWidth);
+  // Move stats vertically
+  stats->SetY2NDC(1 - pad->GetTopMargin());
+  stats->SetY1NDC(stats->GetY2NDC() - statsHeight);
+
+  pad->Modified();
+  pad->Update();
 }
+
 
 void GraphicsUtils::stylePaveText(TPaveText* paveText, TVirtualPad* pad){
 	// Use smaller text size
@@ -214,38 +249,4 @@ void GraphicsUtils::addChi2Value(TVirtualPad* pad){
 
 	pad->Modified();
 	pad->Update();
-}
-
-TPaveStats* GraphicsUtils::getPaveStats(TVirtualPad* pad){
-	// Update Pad - in case the histogram was just drawn - need to update
-	pad->Update();
-
-	// pad->GetListOfPrimitives()->Print();
-
-	// If previously renamed PaveStats and added to the pad primitives - return it
-	TPaveStats *pave = (TPaveStats*)pad->GetPrimitive("mystats");
-	if (pave) return pave;
-
-	// Else remove PaveText from histogram primitives, rename it and add to the list of Pad primitives
-	// pad0->getPrimitive() searches across primitives of primitives
-	pave = (TPaveStats*)pad->GetPrimitive("stats");
-
-	if (pave){
-		pave->SetName("mystats");
-		TH1* parentHist = (TH1*)(pave->GetParent());
-		parentHist->SetStats(0);
-		pad->GetListOfPrimitives()->Add(pave);
-		// pad->GetListOfPrimitives()->Print();
-		return pave;
-	}
-
-	// If not found search object by file type
-	// for (TObject* object : *(pad->GetListOfPrimitives())){
-	//	std::cout << object->GetName() << std::endl;
-	//	if (object->InheritsFrom(TPaveStats::Class())){
-	//		return (TPaveStats*) object;
-	//	}
-	// }
-
-	return NULL;
 }

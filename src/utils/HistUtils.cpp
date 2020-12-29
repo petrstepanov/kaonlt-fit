@@ -80,6 +80,8 @@ TH1* HistUtils::cutHistogram(TH1* hist, Double_t xMin, Double_t xMax){
 	TString name = TString::Format("%s-trimmed", hist->GetName());
 	// TString title = TString::Format("%s (trimmed)", hist->GetTitle());
 	TH1D* trimmedHist = new TH1D(name, hist->GetTitle(), nBins, xAxis->GetBinLowEdge(minBin), xAxis->GetBinUpEdge(maxBin));
+	trimmedHist->GetXaxis()->SetTitle(hist->GetXaxis()->GetTitle());
+	trimmedHist->GetYaxis()->SetTitle(hist->GetYaxis()->GetTitle());
 
 	for (Int_t i = 1; i <= nBins; i++){
 		trimmedHist->SetBinContent(i, hist->GetBinContent(i+minBin-1));

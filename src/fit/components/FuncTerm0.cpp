@@ -30,11 +30,8 @@ Double_t FuncTerm0::func(Double_t* _x, Double_t* par) {
 	Double_t mu = par[6];		// number of photo-electrons
 
 	// Calculate function value
-	Double_t value = // begin mathematica code from "/mathematica/term0.nb"
-// With coeficient
-//			((1 - w)/(Power(E,Power(-Q0 + x,2)/(2.*Power(s0,2)))*Sqrt(2*Pi)*s0) + (a*w*UnitStep(-Q0 + x))/Power(E,a*(-Q0 + x)))/Power(E,mu)
-// Without coefficient
-			(1 - w)/(Power(E,Power(-Q0 + x,2)/(2.*Power(s0,2)))*Sqrt(2*Pi)*s0) + (a*w*UnitStep(-Q0 + x))/Power(E,a*(-Q0 + x))
+	Double_t value = // begin mathematica code from "/mathematica/term0-no-coeff.nb"
+	    (Power(E,((Q0 - x)*(-Q0 + x))/(2.*Power(s0,2)))*(1 - w))/(Sqrt(2*Pi)*s0) + (a*w*UnitStep(-Q0 + x))/Power(E,a*(-Q0 + x))
 	; // end mathematica code
 
 	return value;

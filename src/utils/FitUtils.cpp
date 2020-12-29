@@ -45,6 +45,7 @@
 #include <TLegend.h>
 #include <TCanvas.h>
 #include <TVectorD.h>
+#include <TStyle.h>
 #include <TPaveText.h>
 #include <TCollection.h>
 #include <TFitResultPtr.h>
@@ -301,10 +302,12 @@ Double_t FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcO
 		fitResultPrt = hist->Fit(func, "SLV", "", fitXMin, fitXMax); // MESLV
 	}
 	else if (minimization == Minimization::chi2){
-		fitResultPrt = hist->Fit(func, "SV", "", fitXMin, fitXMax);  // MESV
+	  fitResultPrt = hist->Fit(func, "SV", "", fitXMin, fitXMax);  // MESV
 	}
 	RootUtils::stopAndPrintTimer();
 
+	// Display no histogram info in statistics
+	gStyle->SetOptStat(1000000000);
 	// Display fit parameters and chi^2 in statistis box and draw histogram
 	// https://root.cern.ch/doc/master/classTPaveStats.html#PS02
 	GraphicsUtils::setStatsFitOption(hist, pad, 112);
@@ -398,7 +401,7 @@ Double_t FitUtils::doFit(TH1* hist, FitParameters* pars, AbsComponentFunc* funcO
 	GraphicsUtils::hilightLimitParameters(func, pad);
 
 	// Align and scale statistics box
-	GraphicsUtils::alignStats(hist, pad);
+	GraphicsUtils::alignStats(pad);
 
 	// Evaluate chi^2
 	GraphicsUtils::addChi2Value(pad);
@@ -577,7 +580,7 @@ void FitUtils::estimateFitParameters(TH1* histogram, FitParameters* params){
 	func->GetParameters(par);
 	RooRealVar* s1 = (RooRealVar*) params->getList()->find("#sigma_{1}");
 	Double_t paramDeviation = Constants::getInstance()->parameters.paramDeviation;
-	RootUtils::setRooRealVarValueLimits(s1, par[2], par[2]*(1.-paramDeviation), par[2]*(1.+paramDeviation/2));
+	RootUtils::setRooRealVarValueLimits(s1, par[2], par[2]*(1.-paramDeviation), par[2]*(1.+paramDeviation));
 	s1->Print();
 
 	// Subtract first hump

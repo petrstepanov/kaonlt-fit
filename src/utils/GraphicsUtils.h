@@ -48,13 +48,13 @@ public:
 	static const Int_t BEAM_CANVAS_WIDTH;
 	static const Int_t BEAM_CANVAS_HEIGHT;
 
-    static const std::vector<Int_t> colorSet;
+  static const std::vector<Int_t> colorSet;
 
 	static Style_t getFontCode(Int_t fontSize);
 	static Double_t getFontSizeScale(Bool_t isTopPad);
 
 	static void setStatsFitOption(TH1*, TVirtualPad*, Int_t);
-	static void alignStats(TH1*, TVirtualPad*);
+	static void alignStats(TVirtualPad* pad, Double_t statsWidth = 0.536);
 	static void stylePaveText(TPaveText* paveText, TVirtualPad* pad);
 //	static void addLineToStats(TH1*, const char*, TVirtualPad*);
 //	static void showChi2InStats(TH1*, TFitResultPtr, TVirtualPad*);
@@ -68,6 +68,9 @@ public:
 	static void addChi2Value(TVirtualPad* pad);
 
 	static TPaveStats* getPaveStats(TVirtualPad* pad);
+
+private:
+  static Double_t statsLineHeight;
 };
 
 #endif /* SRC_HELPER_GRAPHICSUTILS_H_ */

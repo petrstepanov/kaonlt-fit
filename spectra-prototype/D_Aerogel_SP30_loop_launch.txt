@@ -1,0 +1,11 @@
+D_Aerogel_SP30_loop*.root
+--params-filename=D_Aerogel_SP30_loop_params.txt
+--plot-profiles=kTRUE
+--terms-number=20 
+--tile-profile=55
+--fit-type=root-analytical
+--ch-bins=1050 
+--ch-fit-min=20
+--ch-fit-max=3000
+--param-deviation=1
+--ch-fit-range-min=350

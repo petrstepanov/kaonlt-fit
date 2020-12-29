@@ -817,7 +817,7 @@ Cell[BoxData[
     Typeset`animator$$, Typeset`animvar$$ = 1, Typeset`name$$ = 
     "\"untitled\"", Typeset`specs$$ = {{
       Hold[$CellContext`n$$], 1, 20, 1}}, Typeset`size$$ = {
-    360., {111., 117.}}, Typeset`update$$ = 0, Typeset`initDone$$, 
+    360., {118., 125.}}, Typeset`update$$ = 0, Typeset`initDone$$, 
     Typeset`skipInitDone$$ = True, $CellContext`n$175597$$ = 0}, 
     DynamicBox[Manipulate`ManipulateBoxes[
      1, StandardForm, "Variables" :> {$CellContext`n$$ = 1}, 
@@ -832,7 +832,7 @@ Cell[BoxData[
 {$CellContext`y, 0, 5000}, Filling -> Bottom, PlotRange -> {0, 0.008}], 
       "Specifications" :> {{$CellContext`n$$, 1, 20, 1}}, "Options" :> {}, 
       "DefaultOptions" :> {}],
-     ImageSizeCache->{407., {155., 162.}},
+     ImageSizeCache->{407., {163., 170.}},
      SingleEvaluation->True],
     Deinitialization:>None,
     DynamicModuleValues:>{},
@@ -884,7 +884,7 @@ Cell[BoxData[
     Typeset`animator$$, Typeset`animvar$$ = 1, Typeset`name$$ = 
     "\"untitled\"", Typeset`specs$$ = {{
       Hold[$CellContext`n$$], 1, 20, 1}}, Typeset`size$$ = {
-    360., {108., 115.}}, Typeset`update$$ = 0, Typeset`initDone$$, 
+    360., {115., 122.}}, Typeset`update$$ = 0, Typeset`initDone$$, 
     Typeset`skipInitDone$$ = True, $CellContext`n$180317$$ = 0}, 
     DynamicBox[Manipulate`ManipulateBoxes[
      1, StandardForm, "Variables" :> {$CellContext`n$$ = 1}, 
@@ -899,7 +899,7 @@ Cell[BoxData[
 {$CellContext`y, 0, 5000}, Filling -> Bottom, PlotRange -> {1.*^-8, 0.008}], 
       "Specifications" :> {{$CellContext`n$$, 1, 20, 1}}, "Options" :> {}, 
       "DefaultOptions" :> {}],
-     ImageSizeCache->{407., {153., 160.}},
+     ImageSizeCache->{407., {160., 167.}},
      SingleEvaluation->True],
     Deinitialization:>None,
     DynamicModuleValues:>{},
@@ -997,7 +997,7 @@ Cell[14404, 371, 4594, 138, 193, "Output",ExpressionUUID->"3392f2b3-9df9-4696-9a
 }, Open  ]],
 Cell[CellGroupData[{
 Cell[19035, 514, 205, 3, 31, "Input",ExpressionUUID->"ccd2591c-a021-4052-9906-fdc03514d749"],
-Cell[19243, 519, 1207, 22, 164, "Output",ExpressionUUID->"e369a835-ad94-410b-a09f-63ace0fae5f0"]
+Cell[19243, 519, 1207, 22, 162, "Output",ExpressionUUID->"e369a835-ad94-410b-a09f-63ace0fae5f0"]
 }, Open  ]],
 Cell[CellGroupData[{
 Cell[20487, 546, 3481, 72, 308, "Input",ExpressionUUID->"d0c16620-cc36-4d0d-a6da-e0ebfcf32af0"],
@@ -1009,9 +1009,9 @@ Cell[28166, 688, 1048, 15, 35, "Output",ExpressionUUID->"f64e00ef-359a-46ab-91ca
 Cell[29217, 705, 1048, 15, 35, "Output",ExpressionUUID->"744020db-4e3b-424c-923b-caa225d2bbe6"],
 Cell[30268, 722, 1047, 15, 35, "Output",ExpressionUUID->"3872a04e-5619-47c2-b3be-8e256d8a277c"],
 Cell[31318, 739, 2776, 70, 174, "Output",ExpressionUUID->"0f6aadf9-1862-4585-aa66-7d426e61c20a"],
-Cell[34097, 811, 2655, 48, 336, "Output",ExpressionUUID->"0a993997-fd3d-4f47-af6e-623ef5793b65"],
+Cell[34097, 811, 2655, 48, 352, "Output",ExpressionUUID->"0a993997-fd3d-4f47-af6e-623ef5793b65"],
 Cell[36755, 861, 1066, 15, 35, "Output",ExpressionUUID->"4f8c7f71-2e3c-4f1b-9d5c-15fcb8ade027"],
-Cell[37824, 878, 2662, 48, 365, "Output",ExpressionUUID->"4eb5f911-e1ca-4909-8d14-28f6aae39eaf"],
+Cell[37824, 878, 2662, 48, 346, "Output",ExpressionUUID->"4eb5f911-e1ca-4909-8d14-28f6aae39eaf"],
 Cell[40489, 928, 1069, 15, 35, "Output",ExpressionUUID->"18d52714-c0cd-48fc-bbca-8c9f9b423d98"]
 }, Open  ]],
 Cell[41573, 946, 297, 4, 31, "Input",ExpressionUUID->"e45a9a66-5a25-4a0d-81e8-17eecde7023c"],

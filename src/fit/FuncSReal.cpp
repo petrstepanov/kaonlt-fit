@@ -48,7 +48,8 @@ FuncSReal::FuncSReal(TH1* h, Int_t nParVal) : AbsComponentFunc(), hist(h), nPar(
 
 	// Initialize coeficient formula
 	TString formulaName = TString::Format("formula_%d", timestamp->Get());
-	coefficientN = new TFormula(formulaName.Data(), "[mu]^[n]*e^(-[mu])/TMath::Factorial([n])");
+	// coefficientN = new TFormula(formulaName.Data(), "[mu]^[n]*e^(-[mu])/TMath::Factorial([n])");
+  coefficientN = new TFormula(formulaName.Data(), "TMath::Power([mu],[n])*TMath::Exp(-[mu])/TMath::Factorial([n])");
 }
 
 FuncSReal::~FuncSReal() {

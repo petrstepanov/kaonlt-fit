@@ -38,49 +38,55 @@ int runPrototype(TList* fileNamesList){
 
 	// Plot the Tree if --plot-tree=kTRUE command line argument was passed
 	if (Constants::getInstance()->parameters.plotTree == kTRUE){
-		for(TObject* object : *fileNamesList){
-			TObjString* fileName = (TObjString*) object;
+		// for(TObject* object : *fileNamesList){
+			// TObjString* fileName = (TObjString*) object;
 			TreeHelper::getInstance()->plotTree();
-		}
+		// }
 	}
 
 	// Prepare histograms for the PMT projection spectra
 	Int_t chMin = Constants::getInstance()->parameters.chMin;
 	Int_t chMax = Constants::getInstance()->parameters.chMax;
 	Int_t chBins = Constants::getInstance()->parameters.chBins;
-	TString pmt1HistTitle = TString::Format("PMT1 profile at tilel=%d", Constants::getInstance()->parameters.tileProfile);
-	TH1* pmt1Hist = new TH1D("pmt1Hist", pmt1HistTitle, chBins, chMin, chMax);
-	pmt1Hist->GetXaxis()->SetTitle("Channel (ch_1)");
-	pmt1Hist->GetYaxis()->SetTitle("Counts");
-	TString pmt2HistTitle = TString::Format("PMT2 profile at tiler=%d", Constants::getInstance()->parameters.tileProfile);
-	TH1* pmt2Hist = new TH1D("pmt2Hist", pmt2HistTitle, chBins, chMin, chMax);
-	pmt2Hist->GetXaxis()->SetTitle("Channel (ch_2)");
-	pmt2Hist->GetYaxis()->SetTitle("Counts");
+	TString pmt1HistTitle = TString::Format("ADC1 spectrum at tilel=%d", Constants::getInstance()->parameters.tileProfile);
+	TH1* pmt1Hist = new TH1D("adc1Hist", pmt1HistTitle, chBins, chMin, chMax);
+  pmt1Hist->GetXaxis()->SetTitle("ADC1 channel (ch_1)");
+  pmt1Hist->GetYaxis()->SetTitle("Number of events");
+  TString pmt2HistTitle = TString::Format("ADC2 spectrum at tiler=%d", Constants::getInstance()->parameters.tileProfile);
+	TH1* pmt2Hist = new TH1D("adc2Hist", pmt2HistTitle, chBins, chMin, chMax);
+	pmt2Hist->GetXaxis()->SetTitle("ADC2 channel (ch_2)");
+	pmt2Hist->GetYaxis()->SetTitle("Number of events");
 
 	// Fill PMT histograms from the Tree data
 	TreeHelper::getInstance()->fillPmtHists(pmt1Hist, pmt2Hist);
 
 	// Plot PMT profile spectra if needed
-	const char* fileURL = TreeHelper::getInstance()->getFileName();
-	const char* fileNameNoExt = StringUtils::extractFilenameNoExtension(fileURL)->Data();
+	// const char* fileURL = TreeHelper::getInstance()->getFileName();
+	// const char* fileNameNoExt = StringUtils::extractFilenameNoExtension(fileURL)->Data();
+	// const char* fileNameNoExt = TreeHelper::getInstance()->getFileName();
 	if (Constants::getInstance()->parameters.plotProfiles == kTRUE){
 		TString pmtsCanvasTitle = TString::Format("Profile of the PMT spectra (tile = %d)", Constants::getInstance()->parameters.tileProfile);
 		TCanvas* pmtsCanvas = new TCanvas("pmtsCanvas", pmtsCanvasTitle.Data(), 1024, 512);
 		pmtsCanvas->Divide(2,1);
 
 		TVirtualPad* pmtsCanvasPad1 = pmtsCanvas->cd(1);
-		pmtsCanvasPad1->SetLogy();
+		// pmtsCanvasPad1->SetLogy();
+		pmtsCanvasPad1->SetGrid();
+		pmt1Hist->SetFillColor(EColor::kCyan-10);
 		TH1* pmt1HistClone = dynamic_cast<TH1F*>(pmt1Hist->DrawClone());
-		// GraphicsUtils::alignStats(pmt1HistClone, pmtsCanvasPad1);
 
 		TVirtualPad* pmtsCanvasPad2 = pmtsCanvas->cd(2);
-		pmtsCanvasPad2->SetLogy();
+		// pmtsCanvasPad2->SetLogy();
+    pmtsCanvasPad2->SetGrid();
+    pmt2Hist->SetFillColor(EColor::kCyan-10);
 		TH1* pmt2HistClone = dynamic_cast<TH1F*>(pmt2Hist->DrawClone());
-		// GraphicsUtils::alignStats(pmt2HistClone, pmtsCanvasPad2);
+
+		GraphicsUtils::alignStats(pmtsCanvasPad1);
+		GraphicsUtils::alignStats(pmtsCanvasPad2);
 
 		// Save canvas with PMT profiles to file
 
-		TString pngFilePath = TString::Format("%s-profiles-tile%d.png",fileNameNoExt, Constants::getInstance()->parameters.tileProfile);
+		TString pngFilePath = TString::Format("%s-profiles-tile%d.png", TreeHelper::getInstance()->getFileName(), Constants::getInstance()->parameters.tileProfile);
 		pmtsCanvas->SaveAs(pngFilePath.Data());
 	}
 
@@ -103,8 +109,8 @@ int runPrototype(TList* fileNamesList){
 	pmtsFitCanvas->Divide(2,1);
 
 	// Retreive parameters for KaonLT Prototype histogram
-	TString* parametersFileName = StringUtils::extractFilenameWithExtension(fileURL);
-	parametersFileName->ReplaceAll(".root", "-params.txt");
+	TString* parametersFileName = new TString(TreeHelper::getInstance()->getFileName()); // TreStringUtils::extractFilenameWithExtension(fileURL);
+	parametersFileName->Append("-params.txt");
 	FitParameters* params = new FitParameters(parametersFileName->Data());
 	if (params->getList()->getSize() != 7){
 		std::cout << "Missing or incomplete fit parameters file \"" << parametersFileName->Data() << "\"" << std::endl;
@@ -121,7 +127,7 @@ int runPrototype(TList* fileNamesList){
 	FitUtils::fitHistogramOnPad(pmt2HistFit, pmtsFitCanvas->cd(2), params, fitType);
 
 	// Save canvas with PMT profiles to file
-	TString pngFitFilePath = TString::Format("%s-fit-tile%d-terms%d-%s.png", fileNameNoExt, Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber, StringUtils::toString(fitType));
+	TString pngFitFilePath = TString::Format("%s-fit-tile%d-terms%d-%s.png", TreeHelper::getInstance()->getFileName(), Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber, StringUtils::toString(fitType));
 	pmtsFitCanvas->SaveAs(pngFitFilePath.Data());
 
 	// Return success (0)
@@ -293,8 +299,13 @@ int run(TList* fileNamesList) {
 // Test fit histogram digitized from the paper
 int testDigitized(){
 	// Get digitized histogram from paper
-	TH1* h = TestSpectrum::getHistogramPaper();
+	// TH1* h = TestSpectrum::getHistogramPaper();
+	TH1* h = TestSpectrum::getHistogramDigitized();
 
+	h->Print();
+	for (Int_t i = 1; i <= h->GetXaxis()->GetNbins(); i++){
+	  std::cout << h->GetBinCenter(i) << ": " << h->GetBinContent(i) << std::endl;
+	}
 	// Retreive parameters for test Bellamy histogram
 	FitParameters* params = new FitParameters(ParametersType::forBellamyHist);
 
@@ -377,12 +388,18 @@ int main(int argc, char* argv[]) {
 
 	if (Constants::getInstance()->parameters.fitType == FitType::test){
 		// Test fitting function on the digitized test histogram
-		// testDigitized();
+		testDigitized();
 		// Test fitting function on the filled random test histogram
-		testFillRandom();
-		testNoTerm0();
+		// testFillRandom();
+		// testNoTerm0();
 	}
 	else {
+    // Parse wildcards in the input files
+    RootUtils::parseWildcardFileNames(constants->parameters.inputFiles);
+
+    // Sort filenames
+    constants->parameters.inputFiles->Sort(kFALSE);
+
 		// Check if input files are provided
 		if (constants->parameters.inputFiles->GetSize() < 1){
 			std::cout << "No spectra files specified." << std::endl;
@@ -413,12 +430,6 @@ int main(int argc, char* argv[]) {
 		// The probelm was that MIGRAD was unable to do a correct error estimates for 60 parameters although it was displaying a perfect fit. With Minosit takes more time but it does a good error estimate.
 
 		// ROOT::Math::IntegratorOneDimOptions:: ROOT::Math::Integrator GSLIntegrator(double absTol = 1.0000000000000001E-9, double relTol = 9.9999999999999995E-7, size_t size = 1000)
-
-		// Exit if file names not provided
-		if (constants->parameters.inputFiles->LastIndex() < 0) return 1;
-
-		// Parse wildcards in the input files
-		RootUtils::parseWildcardFileNames(constants->parameters.inputFiles);
 
 		// Run analysis
 		run(constants->parameters.inputFiles);

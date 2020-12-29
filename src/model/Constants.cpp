@@ -101,13 +101,13 @@ void Constants::parseParameters(int argc, char* argv[]){
 			TObjString* fileName = new TObjString(pair.second);
 			parameters.inputFiles->Add(fileName);
 		}
-		else if (pair.first == "fit"){
+		else if (pair.first == "fit-type"){
 			pair.second.ToLower();
-			if (pair.second == "root"){
+			if (pair.second == "root-analytical"){
 				parameters.fitType = FitType::root;
-			} else if (pair.second == "rootfft"){
+			} else if (pair.second == "root-fft"){
 				parameters.fitType = FitType::rootConv;
-			} else if (pair.second == "roofit"){
+			} else if (pair.second == "roofit-fft"){
 				parameters.fitType = FitType::rooFit;
 			} else if (pair.second == "none"){
 				parameters.fitType = FitType::none;
