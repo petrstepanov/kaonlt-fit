@@ -1,6 +1,6 @@
 # Minor
-spectra-test/*
-spectra-prototype/*
+spectra-test
+spectra-prototype
 
 # Prerequisites
 *.d
