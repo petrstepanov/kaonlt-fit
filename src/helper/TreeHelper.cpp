@@ -226,7 +226,7 @@ void TreeHelper::fillPmtHists(TH1* pmt1Hist, TH1* pmt2Hist){
 			}
 		  // HistUtils::increaseCorrespondingBinContent(pmt1Hist, *ch_1);
 		}
-		if (*tiler == tileProfile && *tilel > 0){
+		if (*tilel == tileProfile && *tiler > 0){
 		  if (*ch_2 != 0) { // zero channel is noise
 		    pmt2Hist->Fill(*ch_2);
 		  }

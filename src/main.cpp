@@ -48,11 +48,11 @@ int runPrototype(TList* fileNamesList){
 	Int_t chMin = Constants::getInstance()->parameters.chMin;
 	Int_t chMax = Constants::getInstance()->parameters.chMax;
 	Int_t chBins = Constants::getInstance()->parameters.chBins;
-	TString pmt1HistTitle = TString::Format("ADC1 spectrum at tilel=%d", Constants::getInstance()->parameters.tileProfile);
+	TString pmt1HistTitle = TString::Format("ADC1 spectrum at tilel=%d, tiler>0", Constants::getInstance()->parameters.tileProfile);
 	TH1* pmt1Hist = new TH1D("adc1Hist", pmt1HistTitle, chBins, chMin, chMax);
   pmt1Hist->GetXaxis()->SetTitle("ADC1 channel (ch_1)");
   pmt1Hist->GetYaxis()->SetTitle("Number of events");
-  TString pmt2HistTitle = TString::Format("ADC2 spectrum at tiler=%d", Constants::getInstance()->parameters.tileProfile);
+  TString pmt2HistTitle = TString::Format("ADC2 spectrum at tilel=%d, tiler>0", Constants::getInstance()->parameters.tileProfile);
 	TH1* pmt2Hist = new TH1D("adc2Hist", pmt2HistTitle, chBins, chMin, chMax);
 	pmt2Hist->GetXaxis()->SetTitle("ADC2 channel (ch_2)");
 	pmt2Hist->GetYaxis()->SetTitle("Number of events");
@@ -65,7 +65,7 @@ int runPrototype(TList* fileNamesList){
 	// const char* fileNameNoExt = StringUtils::extractFilenameNoExtension(fileURL)->Data();
 	// const char* fileNameNoExt = TreeHelper::getInstance()->getFileName();
 	if (Constants::getInstance()->parameters.plotProfiles == kTRUE){
-		TString pmtsCanvasTitle = TString::Format("Profile of the PMT spectra (tile = %d)", Constants::getInstance()->parameters.tileProfile);
+		TString pmtsCanvasTitle = TString::Format("Profile of the PMT spectra (tilel = %d, tiler > 0)", Constants::getInstance()->parameters.tileProfile);
 		TCanvas* pmtsCanvas = new TCanvas("pmtsCanvas", pmtsCanvasTitle.Data(), 1024, 512);
 		pmtsCanvas->Divide(2,1);
 
@@ -104,7 +104,7 @@ int runPrototype(TList* fileNamesList){
 	TH1* pmt1HistFit = HistUtils::cutHistogram(pmt1Hist, chFitMin, chFitMax);
 	TH1* pmt2HistFit = HistUtils::cutHistogram(pmt2Hist, chFitMin, chFitMax);
 
-	TString pmtsFitCanvasTitle = TString::Format("%s of the PMT profile spectra (tile = %d, terms = %d)", fitKind, Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber);
+	TString pmtsFitCanvasTitle = TString::Format("%s of the PMT profile spectra (tilel = %d, tiler > 0, terms = %d)", fitKind, Constants::getInstance()->parameters.tileProfile, Constants::getInstance()->parameters.termsNumber);
 	TCanvas* pmtsFitCanvas = new TCanvas("pmtsFitCanvas", pmtsFitCanvasTitle.Data(), 1024, 512);
 	pmtsFitCanvas->Divide(2,1);
 

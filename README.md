@@ -7,7 +7,7 @@ A CERN ROOT based C++ program used for the Kaon LT prototype PMT spectra fitting
 Program opens a set of ROOT files specified as command line arguments. Class `Constants` parses command line arguments, constructs the list of filenames to be processed. 
 
 <figure>
-  <img src="https://raw.githubusercontent.com/petrstepanov/kaonlt-fit/master/resources/kaonlt-fit-diagram.png" alt="Diagram of the KaonLT Fit application"style="width: 100%">
+  <img src="https://raw.githubusercontent.com/petrstepanov/kaonlt-fit/master/resources/kaonlt-fit-diagram.png?1" alt="Diagram of the KaonLT Fit application"style="width: 100%">
  <figcaption>Diagram of the KaonLT Fit application.</figcaption>
 </figure> 
 
@@ -32,6 +32,10 @@ Following projections for PMT histograms are obtained:
 <img src="https://raw.githubusercontent.com/petrstepanov/kaonlt-fit/master/resources/pmtsCanvas.png" style="width: 100%">
 
 Next the PMT spectra are fit in order to determine the number of the photoelectrons.
+
+## Fit implementation
+
+Fitting is implemented in three different ways: ROOT fit with analytical convolution, ROOT fit with FFT convolution and RooFit. General C++ classes with member functions with parameters are used to create the `TF1` objects used in the fit. [More information here](https://root.cern.ch/doc/master/classTF1.html#F6). 
 
 ## Installation on Windows 10
 
