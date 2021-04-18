@@ -54,16 +54,20 @@ P.S. Running the program on older versions of Windows is currently not possible.
 ```
 mkdir -p ~/Downloads && cd ~/Downloads
 git clone https://github.com/petrstepanov/kaonlt-fit
-cd ./kaonlt-fit
 ```
 
-3. Compile the source code and link with ROOT libraries into a binary executable:
+3. Create a folder for the out-of-source build. Run CMake project generator to generate the Makefile.
 ```
-make
-make install
+rm -rf ./kaonlt-fit-build && mkdir -p ./kaonlt-fit-build && cd ./kaonlt-fit-build
+cmake ../kaonlt-fit
 ```
-4. In order to launch the application type `kaonlt-fit` in Terminal.
+3. Compile the source code and link with ROOT libraries into a binary executable. Install the program.
+```
+make -j`nproc`
+sudo make install
+```
+4. To launch the application type `kaonlt-fit` in Terminal.
 
 ---
 
-Shoot me an email with feedback or questions: [petrs@bgsu.edu](mailto:petrs@bgsu.edu)
+Feel free to reach me out with feedback or questions: [stepanovps@gmail.com](mailto:stepanovps@gmail.com)
