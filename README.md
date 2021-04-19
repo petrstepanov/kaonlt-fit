@@ -69,9 +69,9 @@ sudo make install
 ```
 5. To launch the application type `kaonlt-fit` in Terminal.
 
-## Installation on JLab computiong farm
+## Installation on JLab computing farm
 
-1. Login to the computing farm and source the latest evironment:
+1. Login to the computing farm and source the latest environment:
 ```
 source /site/12gev_phys/softenv.csh 2.4
 ```
@@ -91,7 +91,7 @@ cmake3 ./../kaonlt-fit
 
 4. We do not have root previliges on the Computing Farm. The program cannot be installed system-wide. Launched `kaonlt-fit` with command:
 ```
-~/Downloads/kaonlt-build/
+cd ~/Downloads/kaonlt-build/
 ./kaonlt-fit
 ```
 
