@@ -59,14 +59,55 @@ git clone https://github.com/petrstepanov/kaonlt-fit
 3. Create a folder for the out-of-source build. Run CMake project generator to generate the Makefile.
 ```
 rm -rf ./kaonlt-fit-build && mkdir -p ./kaonlt-fit-build && cd ./kaonlt-fit-build
-cmake ../kaonlt-fit
+cmake ./../kaonlt-fit
 ```
-3. Compile the source code and link with ROOT libraries into a binary executable. Install the program.
+
+4. Compile the source code and link with ROOT libraries into a binary executable. Install the program.
 ```
 make -j`nproc`
 sudo make install
 ```
-4. To launch the application type `kaonlt-fit` in Terminal.
+5. To launch the application type `kaonlt-fit` in Terminal.
+
+## Installation on JLab computiong farm
+
+1. Login to the computing farm and source the latest evironment:
+```
+source /site/12gev_phys/softenv.csh 2.4
+```
+
+2. Clone the program folder into `~/Downloads` folder:
+
+```
+mkdir -p ~/Downloads && cd ~/Downloads
+git clone https://github.com/petrstepanov/kaonlt-fit
+```
+
+3. Current version of CentOS installed on the computing environment is CentOS 7. Therefore CMake v3 command is `cmake3`. Run the project generator.
+```
+rm -rf ./kaonlt-fit-build && mkdir -p ./kaonlt-fit-build && cd ./kaonlt-fit-build
+cmake3 ./../kaonlt-fit
+```
+
+4. We do not have root previliges on the Computing Farm. The program cannot be installed system-wide. Launched `kaonlt-fit` with command:
+```
+~/Downloads/kaonlt-build/
+./kaonlt-fit
+```
+
+## Generating Eclipse project for development
+
+CMake allows easy generation of the Eclipse IDE project with enchanced development featured (code hilighting, debugging and more). Setup of the project is following:
+```
+mkdir -p ~/Development && cd ~/Development
+git clone https://github.com/petrstepanov/kaonlt-fit
+rm -rf ./kaonlt-fit-eclipse && mkdir -p ./kaonlt-fit-eclipse && cd ./kaonlt-fit-eclipse
+cmake -G"Eclipse CDT4 - Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug ../kaonlt-fit
+```
+
+Open Eclipse and go to File → Open Projects from File System... Specify the project location in the modal dialog by clicking the "Directory..." button. Locate the ~/Development/glass-prototype/eclipse project folder. Click "Finish".
+
+CMake links program source folder to the project twice: as [Source directory] and [Subprojects]. Indexer is not working correctly when source code is opened in [Source directory]. Therefore we will filter out the [Source Folder] contents from the build and indexer. Right click the [Source directory] node, select "Properties". Go to "Resouce" → "Resource Filters". Click "Add Filter...". Select option buttons "Exclude All", "Files and Folders". In "Filter Details" specify "Name", "matches", "*". Click "Ok", "Apply and Close".
 
 ---
 

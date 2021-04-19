@@ -70,7 +70,8 @@
 # Compose the install target
 install(TARGETS ${PROJECT_NAME} SO_${PROJECT_NAME} 
         RUNTIME DESTINATION bin
-        LIBRARY DESTINATION ${ROOTSYS}/lib)
+        LIBRARY DESTINATION ${ROOTSYS}/lib
+        ARCHIVE DESTINATION ${ROOTSYS}/lib)
 install(FILES ${PROJECT_BINARY_DIR}/libD_${PROJECT_NAME}.rootmap
         DESTINATION $ENV{ROOTSYS}/lib)
 install(FILES ${PROJECT_BINARY_DIR}/libD_${PROJECT_NAME}_rdict.pcm
