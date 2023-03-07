@@ -83,7 +83,7 @@ mkdir -p ~/Downloads && cd ~/Downloads
 git clone https://github.com/petrstepanov/kaonlt-fit
 ```
 
-3. Current version of CentOS installed on the computing environment is CentOS 7. Therefore CMake v3 command is `cmake3`. Run the project generator.
+3. Current version of CentOS installed on the computing environment is CentOS 7. Therefore CMake v3 command is `cmake3`. Run out-of-source CMake build:
 ```
 rm -rf ./kaonlt-fit-build && mkdir -p ./kaonlt-fit-build && cd ./kaonlt-fit-build
 cmake3 ./../kaonlt-fit
