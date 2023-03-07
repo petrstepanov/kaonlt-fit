@@ -83,14 +83,14 @@ mkdir -p ~/Downloads && cd ~/Downloads
 git clone https://github.com/petrstepanov/kaonlt-fit
 ```
 
-3. Current version of CentOS installed on the computing environment is CentOS 7. Therefore CMake v3 command is `cmake3`. Run out-of-source CMake build:
+3. Run out-of-source CMake build:
 ```
 rm -rf ./kaonlt-fit-build && mkdir -p ./kaonlt-fit-build && cd ./kaonlt-fit-build
-cmake3 ./../kaonlt-fit
+cmake ./../kaonlt-fit
 make -j`nproc`
 ```
 
-4. We do not have root previliges on the Computing Farm. The program cannot be installed system-wide. Launch `kaonlt-fit` with command:
+4. Launch `kaonlt-fit` with command:
 ```
 cd ~/Downloads/kaonlt-build/
 ./kaonlt-fit
