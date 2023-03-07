@@ -87,9 +87,10 @@ git clone https://github.com/petrstepanov/kaonlt-fit
 ```
 rm -rf ./kaonlt-fit-build && mkdir -p ./kaonlt-fit-build && cd ./kaonlt-fit-build
 cmake3 ./../kaonlt-fit
+make -j`nproc`
 ```
 
-4. We do not have root previliges on the Computing Farm. The program cannot be installed system-wide. Launched `kaonlt-fit` with command:
+4. We do not have root previliges on the Computing Farm. The program cannot be installed system-wide. Launch `kaonlt-fit` with command:
 ```
 cd ~/Downloads/kaonlt-build/
 ./kaonlt-fit
