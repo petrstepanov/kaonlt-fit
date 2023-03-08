@@ -96,6 +96,20 @@ cd ~/Downloads/kaonlt-build/
 ./kaonlt-fit
 ```
 
+## How to run the program on the Farm
+
+Create a temporaty folder for the analysis. Copy the `/resources/fit-parameters.txt` file into the temporary folder. For instance,
+```
+mkdir -p /work/hallc/kaon/petrs/SHMS_Stability/ && cd /work/hallc/kaon/petrs/SHMS_Stability/
+cp ~/Downloads/kaonlt-fit/resources/fit-parameters.txt ./
+```
+Start spectrum analysis by passing following list of parameters to the executable:
+```
+kaonlt-fit-local /work/hallc/kaon/petrs/SHMS_Aerogel_replay/result_*.root \
+--params-filename=beam-params.txt --plot-profiles=kFALSE --terms-number=20 --tile-
+profile=55 --fit=root --ch-fit-min=0.1 --ch-fit-max=10 --ch-fit-range-min=0.5
+```
+
 ## Generating Eclipse project for development
 
 CMake allows easy generation of the Eclipse IDE project with enchanced development featured (code hilighting, debugging and more). Setup of the project is following:
