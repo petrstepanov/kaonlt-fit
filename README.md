@@ -101,12 +101,12 @@ cd ~/Downloads/kaonlt-build/
 Create a temporaty folder for the analysis. Copy the `/resources/fit-parameters.txt` file into the temporary folder. For instance,
 ```
 mkdir -p /work/hallc/kaon/petrs/SHMS_Stability/ && cd /work/hallc/kaon/petrs/SHMS_Stability/
-cp ~/Downloads/kaonlt-fit/resources/fit-parameters.txt ./
+cp ~/Downloads/kaonlt-fit/resources/fit-params.txt ./
 ```
 Start spectrum analysis by passing following list of parameters to the executable:
 ```
 kaonlt-fit-local /work/hallc/kaon/petrs/SHMS_Aerogel_replay/result_*.root \
---params-filename=beam-params.txt --plot-profiles=kFALSE --terms-number=20 --tile-
+--params-filename=fit-params.txt --plot-profiles=kFALSE --terms-number=20 --tile-
 profile=55 --fit=root --ch-fit-min=0.1 --ch-fit-max=10 --ch-fit-range-min=0.5
 ```
 
