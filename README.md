@@ -105,9 +105,7 @@ cp ~/Downloads/kaonlt-fit/resources/fit-params.txt ./
 ```
 Start spectrum analysis by passing following list of parameters to the executable:
 ```
-kaonlt-fit-local /work/hallc/kaon/petrs/SHMS_Aerogel_replay/result_*.root \
---params-filename=fit-params.txt --plot-profiles=kFALSE --terms-number=20 --tile-
-profile=55 --fit=root --ch-fit-min=0.1 --ch-fit-max=10 --ch-fit-range-min=0.5
+~/Downloads/kaonlt-fit-build/kaonlt-fit /work/hallc/kaon/petrs/SHMS_Aerogel_replay/result_*.root --params-filename=fit-params.txt --plot-profiles=kFALSE --terms-number=20 --tile-profile=55 --fit=root --ch-fit-min=0.1 --ch-fit-max=10 --ch-fit-range-min=0.5
 ```
 
 ## Generating Eclipse project for development
